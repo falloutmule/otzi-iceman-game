@@ -32,7 +32,6 @@ OTZI.dom = {
           <div class="stick-label">MOVE</div>
           <div class="stick-base"><div class="stick-knob" id="stickKnob"></div></div>
         </div>
-        <div class="aim-strip" id="aimStrip" aria-label="AIM strip">AIM</div>
         <div class="action-cluster">
           <button id="useBtn" type="button">USE<br>GATHER</button>
           <button id="sprintBtn" type="button">DODGE<br>SPRINT</button>
@@ -69,7 +68,6 @@ OTZI.dom = {
     this.statusLine = document.getElementById("statusLine");
     this.moveZone = document.getElementById("moveZone");
     this.stickKnob = document.getElementById("stickKnob");
-    this.aimStrip = document.getElementById("aimStrip");
     this.useBtn = document.getElementById("useBtn");
     this.sprintBtn = document.getElementById("sprintBtn");
     this.menuBtn = document.getElementById("menuBtn");

@@ -35,12 +35,15 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
   await expect(page.locator("#gameShell")).toBeVisible();
   await expect(page.locator("#hudStrip")).toBeVisible();
   await expect(page.locator("#controls")).toBeVisible();
+  await expect(page.locator("#aimStrip")).toHaveCount(0);
+  await expect(page.locator(".aim-strip")).toHaveCount(0);
   const gameBox = await page.locator("#gameShell").boundingBox();
   const controlsBox = await page.locator("#controls").boundingBox();
   expect(gameBox).toBeTruthy();
   expect(controlsBox).toBeTruthy();
   expect(controlsBox.y).toBeGreaterThan(gameBox.y + gameBox.height - 2);
-  await page.screenshot({ path: "artifacts/screenshots/layout-bottom-controls.png", fullPage: true });
+  await page.screenshot({ path: "artifacts/screenshots/no-aim-bottom-controls.png", fullPage: true });
+  await page.screenshot({ path: "artifacts/screenshots/clean-game-view-map-tab.png", fullPage: true });
 
   const initial = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   await page.locator("#useBtn").tap();

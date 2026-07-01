@@ -16,6 +16,11 @@ Field layout and gather checks included:
   MAP tab opens minimap
   joystick drag moves player
 
+Remove AIM cleanup included:
+  #aimStrip is absent
+  .aim-strip is absent
+  bottom controls remain functional without AIM
+
 Notes:
   Port 8080 was already occupied by another local service returning JSON 404 responses.
   Project defaults were updated to use local server port 8099.

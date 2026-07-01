@@ -5,7 +5,6 @@ OTZI.input = {
   keys: new Set(),
   pointers: new Map(),
   moveVector: { x: 0, y: 0 },
-  aimVector: { x: 0, y: 0 },
   pressed: { use: false, sprint: false, menu: false, debug: false, map: false },
   sprintHeld: false,
   init() {
@@ -99,8 +98,6 @@ OTZI.input = {
     this.pointers.clear();
     this.moveVector.x = 0;
     this.moveVector.y = 0;
-    this.aimVector.x = 0;
-    this.aimVector.y = 0;
     this.sprintHeld = false;
     for (const key of Object.keys(this.pressed)) this.pressed[key] = false;
     OTZI.dom.stickKnob.style.transform = "translate(0, 0)";
