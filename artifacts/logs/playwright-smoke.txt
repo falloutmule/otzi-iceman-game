@@ -21,6 +21,12 @@ Remove AIM cleanup included:
   .aim-strip is absent
   bottom controls remain functional without AIM
 
+MAP-to-HUD cleanup included:
+  #hudStrip #mapTab is visible
+  #gameShell > #mapTab is absent
+  game viewport has no persistent MOVE/USE/SPRINT/MENU controls
+  MAP still toggles minimap from the HUD bar
+
 Notes:
   Port 8080 was already occupied by another local service returning JSON 404 responses.
   Project defaults were updated to use local server port 8099.

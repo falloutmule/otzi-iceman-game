@@ -9,7 +9,6 @@ OTZI.dom = {
     this.ctx = this.canvas.getContext("2d", { alpha: false });
     this.uiRoot.innerHTML = `
       <section id="gameShell" class="game-shell" aria-label="Game viewport">
-        <button id="mapTab" type="button" aria-label="Trail map">MAP</button>
         <div id="minimapPanel" class="minimap-panel" hidden aria-label="Trail map preview">
           <div class="panel-title">TRAIL MAP</div>
           <canvas id="minimapCanvas" width="104" height="104" aria-hidden="true"></canvas>
@@ -24,6 +23,7 @@ OTZI.dom = {
         <div id="inventoryChip" class="stat-chip">FLINT: 0</div>
         <div id="staminaChip" class="stat-chip">STAM: 100</div>
         <div id="statusLine" class="status-line">Milestone 1 engine shell</div>
+        <button id="mapTab" type="button" aria-label="Trail map">MAP</button>
         <button id="debugBtn" type="button" aria-label="Toggle debug">D</button>
       </section>
       <div id="debugPanel" class="debug-panel" hidden></div>

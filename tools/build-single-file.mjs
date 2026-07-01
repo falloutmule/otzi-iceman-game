@@ -49,9 +49,10 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 .start-panel h1 { margin:0; font-size:clamp(28px,8vw,52px); letter-spacing:0; }
 .start-panel p { margin:0; color:var(--muted); }
 #startBtn { padding:12px 18px; background:#513d1e; border-color:#a88345; }
-.hud-strip { grid-area:hud; min-height:54px; display:grid; grid-template-columns:auto auto minmax(0,1fr) 48px; align-items:center; gap:8px; padding:8px 10px; border-top:1px solid rgba(243,234,215,.18); border-bottom:1px solid rgba(0,0,0,.45); background:linear-gradient(180deg,#111812,#0b110d); pointer-events:auto; }
+.hud-strip { grid-area:hud; min-height:54px; display:grid; grid-template-columns:auto auto minmax(0,1fr) 52px 48px; align-items:center; gap:8px; padding:8px 10px; border-top:1px solid rgba(243,234,215,.18); border-bottom:1px solid rgba(0,0,0,.45); background:linear-gradient(180deg,#111812,#0b110d); pointer-events:auto; }
 .stat-chip { padding:5px 8px; border:1px solid rgba(143,192,169,.4); border-radius:8px; background:rgba(9,18,14,.72); color:#c7f0dc; font:800 12px ui-monospace,Consolas,monospace; white-space:nowrap; }
 .status-line { min-width:0; color:#ffe3a5; font-weight:800; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#mapTab { width:52px; min-width:52px; height:42px; min-height:42px; background:#142820; border-color:rgba(143,192,169,.5); }
 #debugBtn { width:46px; }
 .debug-panel { grid-area:hud; align-self:end; justify-self:stretch; margin:0 10px 3px; padding:5px 8px; border:1px solid rgba(231,189,108,.35); border-radius:8px; background:rgba(0,0,0,.74); color:#ffe6a8; font:10px ui-monospace,Consolas,monospace; pointer-events:none; z-index:6; }
 .minimap-panel { position:absolute; right:8px; top:56px; width:120px; padding:6px; border:1px solid rgba(143,192,169,.45); border-radius:8px; background:rgba(5,12,9,.82); box-shadow:0 10px 30px rgba(0,0,0,.32); pointer-events:none; z-index:3; }
@@ -74,7 +75,6 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 .action-cluster { position:absolute; right:14px; top:22px; display:grid; grid-template-columns:86px 86px; gap:8px; pointer-events:auto; }
 .action-cluster button { height:58px; font-size:12px; }
 #useBtn { grid-column:span 2; background:#513d1e; border-color:#a88345; }
-#mapTab { position:absolute; right:-1px; top:12px; width:38px; height:76px; background:#142820; border-color:rgba(143,192,169,.5); writing-mode:vertical-rl; text-orientation:mixed; z-index:4; }
 @media (min-width: 720px) { .controls { min-height:188px; } .stick-zone { left:calc(50% - 250px); } .action-cluster { right:calc(50% - 250px); } }
 `;
 
