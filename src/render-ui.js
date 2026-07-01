@@ -5,8 +5,10 @@ OTZI.renderUi = {
   sync() {
     const game = OTZI.game;
     OTZI.dom.inventoryChip.textContent = `FLINT: ${game.inventory.flint || 0}`;
-    if (!OTZI.dom.toast.hidden && performance.now() > OTZI.dialogue.toastUntil) {
-      OTZI.dom.toast.hidden = true;
+    OTZI.dom.staminaChip.textContent = `STAM: ${Math.round(game.player.stamina)}`;
+    if (performance.now() > OTZI.dialogue.toastUntil && OTZI.dialogue.message !== "Milestone 1 engine shell") {
+      OTZI.dialogue.message = "Milestone 1 engine shell";
+      OTZI.dom.statusLine.textContent = OTZI.dialogue.message;
     }
     OTZI.dom.minimapPanel.hidden = !game.minimap;
     if (game.minimap) this.drawMinimap();

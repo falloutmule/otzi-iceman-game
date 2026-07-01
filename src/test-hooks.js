@@ -31,6 +31,10 @@ OTZI.installTestHooks = function installTestHooks() {
         minimap: g.minimap,
         menuOpen: g.menuOpen,
         status: OTZI.dialogue.message,
+        nearestResource: (() => {
+          const node = g.findNearestResource();
+          return node ? { x: node.x, y: node.y, resource: node.resource, dist: node.dist } : null;
+        })(),
         viewport: {
           cssW: OTZI.viewport.cssW,
           cssH: OTZI.viewport.cssH,
@@ -52,6 +56,29 @@ OTZI.installTestHooks = function installTestHooks() {
     teleportToVillage() {
       OTZI.game.player.x = OTZI.CFG.mapW * OTZI.CFG.tileSize / 2;
       OTZI.game.player.y = OTZI.CFG.mapH * OTZI.CFG.tileSize / 2;
+    },
+    teleportToNearestResource() {
+      let best = null;
+      const map = OTZI.game.map;
+      const ts = OTZI.CFG.tileSize;
+      const px = OTZI.game.player.x;
+      const py = OTZI.game.player.y;
+      for (let y = 0; y < map.h; y++) {
+        for (let x = 0; x < map.w; x++) {
+          if (!(map.getFlags(x, y) & OTZI.FLAG.HARVEST)) continue;
+          if (map.getGround(x, y) !== OTZI.TILE.ROCK) continue;
+          const wx = (x + 0.5) * ts;
+          const wy = (y + 0.5) * ts;
+          const dist = Math.hypot(wx - px, wy - py);
+          if (!best || dist < best.dist) best = { x, y, wx, wy, dist };
+        }
+      }
+      if (best) {
+        OTZI.game.player.x = best.wx - ts * 0.9;
+        OTZI.game.player.y = best.wy;
+        OTZI.camera.update();
+      }
+      return best;
     },
     give(item, n = 1) { OTZI.inventory.add(item, n); },
     completeDungeon(id = "flint_cave") {

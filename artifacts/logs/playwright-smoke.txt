@@ -6,7 +6,15 @@ Result:
   ok 1 tests\smoke.spec.js:5:1 - otzi milestone 1 smoke
   ok 2 tests\baseline-starter.spec.js:5:1 - starter reference baseline loads
   ok 3 tests\mobile-controls.spec.js:5:1 - milestone 1 mobile controls are visible and responsive
-  3 passed (4.0s)
+  3 passed (4.1s)
+
+Field layout and gather checks included:
+  layout contains distinct game area, HUD strip, and bottom controls panel
+  USE/GATHER in empty space does not increase flint
+  USE/GATHER near a real flint node increases flint
+  gathered flint node depletes and is no longer nearestResource
+  MAP tab opens minimap
+  joystick drag moves player
 
 Notes:
   Port 8080 was already occupied by another local service returning JSON 404 responses.

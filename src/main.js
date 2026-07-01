@@ -32,9 +32,7 @@ OTZI.game = {
       OTZI.dialogue.toast(this.menuOpen ? "Craft/Menu opened" : "Craft/Menu closed");
     }
     if (actions.usePressed) {
-      OTZI.inventory.add("flint", 1);
-      OTZI.dialogue.toast("Gathered flint +1");
-      OTZI.audio.blip(660, 0.04);
+      this.tryGather();
     }
     if (actions.sprintPressed) {
       this.player.stamina = Math.max(0, this.player.stamina - 8);
@@ -51,6 +49,44 @@ OTZI.game = {
     this.player.stamina = Math.max(0, Math.min(100, this.player.stamina + (actions.sprint ? -22 : 12) * dt));
     OTZI.entities.update(dt);
     OTZI.camera.update();
+  },
+  findNearestResource() {
+    const ts = OTZI.CFG.tileSize;
+    const px = this.player.x;
+    const py = this.player.y;
+    const centerX = Math.floor(px / ts);
+    const centerY = Math.floor(py / ts);
+    let best = null;
+    const maxTiles = Math.ceil(OTZI.CFG.gatherRadius / ts) + 1;
+    for (let y = centerY - maxTiles; y <= centerY + maxTiles; y++) {
+      for (let x = centerX - maxTiles; x <= centerX + maxTiles; x++) {
+        if (!(this.map.getFlags(x, y) & OTZI.FLAG.HARVEST)) continue;
+        const tile = this.map.getGround(x, y);
+        const resource = tile === OTZI.TILE.ROCK ? "flint" : null;
+        if (!resource) continue;
+        const wx = (x + 0.5) * ts;
+        const wy = (y + 0.5) * ts;
+        const dist = Math.hypot(wx - px, wy - py);
+        if (dist <= OTZI.CFG.gatherRadius && (!best || dist < best.dist)) {
+          best = { x, y, tile, resource, dist };
+        }
+      }
+    }
+    return best;
+  },
+  tryGather() {
+    const node = this.findNearestResource();
+    if (!node) {
+      OTZI.dialogue.toast("No resource nearby");
+      OTZI.audio.blip(220, 0.035);
+      return false;
+    }
+    OTZI.inventory.add(node.resource, 1);
+    this.map.setGround(node.x, node.y, OTZI.TILE.DEPLETED);
+    this.map.clearFlags(node.x, node.y, OTZI.FLAG.HARVEST | OTZI.FLAG.BLOCKED);
+    OTZI.dialogue.toast("Gathered flint +1");
+    OTZI.audio.blip(660, 0.04);
+    return true;
   }
 };
 

@@ -14,5 +14,6 @@ OTZI.CFG = {
   maxStepsPerFrame: 5,
   playerSpeed: 118,
   sprintSpeed: 166,
+  gatherRadius: 42,
   dprCap: 2
 };

@@ -25,6 +25,7 @@ OTZI.renderWorld = {
           t === OTZI.TILE.PATH ? pal.path :
           t === OTZI.TILE.TREE ? pal.tree :
           t === OTZI.TILE.ROCK ? pal.rock :
+          t === OTZI.TILE.DEPLETED ? "#4d4b3d" :
           t === OTZI.TILE.DARK_GRASS ? pal.darkGrass : pal.grass;
         ctx.fillRect(x * cfg.tileSize - cam.x, y * cfg.tileSize - cam.y, cfg.tileSize, cfg.tileSize);
         if (t === OTZI.TILE.TREE) {
@@ -34,6 +35,10 @@ OTZI.renderWorld = {
         if (t === OTZI.TILE.ROCK) {
           ctx.fillStyle = "#8b8d83";
           ctx.fillRect(x * cfg.tileSize - cam.x + 5, y * cfg.tileSize - cam.y + 7, 14, 10);
+        }
+        if (t === OTZI.TILE.DEPLETED) {
+          ctx.fillStyle = "rgba(0,0,0,.22)";
+          ctx.fillRect(x * cfg.tileSize - cam.x + 7, y * cfg.tileSize - cam.y + 9, 10, 6);
         }
       }
     }
