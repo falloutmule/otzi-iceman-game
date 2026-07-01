@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>The Legend of Ötzi the Iceman — Customizable Control Scheme</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0f1110;
+      --panel: #181b18;
+      --panel2: #23281f;
+      --ink: #f2ead7;
+      --muted: #c0b59d;
+      --line: #3e4438;
+      --accent: #d49a46;
+      --good: #8fcb7b;
+      --warn: #f0b15f;
+      --bad: #dd6f57;
+      --blue: #8fc7d0;
+      --cold: #9ed6e6;
+      --earth: #6c4e2f;
+      --forest: #314a2f;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    }
+    body { padding: 24px; }
+    main { max-width: 1100px; margin: 0 auto; }
+    h1, h2, h3 { line-height: 1.15; margin: 0 0 12px; }
+    h1 { font-size: clamp(2rem, 4vw, 4rem); letter-spacing: -0.04em; }
+    h2 { margin-top: 34px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 1.55rem; }
+    h3 { margin-top: 22px; color: var(--accent); }
+    p { color: var(--muted); }
+    strong { color: var(--ink); }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+    code { color: var(--accent); }
+    pre { overflow: auto; padding: 16px; border-radius: 14px; background: #090b09; border: 1px solid var(--line); }
+    table { width: 100%; border-collapse: collapse; margin: 14px 0 24px; }
+    th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+    th { color: var(--accent); background: #141712; }
+    ul, ol { color: var(--muted); }
+    li + li { margin-top: 6px; }
+    .hero { padding: 26px; border: 1px solid var(--line); border-radius: 22px; background: linear-gradient(135deg, #22291f, #101210); }
+    .tagrow { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 0; }
+    .tag { border: 1px solid var(--line); background: #0c0e0c; border-radius: 999px; padding: 5px 10px; color: var(--muted); font-size: 0.9rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+    .card h3 { margin-top: 0; }
+    .good { color: var(--good); }
+    .warn { color: var(--warn); }
+    .bad { color: var(--bad); }
+    .blue { color: var(--blue); }
+    .cold { color: var(--cold); }
+    .phone-wrap { display: grid; place-items: center; margin: 18px 0 26px; }
+    .phone {
+      width: min(420px, 92vw);
+      aspect-ratio: 9 / 19.5;
+      border: 10px solid #050505;
+      border-radius: 34px;
+      background: #050505;
+      box-shadow: 0 18px 50px rgba(0,0,0,.45);
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: 60% 7% 8% 25%;
+      position: relative;
+    }
+    .play {
+      background:
+        radial-gradient(circle at 52% 48%, rgba(212,154,70,.26) 0 4px, transparent 5px),
+        radial-gradient(circle at 32% 35%, rgba(143,203,123,.22) 0 7px, transparent 8px),
+        linear-gradient(#33422f, #1c241c 52%, #252019);
+      display: grid;
+      place-items: center;
+      color: #e4d7b9;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-align: center;
+      padding: 14px;
+    }
+    .stats {
+      background: #151813;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      font-size: .67rem;
+      color: #ead9b4;
+      border-top: 1px solid #30362d;
+      gap: 4px;
+      padding: 0 4px;
+    }
+    .mapbar { background: #0f120f; display: grid; place-items: center; border-top: 1px solid #30362d; }
+    .minimap {
+      width: 48%;
+      height: 70%;
+      border: 2px solid #7b6a46;
+      border-radius: 9px;
+      background:
+        radial-gradient(circle at 65% 45%, #d49a46 0 4px, transparent 5px),
+        linear-gradient(90deg, transparent 45%, rgba(158,214,230,.35) 47% 52%, transparent 54%),
+        repeating-linear-gradient(45deg, #2c3f2a 0 8px, #202a20 8px 16px);
+      display: grid;
+      place-items: center;
+      font-size: .62rem;
+      color: #f1ead8;
+      text-align: center;
+    }
+    .deck { position: relative; background: #080a08; border-top: 1px solid #30362d; }
+    .control {
+      position: absolute;
+      border: 2px solid rgba(242,234,215,.30);
+      background: rgba(86,63,32,.34);
+      color: #fff4d5;
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      user-select: none;
+      text-shadow: 0 1px 2px #000;
+    }
+    .move { left: 7%; bottom: 12%; width: 32%; aspect-ratio: 1; border-radius: 50%; }
+    .move::after { content: ""; width: 42%; aspect-ratio: 1; border-radius: 50%; background: rgba(242,234,215,.18); border: 1px solid rgba(242,234,215,.25); }
+    .aim { right: 5%; top: 7%; width: 26%; height: 44%; border-radius: 16px; color: #d7eef5; }
+    .use { right: 35%; top: 8%; width: 23%; height: 24%; border-radius: 14px; color: #f6dba4; }
+    .dodge { right: 35%; bottom: 14%; width: 23%; height: 24%; border-radius: 14px; color: #ffc58a; }
+    .craft { right: 5%; bottom: 14%; width: 26%; height: 24%; border-radius: 14px; color: #ffd166; }
+    .note { padding: 12px 14px; background: #12150f; border-left: 4px solid var(--accent); border-radius: 10px; color: var(--muted); }
+    .small { font-size: .86rem; color: var(--muted); font-weight: 600; }
+    @media print {
+      body { background: white; color: black; }
+      .hero, .card, pre { background: white; color: black; box-shadow: none; }
+      p, li, .small { color: #333; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <h1>The Legend of Ötzi the Iceman — Customizable Control Scheme</h1>
+    <p><strong>Design target:</strong> portrait-first mobile controls for <em>The Legend of Ötzi the Iceman</em>, a top-down Canvas 2D survival adventure. The player explores Copper Age forests, alpine passes, caves, river bends, hunting grounds, and rival trails while managing warmth, hunger, stamina, tools, and carried resources.</p>
+    <div class="tagrow">
+      <span class="tag">portrait-first</span>
+      <span class="tag">customizable</span>
+      <span class="tag">safe-area aware</span>
+      <span class="tag">Pointer Events</span>
+      <span class="tag">burst dodge/sprint</span>
+      <span class="tag">Canvas 2D</span>
+      <span class="tag">Hermes/Codex-safe</span>
+    </div>
+  </section>
+
+  <h2>1. Core recommendation</h2>
+  <p>The control scheme should support a slower, survival-weighted adventure instead of a generic dual-stick shooter. Ötzi needs to move, aim, gather, craft, dodge, open the trail map, and use tools without forcing the player to hold fragile buttons while steering with two thumbs.</p>
+  <div class="grid">
+    <div class="card">
+      <h3>Default layout</h3>
+      <p><strong>Top:</strong> large top-down play window. <strong>Below:</strong> compact stat band, sliding trail-map tab, and a dedicated control deck. This keeps the wilderness readable while still giving the thumbs stable controls.</p>
+    </div>
+    <div class="card">
+      <h3>MOVE stays bottom-left</h3>
+      <p>The left thumb owns walking, sneaking, and river/cave movement. It should never share space with the minimap, craft menu, dodge, or use/gather action.</p>
+    </div>
+    <div class="card">
+      <h3>AIM/LOOK becomes right-side strip</h3>
+      <p>When no ranged weapon is equipped, this strip controls facing/look direction. When the bow or thrown stone is equipped, it becomes an aim surface.</p>
+    </div>
+    <div class="card">
+      <h3>Actions are explicit buttons</h3>
+      <p>USE/GATHER, DODGE/SPRINT, and CRAFT/MENU need large buttons. Sprint should be a burst/toggle so the player can evade, aim, or gather without awkward thumb holds.</p>
+    </div>
+  </div>
+
+  <h2>2. Portrait layout map</h2>
+  <div class="phone-wrap">
+    <div class="phone" aria-label="Portrait phone control diagram for Ötzi game">
+      <div class="play">ÖTZI OVERWORLD<br><span class="small">forest / cave / village / pass</span></div>
+      <div class="stats"><span>WARMTH</span><span>HUNGER</span><span>STAM</span><span>WEIGHT</span><span>DAY</span></div>
+      <div class="mapbar"><div class="minimap">TRAIL<br>MAP</div></div>
+      <div class="deck">
+        <div class="control move" aria-label="Move joystick"></div>
+        <div class="control aim">AIM<br><span class="small">drag/look</span></div>
+        <div class="control use">USE<br><span class="small">gather</span></div>
+        <div class="control dodge">DODGE<br><span class="small">burst</span></div>
+        <div class="control craft">CRAFT<br><span class="small">menu</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="note">Important: control-height editing should move only the control deck. It should not randomly compress the play window, stat band, or trail-map tab. The map/stat band is a stable layer because warmth, hunger, stamina, and carried weight are core survival information.</p>
+
+  <h2>3. Action map</h2>
+  <table>
+    <thead>
+      <tr><th>Action</th><th>Mobile default</th><th>Desktop default</th><th>Behavior</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Move</strong></td><td>Bottom-left virtual joystick</td><td>WASD / arrow keys</td><td>Analog vector on phone, digital vector on keyboard. Movement resets on pointerup, pointercancel, blur, pause, and scene change.</td></tr>
+      <tr><td><strong>Aim / look / face</strong></td><td>Right-side vertical strip; drag to face/aim; tap for quick facing</td><td>Mouse drag / right stick / Q/E optional</td><td>Reliable facing is more important than tiny arrows. The whole strip is the hit surface.</td></tr>
+      <tr><td><strong>Use / gather / interact</strong></td><td>Large USE button near right thumb</td><td>E / Space</td><td>Context action: gather bark, pick flint, harvest grass, talk, open chest/cache, enter cave, use fire.</td></tr>
+      <tr><td><strong>Tool / weapon</strong></td><td>Tap equipped-tool slot or hold CRAFT/MENU radial</td><td>1/2/3 or mouse wheel</td><td>Cycles copper axe, flint dagger, bow, thrown stone, trap, or gathering tool based on unlocks.</td></tr>
+      <tr><td><strong>Dodge / sprint</strong></td><td>Large DODGE button; tap = evade burst; double tap = sprint toggle</td><td>Shift / Ctrl</td><td>Default must not be hold-only. Burst uses stamina; sprint toggle drains stamina until canceled or exhausted.</td></tr>
+      <tr><td><strong>Craft / menu</strong></td><td>CRAFT button opens quick craft; long press opens full menu/pause</td><td>C for craft, Esc/P for pause</td><td>Phone should not need a separate tiny pause button. Craft menu can include inventory, settings, facts, and save/export.</td></tr>
+      <tr><td><strong>Trail map</strong></td><td>Bottom-center sliding map tab</td><td>M</td><td>Tap to expand/collapse. Expanded map pauses or slows gameplay unless explicitly in navigation mode.</td></tr>
+      <tr><td><strong>Fullscreen</strong></td><td>Optional menu item</td><td>Optional menu item</td><td>Enhancement only. The game remains playable without true fullscreen.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>4. Customization model</h2>
+  <p>Customization should be declarative. The engine reads a saved profile, lays out controls from data, and writes changes back through <strong>CRAFT/MENU → OPTIONS → EDIT CONTROLS</strong>.</p>
+
+  <h3>Editable fields</h3>
+  <table>
+    <thead>
+      <tr><th>Setting</th><th>Allowed control</th><th>Why it matters for Ötzi</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Position</td><td>drag in edit mode</td><td>Different hand sizes and phone sizes need different thumb reach.</td></tr>
+      <tr><td>Size</td><td>+ / − buttons or slider</td><td>USE/GATHER and DODGE must stay large enough for cold-weather survival play.</td></tr>
+      <tr><td>Opacity</td><td>0.25–0.90</td><td>Controls must not hide deer, rival scouts, caves, or resource nodes.</td></tr>
+      <tr><td>Dock height</td><td>small / normal / tall</td><td>Supports big thumbs without breaking the world view.</td></tr>
+      <tr><td>Left-handed mode</td><td>mirror layout</td><td>Moves action cluster left and joystick right for left-handed players.</td></tr>
+      <tr><td>Joystick deadzone</td><td>0.08–0.30</td><td>Prevents accidental drift near cliffs, rivers, cave exits, and rival patrols.</td></tr>
+      <tr><td>Dodge/sprint mode</td><td>burst / toggle / hold fallback</td><td>Default should be burst/toggle; hold is optional only.</td></tr>
+      <tr><td>AIM sensitivity</td><td>low / normal / high</td><td>Fixes over-aiming with bow and under-turning in caves.</td></tr>
+      <tr><td>Reduced motion</td><td>on/off</td><td>Turns down snowstorm shake, damage flash, cold vignette, and heavy screen effects.</td></tr>
+      <tr><td>High contrast survival HUD</td><td>on/off</td><td>Makes warmth, hunger, stamina, and carried weight more readable outdoors.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Control profile data shape</h3>
+  <pre><code>const DEFAULT_CONTROL_PROFILE = {
+  version: 1,
+  name: "Ötzi Portrait Default",
+  updatedBy: "otzi-customizable-control-scheme",
+  global: {
+    opacity: 0.64,
+    dockHeight: "normal",
+    leftHanded: false,
+    safeAreaPadding: true,
+    reducedMotion: false,
+    highContrastSurvivalHud: false
+  },
+  actions: {
+    move:   { type: "joystick", label: "MOVE", deadzone: 0.16, radius: 64 },
+    aim:    { type: "strip",    label: "AIM", sensitivity: 1.0, tapZones: true, mode: "faceOrAim" },
+    use:    { type: "button",   label: "USE", context: ["gather", "talk", "open", "campfire"], repeat: false },
+    dodge:  { type: "button",   label: "DODGE", mode: "burstToggle", burstMs: 520, staminaCost: 12 },
+    craft:  { type: "button",   label: "CRAFT", opens: "quickCraft", longPressOpens: "pauseMenu" },
+    map:    { type: "tab",      label: "MAP", opens: "trailMap" }
+  },
+  portrait: {
+    controls: [
+      { id: "move",  action: "move",  anchor: "bottom-left",  x: 0.08, y: 0.12, w: 0.32, h: 0.32 },
+      { id: "aim",   action: "aim",   anchor: "bottom-right", x: 0.69, y: 0.06, w: 0.26, h: 0.44 },
+      { id: "use",   action: "use",   anchor: "bottom-right", x: 0.42, y: 0.08, w: 0.22, h: 0.24 },
+      { id: "dodge", action: "dodge", anchor: "bottom-right", x: 0.42, y: 0.62, w: 0.22, h: 0.24 },
+      { id: "craft", action: "craft", anchor: "bottom-right", x: 0.69, y: 0.62, w: 0.26, h: 0.24 },
+      { id: "map",   action: "map",   anchor: "map-band",     x: 0.26, y: 0.14, w: 0.48, h: 0.70 }
+    ]
+  },
+  landscape: {
+    controls: [
+      { id: "move",  action: "move",  anchor: "bottom-left",  x: 0.05, y: 0.12, w: 0.20, h: 0.34 },
+      { id: "aim",   action: "aim",   anchor: "bottom-right", x: 0.74, y: 0.12, w: 0.20, h: 0.44 },
+      { id: "use",   action: "use",   anchor: "bottom-right", x: 0.61, y: 0.16, w: 0.11, h: 0.20 },
+      { id: "dodge", action: "dodge", anchor: "bottom-right", x: 0.61, y: 0.62, w: 0.11, h: 0.20 },
+      { id: "craft", action: "craft", anchor: "top-right",    x: 0.82, y: 0.04, w: 0.12, h: 0.10 }
+    ]
+  }
+};</code></pre>
+
+  <h2>5. Edit Controls flow</h2>
+  <ol>
+    <li>Player opens <strong>CRAFT/MENU → OPTIONS → EDIT CONTROLS</strong>.</li>
+    <li>The options overlay dims or collapses so it does not block controls being edited.</li>
+    <li>Each control shows its boundary, label, resize handles, and reset button.</li>
+    <li>Player drags controls inside legal control deck / map band boundaries.</li>
+    <li>Player uses <strong>+</strong> and <strong>−</strong> to resize the selected control.</li>
+    <li>Player taps <strong>Save</strong>, <strong>Reset Portrait</strong>, <strong>Reset All</strong>, <strong>Left-Handed Mirror</strong>, or <strong>Export Profile</strong>.</li>
+  </ol>
+
+  <p class="note">The editor must clamp controls away from browser gesture edges and safe-area cutouts. It should never allow a critical survival button to sit under Android navigation, iOS home indicator, a notch, or the browser back gesture edge.</p>
+
+  <h2>6. Runtime input rules</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Pointer ownership</h3>
+      <p>Each active pointer gets one owner: move, aim, use, dodge, craft/menu, map, or UI. Do not let one pointer trigger two gameplay controls.</p>
+    </div>
+    <div class="card">
+      <h3>Pointer capture</h3>
+      <p>When a pointer starts on MOVE or AIM, capture it until pointerup or pointercancel. Dragging off the visible control should still work.</p>
+    </div>
+    <div class="card">
+      <h3>Cancel safety</h3>
+      <p>On pointercancel, blur, orientation change, pause, cutscene, dialogue, or scene transition, zero movement and aim input immediately.</p>
+    </div>
+    <div class="card">
+      <h3>Action sampling</h3>
+      <p>DOM events update raw pointer/key state only. The fixed-step game loop samples the action map once per tick.</p>
+    </div>
+  </div>
+
+  <h3>Input pipeline</h3>
+  <pre><code>Pointer/keyboard/gamepad events
+        ↓
+INPUT module stores raw state by pointerId/key
+        ↓
+CONTROL_LAYOUT assigns raw input to control zones
+        ↓
+ACTION_MAP emits move/aim/use/dodge/craft/map
+        ↓
+GAME UPDATE consumes actions
+        ↓
+RENDER draws world, survival HUD, control feedback, and debug overlay</code></pre>
+
+  <h2>7. Implementation notes for Ötzi</h2>
+  <ul>
+    <li><strong>Keep controls declarative.</strong> Do not hardcode button coordinates in multiple modules.</li>
+    <li><strong>Use CRAFT/MENU as the phone pause path.</strong> Short press opens quick craft; long press opens pause/options/inventory/facts.</li>
+    <li><strong>Keep trail map independent.</strong> Trail map lives in its own tab/band, not inside MOVE or AIM zones.</li>
+    <li><strong>Keep dodge forgiving.</strong> Recommended default: tap for a short dodge, double tap for sprint toggle, stamina drains normally.</li>
+    <li><strong>Keep AIM context-aware.</strong> No bow equipped = face/look; bow equipped = aim; trap equipped = placement direction.</li>
+    <li><strong>Keep safe-area math centralized.</strong> Resize/orientation changes rebuild the layout from the profile.</li>
+    <li><strong>Do not couple visual size to gameplay strength.</strong> Making DODGE bigger should not change dodge distance or stamina cost.</li>
+    <li><strong>Do not let dialogue eat movement state.</strong> Opening a fact dialogue must zero raw movement/aim to prevent stuck walking.</li>
+  </ul>
+
+  <h2>8. Presets</h2>
+  <table>
+    <thead>
+      <tr><th>Preset</th><th>Changes</th><th>Use case</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Default</strong></td><td>MOVE left, AIM right, USE/DODGE/CRAFT right cluster, trail map bottom-center</td><td>Normal portrait phone play.</td></tr>
+      <tr><td><strong>Big Thumb</strong></td><td>Large MOVE, large USE/DODGE, taller dock, lower opacity</td><td>Work phone, gloves, larger hands, rough conditions.</td></tr>
+      <tr><td><strong>Left-Handed</strong></td><td>Mirror MOVE and action cluster; AIM can remain on preferred side</td><td>Left-handed play or hand fatigue.</td></tr>
+      <tr><td><strong>Hunting</strong></td><td>Larger AIM strip, smaller CRAFT, visible bow/arrow counter</td><td>Bow-heavy deer hunting and rival trail encounters.</td></tr>
+      <tr><td><strong>Gathering</strong></td><td>Larger USE, high contrast resource prompts, map collapsed</td><td>Forest/birch/flint runs and quick resource gathering.</td></tr>
+      <tr><td><strong>Accessibility</strong></td><td>Maximum button size, high contrast, no hold actions, reduced motion</td><td>Lowest precision burden.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>9. Mobile proof checklist</h2>
+  <table>
+    <thead>
+      <tr><th>Check</th><th>Pass condition</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>First load portrait</td><td>World window, survival stat band, trail-map tab, and control deck appear without black dead-zone confusion.</td></tr>
+      <tr><td>MOVE joystick</td><td>Dragging inside and outside the visible circle moves Ötzi and returns to zero on release.</td></tr>
+      <tr><td>AIM strip</td><td>Right thumb drag faces/aims reliably in portrait and landscape.</td></tr>
+      <tr><td>MOVE + USE multitouch</td><td>Player can move while gathering, talking, opening, or using a campfire.</td></tr>
+      <tr><td>MOVE + DODGE multitouch</td><td>Player can dodge or sprint-burst while moving without getting stuck.</td></tr>
+      <tr><td>AIM + USE</td><td>Bow aim can release/confirm cleanly without stealing movement pointer.</td></tr>
+      <tr><td>Pointercancel</td><td>Active pointer count returns to zero and movement/aim stops.</td></tr>
+      <tr><td>Options edit overlay</td><td>Edit Controls does not hide or block the selected controls.</td></tr>
+      <tr><td>Resize controls</td><td>+ / − changes visible control size without moving trail-map/stat band incorrectly.</td></tr>
+      <tr><td>Rotation</td><td>Portrait ↔ landscape recalculates controls and keeps AIM usable.</td></tr>
+      <tr><td>Safe area</td><td>No critical control is under browser/system gesture zones.</td></tr>
+      <tr><td>Dialogue transition</td><td>Opening an NPC fact dialogue releases movement/aim and resumes cleanly after closing.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>10. Hermes / Codex implementation card</h2>
+  <pre><code>TASK: Implement Ötzi customizable controls based on docs/otzi-customizable-control-scheme.html.
+
+Rules:
+- Do not redesign gameplay.
+- Do not edit minified/release output directly.
+- Keep controls declarative in one profile object.
+- MOVE bottom-left by default.
+- Trail map bottom-center in its own band/tab.
+- AIM is a right-side strip/zone, not tiny required arrows.
+- USE/GATHER and DODGE/SPRINT are explicit large buttons.
+- DODGE/SPRINT default is burst/toggle, not hold-only.
+- CRAFT/MENU opens quick craft on tap and pause/options on long press.
+- Edit Controls supports drag, +/− resize, reset, save, left-handed mirror, and export profile.
+- Runtime input uses Pointer Events, pointer capture, pointercancel recovery.
+- Dialogue, pause, death, and scene changes must clear raw movement/aim.
+- Every change must run smoke tests.
+- Every control/layout change must produce portrait and landscape screenshots.
+- Every mobile-control change must be tested on Android Chrome if possible.
+
+Evidence paths:
+- proof/control-default-portrait.png
+- proof/control-edit-portrait.png
+- proof/control-default-landscape.png
+- proof/control-multitouch-report.md
+- proof/control-dialogue-release-report.md</code></pre>
+
+  <h2>11. Final design contract</h2>
+  <p><strong>Ötzi controls should feel like a survival tool belt attached to a top-down wilderness screen.</strong> The world remains readable. The survival stats remain visible. The trail map has a stable home. MOVE, AIM, USE, DODGE, and CRAFT/MENU are customizable but still bound by a layout contract that protects mobile play from regression.</p>
+</main>
+</body>
+</html>

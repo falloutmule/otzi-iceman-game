@@ -1,0 +1,12 @@
+Command:
+  npx.cmd playwright test
+
+Result:
+  Running 2 tests using 2 workers
+  ok 1 tests\smoke.spec.js:5:1 - otzi milestone 1 smoke
+  ok 2 tests\baseline-starter.spec.js:5:1 - starter reference baseline loads
+  2 passed (4.1s)
+
+Notes:
+  Port 8080 was already occupied by another local service returning JSON 404 responses.
+  Project defaults were updated to use local server port 8099.

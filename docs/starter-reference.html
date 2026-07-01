@@ -1,0 +1,2506 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Ötzi Canvas 2D Engine Starter — Procedural Graphics Field File</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d0f0f;
+      --ink: #f3ead7;
+      --muted: #c1b69f;
+      --dim: #8b816d;
+      --panel: #171a18;
+      --panel2: #20241f;
+      --panel3: #292e27;
+      --line: #42483d;
+      --accent: #e7bd6c;
+      --accent2: #8fc0a9;
+      --warn: #d88c5a;
+      --bad: #e36d63;
+      --good: #89c779;
+      --code: #f3d999;
+      --blue: #9cc9df;
+      --shadow: rgba(0,0,0,.42);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 18% 0%, rgba(231,189,108,.08), transparent 32rem),
+        radial-gradient(circle at 82% 12%, rgba(143,192,169,.08), transparent 34rem),
+        var(--bg);
+      color: var(--ink);
+      font: 15px/1.55 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+      overscroll-behavior: none;
+    }
+
+    a { color: var(--accent); }
+    p, li, td { color: var(--muted); }
+    strong { color: var(--ink); }
+    h1, h2, h3, h4 {
+      line-height: 1.12;
+      margin: 0 0 .65rem;
+      color: var(--ink);
+    }
+    h1 {
+      font-size: clamp(2rem, 5vw, 4.7rem);
+      letter-spacing: -.06em;
+      max-width: 980px;
+    }
+    h2 {
+      margin-top: 2.2rem;
+      padding-top: 1.35rem;
+      border-top: 1px solid var(--line);
+      font-size: clamp(1.4rem, 2.4vw, 2.2rem);
+      letter-spacing: -.02em;
+    }
+    h3 {
+      margin-top: 1.5rem;
+      color: var(--accent);
+      font-size: 1.08rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    h4 { color: var(--accent2); margin-top: 1rem; }
+
+    main { max-width: 1240px; margin: 0 auto; }
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: linear-gradient(135deg, rgba(32,36,31,.95), rgba(14,15,14,.95));
+      box-shadow: 0 24px 80px var(--shadow);
+      padding: clamp(20px, 5vw, 48px);
+    }
+    .hero:after {
+      content: "";
+      position: absolute;
+      inset: auto -8rem -10rem auto;
+      width: 26rem;
+      height: 26rem;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(231,189,108,.16), transparent 62%);
+      pointer-events: none;
+    }
+    .subtitle {
+      max-width: 940px;
+      font-size: clamp(1.02rem, 2vw, 1.25rem);
+    }
+    .pillrow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin: 1.2rem 0 0;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #101210;
+      color: var(--muted);
+      padding: .35rem .65rem;
+      font-size: .88rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .two {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(320px, .8fr);
+      gap: 1rem;
+      align-items: start;
+    }
+    @media (max-width: 920px) { .two { grid-template-columns: 1fr; } }
+
+    .card {
+      background: linear-gradient(180deg, var(--panel), #121412);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 1rem;
+      box-shadow: 0 12px 40px rgba(0,0,0,.14);
+    }
+    .card h3:first-child, .card h4:first-child { margin-top: 0; }
+    .note {
+      border-left: 4px solid var(--accent);
+      background: rgba(231,189,108,.075);
+      border-radius: 12px;
+      padding: .85rem 1rem;
+      color: var(--muted);
+    }
+    .danger {
+      border-left-color: var(--bad);
+      background: rgba(227,109,99,.09);
+    }
+    .ok {
+      border-left-color: var(--good);
+      background: rgba(137,199,121,.08);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: .8rem 0 1.4rem;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+    th, td {
+      text-align: left;
+      vertical-align: top;
+      padding: .65rem .75rem;
+      border-bottom: 1px solid var(--line);
+    }
+    th {
+      color: var(--accent);
+      background: #111410;
+      font-size: .85rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    tr:last-child td { border-bottom: 0; }
+
+    code, pre {
+      font-family: ui-monospace, SFMono-Regular, Consolas, Menlo, Monaco, "Liberation Mono", monospace;
+      font-size: .9rem;
+    }
+    code { color: var(--code); }
+    pre {
+      margin: .9rem 0 1.3rem;
+      padding: 1rem;
+      white-space: pre;
+      overflow: auto;
+      border: 1px solid #30352d;
+      border-radius: 16px;
+      background: #080a09;
+      color: #f0e4c4;
+      max-height: 680px;
+    }
+
+    .demo-shell {
+      position: sticky;
+      top: 10px;
+      z-index: 2;
+      background: #080a09;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 20px 80px rgba(0,0,0,.4);
+    }
+    .demo-head {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      align-items: center;
+      justify-content: space-between;
+      background: #111410;
+      border-bottom: 1px solid var(--line);
+      padding: .7rem .8rem;
+    }
+    .demo-title {
+      display: flex;
+      flex-direction: column;
+      gap: .1rem;
+    }
+    .demo-title strong { font-size: .96rem; }
+    .demo-title span { color: var(--dim); font-size: .78rem; }
+    .btnrow { display: flex; flex-wrap: wrap; gap: .45rem; }
+    button, select, input {
+      font: inherit;
+      color: var(--ink);
+      background: #1b1f1b;
+      border: 1px solid #4a5147;
+      border-radius: 999px;
+      padding: .45rem .7rem;
+    }
+    button {
+      cursor: pointer;
+      touch-action: manipulation;
+      user-select: none;
+    }
+    button:hover { border-color: var(--accent); }
+    button.primary { background: #3a2d18; border-color: #8c6a2c; color: #ffe2a4; }
+    button.warn { background: #332117; border-color: #9a5c31; color: #ffd5b4; }
+    #gameStage {
+      position: relative;
+      width: 100%;
+      height: min(72dvh, 720px);
+      min-height: 460px;
+      background: #050706;
+      touch-action: none;
+      overflow: hidden;
+    }
+    @media (max-width: 700px) {
+      #gameStage {
+        height: 80dvh;
+        min-height: 560px;
+      }
+    }
+    canvas {
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    #worldCanvas {
+      width: 100%;
+      height: 100%;
+      background: #0a0d0a;
+    }
+    .hud {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      padding: .65rem;
+      gap: .5rem;
+    }
+    .topHud, .bottomHud {
+      display: flex;
+      gap: .5rem;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .statline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .35rem;
+    }
+    .chip {
+      background: rgba(8,10,9,.72);
+      border: 1px solid rgba(241,234,215,.16);
+      border-radius: 999px;
+      padding: .26rem .5rem;
+      color: #f3ead7;
+      font-size: .78rem;
+      backdrop-filter: blur(3px);
+    }
+    .chip.good { color: #cbffbd; }
+    .chip.warn { color: #ffd4aa; }
+    .chip.bad { color: #ffb4ae; }
+    .dialogue {
+      align-self: end;
+      justify-self: center;
+      max-width: min(92%, 760px);
+      background: rgba(12,14,13,.86);
+      border: 1px solid rgba(231,189,108,.36);
+      border-radius: 18px;
+      padding: .8rem 1rem;
+      color: var(--ink);
+      box-shadow: 0 12px 40px rgba(0,0,0,.35);
+      display: none;
+    }
+    .dialogue.show { display: block; }
+    .dialogue strong { color: var(--accent); }
+
+    .touchDeck {
+      pointer-events: auto;
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 30%;
+      min-height: 178px;
+      display: none;
+      background: linear-gradient(transparent, rgba(5,6,5,.6));
+    }
+    .touchControl {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      border: 2px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.075);
+      color: rgba(255,255,255,.82);
+      font-weight: 800;
+      font-size: .82rem;
+      text-align: center;
+      touch-action: none;
+      user-select: none;
+    }
+    .stick {
+      left: 7%;
+      bottom: max(14px, env(safe-area-inset-bottom));
+      width: 112px;
+      height: 112px;
+      max-width: 30vw;
+      max-height: 30vw;
+      border-radius: 999px;
+    }
+    .stickKnob {
+      width: 42%;
+      height: 42%;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.24);
+      background: rgba(255,255,255,.17);
+      transform: translate(0, 0);
+    }
+    .useBtn {
+      right: 28%;
+      bottom: calc(82px + env(safe-area-inset-bottom));
+      width: 86px;
+      height: 56px;
+      border-radius: 17px;
+      color: #ffe5a8;
+    }
+    .sprintBtn {
+      right: 28%;
+      bottom: max(18px, env(safe-area-inset-bottom));
+      width: 86px;
+      height: 56px;
+      border-radius: 17px;
+      color: #bbf7c5;
+    }
+    .menuBtn {
+      right: 6%;
+      bottom: max(18px, env(safe-area-inset-bottom));
+      width: 82px;
+      height: 56px;
+      border-radius: 17px;
+      color: #c7e8ff;
+    }
+    .mapTab {
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: calc(20px + env(safe-area-inset-bottom));
+      width: 90px;
+      height: 56px;
+      border-radius: 15px;
+      color: #d4ffd6;
+    }
+
+    @media (hover: none), (pointer: coarse) {
+      .touchDeck { display: block; }
+    }
+
+    .atlasGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: .8rem;
+    }
+    .atlasCard {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #101210;
+      overflow: hidden;
+    }
+    .atlasCard canvas {
+      width: 100%;
+      height: 128px;
+      background: #090a09;
+    }
+    .atlasCard .cap {
+      padding: .55rem .65rem;
+      color: var(--muted);
+      font-size: .85rem;
+      border-top: 1px solid var(--line);
+    }
+
+    .toc {
+      columns: 2 280px;
+      padding-left: 1.1rem;
+    }
+    .toc a { text-decoration: none; color: var(--muted); }
+    .toc a:hover { color: var(--accent); }
+
+    .print-note {
+      margin-top: 2rem;
+      color: var(--dim);
+      font-size: .85rem;
+    }
+
+    @media print {
+      body { background: white; color: black; }
+      .hero, .card, .demo-shell, pre, table { box-shadow: none; background: white; color: black; }
+      p, li, td, .small, .print-note { color: #333; }
+      .demo-shell { position: static; }
+      #gameStage { height: 480px; }
+    }
+  </style>
+</head>
+
+<body>
+<main>
+  <section class="hero">
+    <h1>Ötzi Canvas 2D Engine Starter</h1>
+    <p class="subtitle">
+      A self-contained HTML field file for Codex/Hermes to start a strict single-file Canvas 2D top-down adventure engine.
+      It contains a live procedural graphics demo, an AI-safe module constitution, data shapes, rendering recipes, test hooks,
+      and implementation cards for <strong>The Legend of Ötzi the Iceman</strong>.
+    </p>
+    <div class="pillrow">
+      <span class="pill">single index.html</span>
+      <span class="pill">Canvas 2D world</span>
+      <span class="pill">DOM UI allowed</span>
+      <span class="pill">procedural graphics</span>
+      <span class="pill">seeded worldgen</span>
+      <span class="pill">mobile portrait first</span>
+      <span class="pill">no external assets</span>
+      <span class="pill">Codex/Hermes starter</span>
+    </div>
+  </section>
+
+  <h2 id="toc">Contents</h2>
+  <ol class="toc">
+    <li><a href="#live-demo">Live starter demo</a></li>
+    <li><a href="#direction">Final direction</a></li>
+    <li><a href="#constitution">AI-safe source constitution</a></li>
+    <li><a href="#modules">Engine modules and ownership</a></li>
+    <li><a href="#procedural-graphics">Procedural graphics library</a></li>
+    <li><a href="#tilemap">Tilemap and world model</a></li>
+    <li><a href="#entities">Entity model</a></li>
+    <li><a href="#survival">Survival, crafting, and village loop</a></li>
+    <li><a href="#input">Input/action map</a></li>
+    <li><a href="#save">Save/load schema</a></li>
+    <li><a href="#audio">Procedural audio</a></li>
+    <li><a href="#debug">Debug/test hooks</a></li>
+    <li><a href="#codex">Codex implementation cards</a></li>
+    <li><a href="#mvp">MVP milestones</a></li>
+    <li><a href="#source">Single-file starter source map</a></li>
+  </ol>
+
+  <h2 id="live-demo">1. Live starter demo</h2>
+  <p>
+    This demo is intentionally small but structured like the engine should be structured. It generates its own tile atlas,
+    sprite atlas, world map, resource nodes, NPCs, particles, fog/vignette, minimap, collision overlay, and save/export state.
+    Codex can pull the same module names into split files later.
+  </p>
+
+  <div class="two">
+    <section class="demo-shell" aria-label="Runnable Canvas 2D engine starter demo">
+      <div class="demo-head">
+        <div class="demo-title">
+          <strong>Procedural Canvas 2D starter</strong>
+          <span>WASD/arrow keys move • E gather/talk • Shift sprint • D debug • M minimap • R reseed</span>
+        </div>
+        <div class="btnrow">
+          <button class="primary" id="startBtn">Start / Audio Unlock</button>
+          <button id="reseedBtn">Reseed</button>
+          <button id="debugBtn">Debug</button>
+          <button id="saveBtn">Save</button>
+          <button id="exportBtn">Export</button>
+        </div>
+      </div>
+      <div id="gameStage">
+        <canvas id="worldCanvas" width="640" height="960" aria-label="Top-down adventure Canvas demo"></canvas>
+        <div class="hud">
+          <div class="topHud">
+            <div class="statline" id="statsLine"></div>
+            <div class="statline" id="metaLine"></div>
+          </div>
+          <div class="dialogue" id="dialogueBox"></div>
+          <div class="bottomHud"></div>
+        </div>
+        <div class="touchDeck" id="touchDeck">
+          <div class="touchControl stick" data-control="move"><div class="stickKnob" id="stickKnob"></div></div>
+          <div class="touchControl useBtn" data-control="use">USE<br>GATHER</div>
+          <div class="touchControl sprintBtn" data-control="sprint">SPRINT</div>
+          <div class="touchControl mapTab" data-control="map">MAP</div>
+          <div class="touchControl menuBtn" data-control="menu">MENU</div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="card">
+      <h3>What this demo proves</h3>
+      <ul>
+        <li><strong>No image files:</strong> tiles and sprites are Canvas-generated at startup.</li>
+        <li><strong>Seeded generation:</strong> same seed makes the same forest/cave/resource layout.</li>
+        <li><strong>Game-loop shape:</strong> requestAnimationFrame drives a fixed-step update accumulator.</li>
+        <li><strong>Separation:</strong> render caches, simulation state, input state, save state, and debug state are separate.</li>
+        <li><strong>Mobile pattern:</strong> Pointer Events drive a left stick and large right buttons.</li>
+        <li><strong>Starter, not final game:</strong> this is a Codex launchpad with deliberate extension points.</li>
+      </ul>
+      <p class="note">The live code is embedded near the bottom under <strong>Source map</strong>. It is readable on purpose. Do not minify until release.</p>
+    </aside>
+  </div>
+
+  <h2 id="direction">2. Final direction</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Build custom Canvas 2D</h3>
+      <p>
+        Use a custom engine. Phaser-like scene and asset-cache ideas are worth copying conceptually, but not the runtime dependency.
+        The single-file/no-external-assets target makes a small custom loop easier for AI agents to inspect and repair.
+      </p>
+    </div>
+    <div class="card">
+      <h3>Canvas world, DOM panels</h3>
+      <p>
+        Draw world, entities, particles, overlays, minimap, and debug collision on Canvas. Use DOM/CSS only for pause menu,
+        inventory, dialogue panels, settings, and documentation overlays.
+      </p>
+    </div>
+    <div class="card">
+      <h3>Procedural assets first</h3>
+      <p>
+        Start with generated low-color graphics: ground tiles, trees, rocks, deer, campfire, buildings, icons, silhouettes,
+        fog, warmth vignette, and UI tokens. Embedded art can come later only if it stays small.
+      </p>
+    </div>
+    <div class="card">
+      <h3>Data-driven history</h3>
+      <p>
+        Facts about Ötzi should live in a fact database with source fields. Game text can separate verified archaeology,
+        plausible gameplay interpretation, and fictionalized myth/ending.
+      </p>
+    </div>
+  </div>
+
+  <h2 id="constitution">3. AI-safe source constitution</h2>
+  <p>Paste this at the top of the eventual game source. It tells Codex/Hermes how to avoid breaking the engine.</p>
+  <pre><code>/*
+OTZI CANVAS 2D ENGINE CONSTITUTION
+
+GOAL
+- Strict single-file HTML5 game for final release.
+- Development may be split into src/*.js, but dist/index.html is the playable artifact.
+- No external runtime assets, no CDN, no network calls, no external fonts.
+
+ENGINE SHAPE
+- Canvas 2D renders the world.
+- DOM/CSS renders menus, settings, inventory, dialogue, and debug panels.
+- The game is mobile portrait first, Android Chrome first, iOS Safari fallback.
+- Every visual asset needed for the MVP must be procedural or embedded as tiny data.
+
+SECTION OWNERSHIP
+- CONFIG owns constants only.
+- RNG owns deterministic random generation only.
+- VIEWPORT owns CSS size, DPR, backing buffer, safe areas, and visualViewport handling.
+- INPUT owns raw keyboard/pointer/gamepad state only.
+- ACTION_MAP converts raw input to semantic actions.
+- SAVE owns versioned persistent state and migrations.
+- AUDIO owns one AudioContext and procedural sound functions.
+- ASSETS owns generated atlases/canvases. It does not mutate game state.
+- TILEMAP owns map cells, semantic layers, chunk data, and collision flags.
+- WORLDGEN owns seed-based generation and solvability checks.
+- ENTITIES owns entity arrays and behavior dispatch.
+- COLLISION owns movement resolution and tile/entity collision helpers.
+- CAMERA owns world-to-screen conversion and camera smoothing.
+- SCENES owns scene transitions only.
+- DIALOGUE owns text queues and fact display.
+- INVENTORY owns items, stack counts, equipment, and caps.
+- CRAFTING owns recipes and validation.
+- VILLAGE owns unlocked building functions, not complex colony AI.
+- RENDER_WORLD draws world and entities. It must not mutate simulation state.
+- RENDER_UI draws Canvas HUD/minimap/debug. DOM UI is updated separately.
+- DEBUG owns overlays, seed display, test hooks, and benchmark mode.
+- TEST_HOOKS exposes stable functions for Playwright/Codex tests.
+
+MANDATORY INVARIANTS
+- Same engineVersion + same seed + same procedural inputs = same generated world.
+- Saves store seed plus deltas, not transient render caches.
+- No save schema change without bumping SAVE_VERSION and adding migration notes.
+- No visual change without screenshot proof.
+- No mobile input change without pointercancel/rotation/resize testing.
+- No render-loop allocation spikes: avoid creating objects inside hot loops.
+- Do not edit minified release output during development.
+*/</code></pre>
+
+  <h2 id="modules">4. Engine modules and ownership</h2>
+  <table>
+    <thead><tr><th>Module</th><th>Responsibility</th><th>Public API shape</th><th>Codex failure mode to prevent</th></tr></thead>
+    <tbody>
+      <tr><td>BOOT</td><td>Find DOM nodes, initialize modules, start loop after user gesture.</td><td><code>BOOT.init(); BOOT.start();</code></td><td>Starting audio/loop before assets and viewport are ready.</td></tr>
+      <tr><td>CONFIG</td><td>Constants, feature flags, balance knobs, tile sizes, performance budgets.</td><td><code>CONFIG.tileSize</code>, <code>CONFIG.mobile</code></td><td>Magic numbers scattered across render/collision/worldgen.</td></tr>
+      <tr><td>VIEWPORT</td><td>DPR, backing buffer, CSS size, safe areas, <code>visualViewport</code> resize hooks.</td><td><code>resize(canvas)</code>, <code>worldRect()</code></td><td>Canvas CSS/backing size mismatch, blurry or stretched output.</td></tr>
+      <tr><td>INPUT</td><td>Raw key/pointer/gamepad states; no gameplay decisions.</td><td><code>onPointerDown</code>, <code>keys</code>, <code>pointers</code></td><td>Coupling controls to player movement directly.</td></tr>
+      <tr><td>ACTION_MAP</td><td>Convert raw input to <code>move/use/sprint/menu/map</code>.</td><td><code>sample(dt)</code></td><td>One-off mobile gestures bypassing keyboard/gamepad parity.</td></tr>
+      <tr><td>RNG</td><td>Seeded deterministic random numbers.</td><td><code>RNG.fromSeed(seed).float()</code></td><td>Using <code>Math.random()</code> inside worldgen.</td></tr>
+      <tr><td>ASSETS</td><td>Generate tile/sprite/UI atlases and cached patterns.</td><td><code>buildAtlases(seed)</code></td><td>Regenerating assets every frame or loading external images.</td></tr>
+      <tr><td>TILEMAP</td><td>Grid cells, semantic layers, walkability, triggers, fog-of-war.</td><td><code>cell(x,y)</code>, <code>isBlocked(x,y)</code></td><td>Mixing tile art IDs with gameplay flags in fragile ways.</td></tr>
+      <tr><td>WORLDGEN</td><td>Build overworld/dungeon/village maps from seed and version.</td><td><code>generateRegion(type, seed)</code></td><td>Unsolvable maps with blocked exits/resources.</td></tr>
+      <tr><td>ENTITIES</td><td>Update player, animals, rivals, NPCs, resources, dropped items.</td><td><code>spawn(type,x,y,data)</code>, <code>updateAll(dt)</code></td><td>Overbuilding an ECS before there is enough game complexity.</td></tr>
+      <tr><td>COLLISION</td><td>Circle-vs-tile collision, sliding movement, triggers.</td><td><code>moveCircle(entity, dx, dy)</code></td><td>Corner snagging, tunneling, inconsistent tile flags.</td></tr>
+      <tr><td>CAMERA</td><td>Follow player, clamp to map, convert coordinates.</td><td><code>worldToScreen(x,y)</code></td><td>Rendering and collision using different coordinate spaces.</td></tr>
+      <tr><td>SCENES</td><td>Title, overworld, dungeon, village, pause, game-over transitions.</td><td><code>setScene(name)</code></td><td>Scene switches leaving pointers/audio/dialogue stuck.</td></tr>
+      <tr><td>DIALOGUE</td><td>NPC lines, fact reveals, typewriter/queue behavior.</td><td><code>say(speaker,text,factId)</code></td><td>Hardcoding historical facts inside NPC update functions.</td></tr>
+      <tr><td>INVENTORY</td><td>Stacks, equipment, item caps, exportable save data.</td><td><code>add(item,n)</code>, <code>has(item,n)</code></td><td>Letting entities directly mutate item structures.</td></tr>
+      <tr><td>CRAFTING</td><td>Recipes, craft validation, output events.</td><td><code>canCraft(id)</code>, <code>craft(id)</code></td><td>Silent crafting failures and inconsistent resource names.</td></tr>
+      <tr><td>VILLAGE</td><td>Auto-build unlocks, passive resource income, healing/trade/crafting stations.</td><td><code>completeDungeon(id)</code></td><td>Turning the village into full RimWorld/colony simulation too early.</td></tr>
+      <tr><td>SAVE</td><td>localStorage try/catch, export/import fallback, schema migrations.</td><td><code>save()</code>, <code>load()</code>, <code>exportString()</code></td><td>Saving caches, functions, DOM, or generated maps unnecessarily.</td></tr>
+      <tr><td>DEBUG</td><td>Overlays, test map, seed HUD, teleport/give/benchmark commands.</td><td><code>toggle()</code>, <code>snapshot()</code></td><td>Debug features mutating balance or shipping enabled by accident.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="procedural-graphics">5. Procedural graphics library</h2>
+  <p>
+    The starter engine should use a small, deterministic procedural asset system. Each recipe draws into an offscreen canvas once,
+    then the render loop uses <code>drawImage</code> from the cache. The recipes below are intentionally simple: mostly <code>fillRect</code>,
+    <code>arc</code>, <code>lineTo</code>, <code>globalAlpha</code>, and seeded jitter.
+  </p>
+
+  <div class="atlasGrid" id="atlasGrid"></div>
+
+  <h3>Asset recipes to keep</h3>
+  <table>
+    <thead><tr><th>Asset</th><th>Canvas method</th><th>Why it works</th><th>Extension path</th></tr></thead>
+    <tbody>
+      <tr><td>Ground tiles</td><td>Base fill + small seeded flecks + edge tint.</td><td>Cheap, readable, no asset dependency.</td><td>Add biome palettes and transition masks.</td></tr>
+      <tr><td>Water/river</td><td>Blue fill + sine/arc strokes + animated offset.</td><td>Motion reads as water without spritesheets.</td><td>Add foam at collision edges.</td></tr>
+      <tr><td>Snow/fog overlay</td><td>Screen-space translucent gradient + particle specks.</td><td>Atmosphere without expensive per-tile effects.</td><td>Scale by biome/wetness/warmth.</td></tr>
+      <tr><td>Trees</td><td>Trunk rect + layered circles/polygons.</td><td>Blockers are legible from top-down.</td><td>Generate pine/birch variants.</td></tr>
+      <tr><td>Rocks/flint</td><td>Irregular polygon + side highlights.</td><td>Good resource nodes with collision.</td><td>Small flint glints and harvest states.</td></tr>
+      <tr><td>Deer</td><td>Ellipse body + head + legs + antler strokes.</td><td>Readable at tiny size.</td><td>Direction and flee animation frames.</td></tr>
+      <tr><td>Villagers/rivals</td><td>Static low-color silhouette with tunic/hood color.</td><td>Enough for NPC fact delivery and encounter logic.</td><td>8-direction frames only if needed.</td></tr>
+      <tr><td>Buildings/workstations</td><td>Rects, roofs, posts, icons.</td><td>Village unlocks read as functions, not simulation pawns.</td><td>Trading/healing/upgrading icons.</td></tr>
+      <tr><td>HUD icons</td><td>Vector glyph-like icons on cached canvas.</td><td>Small and crisp at DPR.</td><td>Warmth/hunger/stamina durability variants.</td></tr>
+    </tbody>
+  </table>
+
+  <pre><code>// Procedural asset rule:
+// 1. Generate once at boot or seed change.
+// 2. Store canvases in ASSETS.tiles / ASSETS.sprites / ASSETS.icons.
+// 3. Never draw procedural noise directly inside the main render loop.
+// 4. Never load external PNG/SVG/fonts for MVP.
+// 5. Use deterministic RNG for variant placement.</code></pre>
+
+  <h2 id="tilemap">6. Tilemap and world model</h2>
+  <p>
+    Recommended: a chunked typed-array tilemap for generated worlds, plus object/entity layers for gameplay. Do not store
+    everything as objects. Do not store everything as one giant string once you need mutation. Use compact typed layers in memory,
+    and save only seed plus deltas.
+  </p>
+
+  <table>
+    <thead><tr><th>Layer</th><th>Type</th><th>Owns</th><th>Save behavior</th></tr></thead>
+    <tbody>
+      <tr><td><code>ground</code></td><td><code>Uint16Array</code></td><td>grass, dirt, snow, stone, water, cave floor.</td><td>Generated from seed; save changed tiles only.</td></tr>
+      <tr><td><code>object</code></td><td><code>Uint16Array</code></td><td>tree, boulder, flint scar, bush, door, chest, workstation.</td><td>Generated from seed; save harvested/removed/built deltas.</td></tr>
+      <tr><td><code>flags</code></td><td><code>Uint16Array</code></td><td>blocked, water, warm, cold, trigger, harvestable, discovered.</td><td>Derived + deltas for fog-of-war and mutations.</td></tr>
+      <tr><td><code>biome</code></td><td><code>Uint8Array</code></td><td>forest, alpine, river, cave, village, rival trail.</td><td>Generated from seed; save region id only.</td></tr>
+      <tr><td><code>entities</code></td><td>Array of records</td><td>Player, animals, NPCs, drops, arrows, triggers.</td><td>Save persistent entities; skip particles/projectiles unless needed.</td></tr>
+    </tbody>
+  </table>
+
+  <pre><code>const TILE = Object.freeze({
+  GRASS: 1, DIRT: 2, SNOW: 3, STONE: 4, WATER: 5, CAVE: 6,
+  VILLAGE_FLOOR: 7, PATH: 8
+});
+
+const OBJ = Object.freeze({
+  NONE: 0, PINE: 1, BIRCH: 2, BOULDER: 3, FLINT_SCAR: 4,
+  BUSH: 5, CAMPFIRE: 6, DOOR: 7, EXIT: 8, WORKSTATION: 9
+});
+
+const FLAG = Object.freeze({
+  BLOCKED: 1 << 0,
+  WATER: 1 << 1,
+  HARVEST: 1 << 2,
+  TRIGGER: 1 << 3,
+  WARM: 1 << 4,
+  COLD: 1 << 5,
+  DISCOVERED: 1 << 6
+});</code></pre>
+
+  <h2 id="entities">7. Entity model</h2>
+  <p>
+    Use a small object model with typed behavior functions. Avoid a full ECS until there is evidence the game needs it.
+    Each entity has a stable <code>type</code>, <code>id</code>, <code>x/y</code>, <code>radius</code>, <code>state</code>, and optional <code>save</code> flag.
+  </p>
+
+  <table>
+    <thead><tr><th>Entity</th><th>State fields</th><th>Update</th><th>Render</th><th>Save?</th></tr></thead>
+    <tbody>
+      <tr><td>player</td><td>health, stamina, hunger, warmth, wetness, injury, inventory, equipped.</td><td>Input movement, collision, gathering, triggers.</td><td>Sprite, shadow, direction marker.</td><td>Yes</td></tr>
+      <tr><td>deer</td><td>alert, fleeTimer, herdId, hp.</td><td>Graze, flee from player/rivals, path around blockers.</td><td>Generated deer sprite, hoof particles.</td><td>No or region delta if killed.</td></tr>
+      <tr><td>rival</td><td>alert, patrolPath, aggression, dialogueSeen.</td><td>Warn/chase/block/trade depending design.</td><td>Different color silhouette.</td><td>Persistent encounter flags.</td></tr>
+      <tr><td>npc</td><td>factId, dialogueState, buildingId.</td><td>Idle, face player, open fact dialogue.</td><td>Villager sprite + icon bubble.</td><td>Yes for discovered facts.</td></tr>
+      <tr><td>resource</td><td>item, amount, depleted, respawnRule.</td><td>Respond to gather action.</td><td>Node sprite, sparkle when usable.</td><td>Save depleted deltas.</td></tr>
+      <tr><td>drop</td><td>item, count, age.</td><td>Pickup if near.</td><td>Small icon + bob.</td><td>Only if important.</td></tr>
+      <tr><td>arrow</td><td>vx, vy, damage, owner, ttl.</td><td>Projectile motion/collision.</td><td>Line/sprite.</td><td>No</td></tr>
+      <tr><td>campfire</td><td>fuel, warmthRadius, lit.</td><td>Consumes fuel, warms/drys player.</td><td>Fire sprite + particles + light circle.</td><td>Yes if placed.</td></tr>
+      <tr><td>building</td><td>buildingId, unlocked, function.</td><td>Passive function unlock.</td><td>Procedural hut/workstation.</td><td>Yes</td></tr>
+      <tr><td>trigger</td><td>triggerId, sceneTarget, used.</td><td>Scene transition/objective detection.</td><td>Debug only by default.</td><td>Only completion flags.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="survival">8. Survival, crafting, and village loop</h2>
+  <p>
+    Keep survival readable. Each stat should change player decisions, not become a spreadsheet. Village systems are function unlocks,
+    not simulated pawns.
+  </p>
+  <div class="grid">
+    <div class="card">
+      <h3>Survival stats</h3>
+      <ul>
+        <li><strong>Health:</strong> fail state and injury pressure.</li>
+        <li><strong>Stamina:</strong> sprint/dodge/combat budget.</li>
+        <li><strong>Hunger:</strong> slow pressure; affects stamina regen.</li>
+        <li><strong>Warmth:</strong> cold-region timer; fire/clothing matter.</li>
+        <li><strong>Wetness:</strong> increases cold drain; river/rain cost.</li>
+        <li><strong>Weight:</strong> limits resource hoarding.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Crafting scope</h3>
+      <ul>
+        <li>Stick + flint + fiber → crude tool.</li>
+        <li>Birch bark + fiber → container.</li>
+        <li>Tinder fungus + stick → fire kit.</li>
+        <li>Hide + grass → warmth upgrade.</li>
+        <li>Flint + shaft + feather/fiber → arrow bundle.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Dungeon unlocks</h3>
+      <ul>
+        <li>Cave/flint scar → passive flint gathering.</li>
+        <li>Birch grove → passive bark/fiber gathering.</li>
+        <li>Hunting ground → food/hide access.</li>
+        <li>River bend → fish/water route.</li>
+        <li>Rival trail camp → story/final conflict route.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Village functions</h3>
+      <ul>
+        <li>Trade hut: convert surplus.</li>
+        <li>Healer/fire: restore health/warmth.</li>
+        <li>Workshop: unlock upgrades.</li>
+        <li>Storehouse: raise caps.</li>
+        <li>Fact NPCs: teach verified archaeology.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2 id="input">9. Input/action map</h2>
+  <p>
+    The engine should expose one action map across keyboard, pointer/touch, mouse, and optional gamepad. Mobile-first controls:
+    left movement zone, right action buttons, sliding minimap tab, pause/settings, and burst/toggle sprint.
+  </p>
+  <pre><code>const ACTIONS = {
+  moveX: 0,
+  moveY: 0,
+  usePressed: false,
+  useHeld: false,
+  sprintPressed: false,
+  sprintHeld: false,
+  menuPressed: false,
+  mapPressed: false,
+  debugPressed: false
+};
+
+// Runtime rule:
+// DOM events update INPUT.raw.
+// ACTION_MAP.sample(dt) derives ACTIONS.
+// updatePlayer(dt, ACTIONS) consumes ACTIONS.</code></pre>
+
+  <h2 id="save">10. Save/load schema</h2>
+  <p>
+    Versioned saves should be boring and durable. Use <code>localStorage</code> through try/catch; always include export/import string fallback.
+    Under <code>file://</code>, browsers may treat storage differently, so the game should degrade to export/import.
+  </p>
+  <pre><code>const SAVE_VERSION = 1;
+
+const saveShape = {
+  version: SAVE_VERSION,
+  engineVersion: "otzi-canvas-0.1.0",
+  savedAt: "ISO timestamp",
+  seed: 123456789,
+  scene: "overworld",
+  player: { x: 0, y: 0, health: 100, stamina: 100, warmth: 100, hunger: 0, wetness: 0, equipped: "hand" },
+  inventory: { stick: 4, stone: 2, flint: 1, bark: 0, grass: 2, food: 1 },
+  village: { buildings: ["fire"], completedDungeons: [], passive: {} },
+  facts: { discovered: [] },
+  regions: {
+    overworld: { exploredChunks: [], tileDeltas: [], removedObjects: [] }
+  },
+  settings: { volume: 0.7, controls: "default", reducedMotion: false },
+  stats: { steps: 0, gathers: 0, crafts: 0, deerScared: 0 }
+};</code></pre>
+
+  <h2 id="audio">11. Procedural audio</h2>
+  <p>
+    Use one <code>AudioContext</code>, unlocked by a Start button. Sounds are short oscillator/noise envelopes: footstep, gather,
+    craft, bow draw/release, arrow hit, deer flee, rival alert, cold wind, fire crackle, UI click, village unlock, low-health warning.
+  </p>
+  <pre><code>// Procedural sound rule:
+// - Create/resume AudioContext only from user gesture.
+// - Use gain ramps; do not snap gain from 1 to 0.
+// - Keep every sound optional behind mute/volume settings.
+// - Avoid autoplay assumptions.
+// - Embedded samples are optional later, but not required for MVP.</code></pre>
+
+  <h2 id="debug">12. Debug/test hooks</h2>
+  <table>
+    <thead><tr><th>Hook</th><th>Purpose</th><th>Expected output</th></tr></thead>
+    <tbody>
+      <tr><td><code>window.__OTZI_TEST__.snapshot()</code></td><td>Playwright state inspection.</td><td>Scene, seed, player tile, inventory, entity count, debug flags.</td></tr>
+      <tr><td><code>teleportToVillage()</code></td><td>Fast test of village unlock UI.</td><td>Scene = village, player at safe tile.</td></tr>
+      <tr><td><code>completeDungeon(id)</code></td><td>Unlock passive function for tests.</td><td>Village building added.</td></tr>
+      <tr><td><code>give(item,n)</code></td><td>Crafting/inventory tests.</td><td>Inventory count increased.</td></tr>
+      <tr><td><code>setSeed(seed)</code></td><td>Repro visual tests.</td><td>Generated map exactly reproducible.</td></tr>
+      <tr><td><code>exportSave()</code></td><td>Save string round-trip tests.</td><td>Base64 JSON string.</td></tr>
+    </tbody>
+  </table>
+
+  <pre><code>// Playwright-style smoke test sketch
+test("Otzi starter loads and moves", async ({ page }) => {
+  const requests = [];
+  page.on("request", r => requests.push(r.url()));
+  const errors = [];
+  page.on("pageerror", e => errors.push(e.message));
+  page.on("console", msg => { if (msg.type() === "error") errors.push(msg.text()); });
+
+  await page.goto("http://127.0.0.1:8080/dist/index.html");
+  await expect(page.locator("canvas#worldCanvas")).toBeVisible();
+
+  await page.click("#startBtn");
+  await page.keyboard.down("KeyD");
+  await page.waitForTimeout(500);
+  await page.keyboard.up("KeyD");
+
+  const snap = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
+  expect(snap.player.x).toBeGreaterThan(0);
+  expect(errors).toEqual([]);
+  expect(requests.filter(url => !url.startsWith("http://127.0.0.1:8080"))).toEqual([]);
+
+  await page.screenshot({ path: "proof/otzi-starter-reference-seed.png" });
+});</code></pre>
+
+  <h2 id="codex">13. Codex implementation cards</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Card 1 — Extract modules</h3>
+      <p>Create <code>src/</code> files matching the module names in this document. Preserve public API names. Build back to single <code>dist/index.html</code>.</p>
+    </div>
+    <div class="card">
+      <h3>Card 2 — Improve procedural tiles</h3>
+      <p>Add biome palettes, transition tiles, river edges, cave floors, snow patches, and generated minimap icons. Produce atlas screenshot proof.</p>
+    </div>
+    <div class="card">
+      <h3>Card 3 — Resource gathering loop</h3>
+      <p>Implement stick/stone/bark/grass/flint nodes, gather timing, inventory caps, node depletion deltas, and save/load round trip.</p>
+    </div>
+    <div class="card">
+      <h3>Card 4 — Dungeon run</h3>
+      <p>Add cave map generator, guaranteed entrance/exit path, flint objective, completion flag, and village unlock.</p>
+    </div>
+    <div class="card">
+      <h3>Card 5 — NPC fact dialogue</h3>
+      <p>Add facts database with source fields and verified/plausible/fictional labels. NPCs reveal facts and mark discovered facts in save.</p>
+    </div>
+    <div class="card">
+      <h3>Card 6 — Mobile proof</h3>
+      <p>Run Android Chrome test: first load, Start/audio, joystick+use multitouch, pointercancel, orientation, resize, save/reload, screenshot evidence.</p>
+    </div>
+  </div>
+
+  <h2 id="mvp">14. MVP milestones</h2>
+  <table>
+    <thead><tr><th>Milestone</th><th>Target</th><th>Exit proof</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Portrait shell, canvas world, movement, camera, collision, debug overlay.</td><td>Desktop + mobile screenshot; no console errors.</td></tr>
+      <tr><td>2</td><td>Procedural forest, sticks/stones/bark/grass/flint, inventory, basic crafting.</td><td>Gather/craft test and inventory screenshot.</td></tr>
+      <tr><td>3</td><td>Cave/resource dungeon, deer behavior, rival encounter, dungeon completion flag.</td><td>Completion unlock saved in export string.</td></tr>
+      <tr><td>4</td><td>Village auto-building, NPC fact dialogue, save/load, minimap tab.</td><td>NPC fact appears; save/load restores village state.</td></tr>
+      <tr><td>5</td><td>Mobile torture test, single-file build, GitHub Pages deploy.</td><td>Android Chrome screenshots and release checklist.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="source">15. Single-file starter source map</h2>
+  <p>
+    The running script below is intentionally organized with named section markers. Codex can copy these sections into split files,
+    then use a simple merge script to produce one final HTML.
+  </p>
+
+  <pre><code id="sourceMap">Source is embedded in this HTML. Search inside the file for:
+SECTION 00: DOM
+SECTION 01: CONFIG
+SECTION 02: RNG
+SECTION 03: VIEWPORT
+SECTION 04: INPUT
+SECTION 05: AUDIO
+SECTION 06: ASSETS
+SECTION 07: WORLDGEN
+SECTION 08: ENTITIES/COLLISION
+SECTION 09: CAMERA/RENDER
+SECTION 10: SAVE
+SECTION 11: TEST_HOOKS
+SECTION 12: MAIN LOOP</code></pre>
+
+  <h2>16. Source references used by this file</h2>
+  <p>
+    This starter intentionally uses standard browser APIs only: Canvas 2D rendering, requestAnimationFrame, Pointer Events,
+    CSS touch-action, Web Audio, localStorage, VisualViewport, and viewport-relative sizing. See final chat message for live citations.
+  </p>
+
+  <p class="print-note">Generated for Travis Omernick / FalloutMule — strict single-file HTML5 Canvas 2D engine starter for Hermes/Codex.</p>
+</main>
+
+<script>
+"use strict";
+
+/* SECTION 00: DOM */
+const DOM = {
+  canvas: document.getElementById("worldCanvas"),
+  stage: document.getElementById("gameStage"),
+  stats: document.getElementById("statsLine"),
+  meta: document.getElementById("metaLine"),
+  dialogue: document.getElementById("dialogueBox"),
+  startBtn: document.getElementById("startBtn"),
+  reseedBtn: document.getElementById("reseedBtn"),
+  debugBtn: document.getElementById("debugBtn"),
+  saveBtn: document.getElementById("saveBtn"),
+  exportBtn: document.getElementById("exportBtn"),
+  atlasGrid: document.getElementById("atlasGrid"),
+  touchDeck: document.getElementById("touchDeck"),
+  stickKnob: document.getElementById("stickKnob")
+};
+
+const CTX = DOM.canvas.getContext("2d", { alpha: false });
+CTX.imageSmoothingEnabled = false;
+
+/* SECTION 01: CONFIG */
+const CONFIG = Object.freeze({
+  engineVersion: "otzi-canvas-starter-0.1.0",
+  saveKey: "otzi_canvas_starter_save_v1",
+  saveVersion: 1,
+  logicalWidth: 360,
+  logicalHeight: 640,
+  tileSize: 24,
+  mapW: 96,
+  mapH: 96,
+  playerRadius: 7,
+  baseSpeed: 92,
+  sprintSpeed: 152,
+  fixedDt: 1 / 60,
+  maxStepsPerFrame: 5,
+  cameraLag: 0.12,
+  defaultSeed: 5301991,
+  palettes: {
+    forest: {
+      grass: ["#23351f", "#2f4a29", "#3f5e35", "#1d2b1b"],
+      dirt: ["#58422c", "#6b5438", "#806545", "#42301f"],
+      water: ["#183c4a", "#225c70", "#2c788a", "#0f2833"],
+      stone: ["#45483f", "#5b6055", "#777d70", "#2d312b"],
+      snow: ["#d6d4bd", "#f0ead2", "#b8c3b5", "#a4ad9f"],
+      bark: ["#b9a06f", "#e2d2a2", "#695235"],
+      accent: "#e7bd6c"
+    }
+  }
+});
+
+const TILE = Object.freeze({
+  GRASS: 1,
+  DIRT: 2,
+  WATER: 3,
+  STONE: 4,
+  SNOW: 5,
+  CAVE: 6,
+  PATH: 7
+});
+
+const OBJ = Object.freeze({
+  NONE: 0,
+  PINE: 1,
+  BIRCH: 2,
+  BOULDER: 3,
+  FLINT: 4,
+  BUSH: 5,
+  CAMP: 6,
+  EXIT: 7,
+  VILLAGER: 8
+});
+
+const FLAG = Object.freeze({
+  BLOCKED: 1 << 0,
+  WATER: 1 << 1,
+  HARVEST: 1 << 2,
+  TRIGGER: 1 << 3,
+  WARM: 1 << 4,
+  DISCOVERED: 1 << 5
+});
+
+/* SECTION 02: RNG */
+function xmur3(str) {
+  let h = 1779033703 ^ str.length;
+  for (let i = 0; i < str.length; i++) {
+    h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  return function() {
+    h = Math.imul(h ^ (h >>> 16), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    return (h ^= h >>> 16) >>> 0;
+  };
+}
+
+function mulberry32(seed) {
+  let t = seed >>> 0;
+  return function() {
+    t += 0x6D2B79F5;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const RNG = {
+  fromSeed(seedLike) {
+    const seedNum = typeof seedLike === "number" ? seedLike >>> 0 : xmur3(String(seedLike))();
+    const rand = mulberry32(seedNum);
+    return {
+      seed: seedNum,
+      float: () => rand(),
+      int: (min, max) => Math.floor(rand() * (max - min + 1)) + min,
+      choose: (arr) => arr[Math.floor(rand() * arr.length)],
+      chance: (p) => rand() < p,
+      range: (min, max) => min + (max - min) * rand()
+    };
+  }
+};
+
+/* SECTION 03: VIEWPORT */
+const VIEWPORT = {
+  dpr: 1,
+  cssW: 0,
+  cssH: 0,
+  scale: 1,
+  internalW: CONFIG.logicalWidth,
+  internalH: CONFIG.logicalHeight,
+  resize() {
+    const rect = DOM.stage.getBoundingClientRect();
+    this.cssW = Math.max(1, Math.floor(rect.width));
+    this.cssH = Math.max(1, Math.floor(rect.height));
+    this.dpr = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+
+    // Internal low-res canvas keeps mobile performance stable and gives pixel-art style.
+    const portrait = this.cssH >= this.cssW;
+    this.internalW = portrait ? 360 : 640;
+    this.internalH = portrait ? 640 : 360;
+
+    DOM.canvas.width = this.internalW;
+    DOM.canvas.height = this.internalH;
+    DOM.canvas.style.width = "100%";
+    DOM.canvas.style.height = "100%";
+    CTX.imageSmoothingEnabled = false;
+  }
+};
+
+/* SECTION 04: INPUT + ACTION MAP */
+const INPUT = {
+  keys: new Set(),
+  pointers: new Map(),
+  movePointerId: null,
+  stickOrigin: { x: 0, y: 0 },
+  stickVector: { x: 0, y: 0 },
+  actions: {
+    moveX: 0,
+    moveY: 0,
+    usePressed: false,
+    sprintHeld: false,
+    sprintPressed: false,
+    menuPressed: false,
+    mapPressed: false,
+    debugPressed: false
+  },
+
+  init() {
+    window.addEventListener("keydown", (e) => {
+      this.keys.add(e.code);
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(e.code)) e.preventDefault();
+      if (e.code === "KeyE" || e.code === "Space") this.actions.usePressed = true;
+      if (e.code === "ShiftLeft" || e.code === "ShiftRight") this.actions.sprintPressed = true;
+      if (e.code === "KeyM") this.actions.mapPressed = true;
+      if (e.code === "KeyD") this.actions.debugPressed = true;
+      if (e.code === "KeyR") GAME.reseed();
+    }, { passive: false });
+
+    window.addEventListener("keyup", (e) => {
+      this.keys.delete(e.code);
+    });
+
+    const controls = Array.from(DOM.touchDeck.querySelectorAll("[data-control]"));
+    for (const el of controls) {
+      el.addEventListener("pointerdown", (e) => this.pointerDown(e, el), { passive: false });
+      el.addEventListener("pointermove", (e) => this.pointerMove(e, el), { passive: false });
+      el.addEventListener("pointerup", (e) => this.pointerUp(e, el), { passive: false });
+      el.addEventListener("pointercancel", (e) => this.pointerCancel(e, el), { passive: false });
+      el.addEventListener("lostpointercapture", (e) => this.pointerCancel(e, el), { passive: false });
+    }
+
+    window.addEventListener("blur", () => this.resetAll());
+    window.addEventListener("visibilitychange", () => {
+      if (document.hidden) this.resetAll();
+    });
+  },
+
+  pointerDown(e, el) {
+    e.preventDefault();
+    try { el.setPointerCapture(e.pointerId); } catch (_) {}
+    const control = el.dataset.control;
+    this.pointers.set(e.pointerId, { control, x: e.clientX, y: e.clientY });
+    if (control === "move") {
+      this.movePointerId = e.pointerId;
+      this.stickOrigin.x = e.clientX;
+      this.stickOrigin.y = e.clientY;
+      this.updateStick(e.clientX, e.clientY);
+    }
+    if (control === "use") this.actions.usePressed = true;
+    if (control === "sprint") {
+      this.actions.sprintPressed = true;
+      this.actions.sprintHeld = true;
+    }
+    if (control === "map") this.actions.mapPressed = true;
+    if (control === "menu") this.actions.menuPressed = true;
+  },
+
+  pointerMove(e) {
+    if (!this.pointers.has(e.pointerId)) return;
+    e.preventDefault();
+    const p = this.pointers.get(e.pointerId);
+    p.x = e.clientX;
+    p.y = e.clientY;
+    if (e.pointerId === this.movePointerId) this.updateStick(e.clientX, e.clientY);
+  },
+
+  pointerUp(e, el) {
+    e.preventDefault();
+    this.releasePointer(e.pointerId, el);
+  },
+
+  pointerCancel(e, el) {
+    this.releasePointer(e.pointerId, el);
+  },
+
+  releasePointer(pointerId, el) {
+    const p = this.pointers.get(pointerId);
+    if (!p) return;
+    if (p.control === "move") {
+      this.movePointerId = null;
+      this.stickVector.x = 0;
+      this.stickVector.y = 0;
+      DOM.stickKnob.style.transform = "translate(0,0)";
+    }
+    if (p.control === "sprint") this.actions.sprintHeld = false;
+    this.pointers.delete(pointerId);
+    try { el.releasePointerCapture(pointerId); } catch (_) {}
+  },
+
+  updateStick(x, y) {
+    const dx = x - this.stickOrigin.x;
+    const dy = y - this.stickOrigin.y;
+    const max = 44;
+    const mag = Math.hypot(dx, dy) || 1;
+    const clamped = Math.min(max, mag);
+    const nx = dx / mag;
+    const ny = dy / mag;
+    this.stickVector.x = nx * (clamped / max);
+    this.stickVector.y = ny * (clamped / max);
+    DOM.stickKnob.style.transform = `translate(${nx * clamped}px, ${ny * clamped}px)`;
+  },
+
+  resetAll() {
+    this.keys.clear();
+    this.pointers.clear();
+    this.movePointerId = null;
+    this.stickVector.x = 0;
+    this.stickVector.y = 0;
+    this.actions.sprintHeld = false;
+    DOM.stickKnob.style.transform = "translate(0,0)";
+  },
+
+  sample() {
+    const a = this.actions;
+    let x = 0, y = 0;
+    if (this.keys.has("KeyA") || this.keys.has("ArrowLeft")) x -= 1;
+    if (this.keys.has("KeyD") || this.keys.has("ArrowRight")) x += 1;
+    if (this.keys.has("KeyW") || this.keys.has("ArrowUp")) y -= 1;
+    if (this.keys.has("KeyS") || this.keys.has("ArrowDown")) y += 1;
+
+    x += this.stickVector.x;
+    y += this.stickVector.y;
+
+    const mag = Math.hypot(x, y);
+    if (mag > 1) { x /= mag; y /= mag; }
+
+    a.moveX = x;
+    a.moveY = y;
+    a.sprintHeld = a.sprintHeld || this.keys.has("ShiftLeft") || this.keys.has("ShiftRight");
+
+    const out = { ...a };
+
+    // Pressed flags are consumed once per frame.
+    a.usePressed = false;
+    a.sprintPressed = false;
+    a.menuPressed = false;
+    a.mapPressed = false;
+    a.debugPressed = false;
+
+    return out;
+  }
+};
+
+/* SECTION 05: AUDIO */
+const AUDIO = {
+  ctx: null,
+  master: null,
+  enabled: false,
+
+  async unlock() {
+    if (!this.ctx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return false;
+      this.ctx = new AudioContext();
+      this.master = this.ctx.createGain();
+      this.master.gain.value = 0.25;
+      this.master.connect(this.ctx.destination);
+    }
+    if (this.ctx.state !== "running") await this.ctx.resume();
+    this.enabled = true;
+    this.click();
+    return true;
+  },
+
+  tone(freq = 440, dur = 0.08, type = "sine", gain = 0.08, slide = 0) {
+    if (!this.enabled || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+    if (slide) osc.frequency.exponentialRampToValueAtTime(Math.max(1, freq + slide), now + dur);
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(gain, now + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    osc.connect(g);
+    g.connect(this.master);
+    osc.start(now);
+    osc.stop(now + dur + 0.02);
+  },
+
+  noise(dur = 0.08, gain = 0.06, filter = 800) {
+    if (!this.enabled || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    const len = Math.max(1, Math.floor(this.ctx.sampleRate * dur));
+    const buffer = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+    const src = this.ctx.createBufferSource();
+    src.buffer = buffer;
+    const biquad = this.ctx.createBiquadFilter();
+    biquad.type = "lowpass";
+    biquad.frequency.value = filter;
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(gain, now + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    src.connect(biquad);
+    biquad.connect(g);
+    g.connect(this.master);
+    src.start(now);
+  },
+
+  click() { this.tone(520, 0.045, "triangle", 0.05, 90); },
+  gather() { this.noise(0.07, 0.04, 1200); this.tone(280, 0.05, "square", 0.025, -80); },
+  craft() { this.tone(330, 0.07, "triangle", 0.045, 130); setTimeout(() => this.tone(500, 0.07, "triangle", 0.04, 80), 80); },
+  step() { this.noise(0.045, 0.018, 500); },
+  unlockSound() { this.tone(440, 0.09, "triangle", 0.05, 100); setTimeout(() => this.tone(660, 0.11, "triangle", 0.05, 130), 90); }
+};
+
+/* SECTION 06: ASSETS */
+const ASSETS = {
+  tiles: {},
+  sprites: {},
+  icons: {},
+  rng: RNG.fromSeed(CONFIG.defaultSeed),
+
+  build(seed) {
+    this.rng = RNG.fromSeed(seed + ":assets");
+    this.tiles = {
+      [TILE.GRASS]: this.makeTile("grass"),
+      [TILE.DIRT]: this.makeTile("dirt"),
+      [TILE.WATER]: this.makeTile("water"),
+      [TILE.STONE]: this.makeTile("stone"),
+      [TILE.SNOW]: this.makeTile("snow"),
+      [TILE.CAVE]: this.makeTile("cave"),
+      [TILE.PATH]: this.makeTile("path")
+    };
+    this.sprites = {
+      player: this.makePlayerSprite(),
+      pine: this.makePineSprite(),
+      birch: this.makeBirchSprite(),
+      boulder: this.makeBoulderSprite(),
+      flint: this.makeFlintSprite(),
+      bush: this.makeBushSprite(),
+      deer: this.makeDeerSprite(),
+      rival: this.makeHumanSprite("#7b4a39", "#2b1b18"),
+      villager: this.makeHumanSprite("#557052", "#2d3829"),
+      camp: this.makeCampSprite(),
+      hut: this.makeHutSprite()
+    };
+    this.icons = {
+      stick: this.makeIcon("stick"),
+      stone: this.makeIcon("stone"),
+      flint: this.makeIcon("flint"),
+      bark: this.makeIcon("bark"),
+      grass: this.makeIcon("grass"),
+      food: this.makeIcon("food")
+    };
+    this.renderAtlasCards();
+  },
+
+  canvas(w, h) {
+    const c = document.createElement("canvas");
+    c.width = w; c.height = h;
+    const ctx = c.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+    return [c, ctx];
+  },
+
+  makeTile(kind) {
+    const [c, ctx] = this.canvas(32, 32);
+    const p = CONFIG.palettes.forest;
+    let colors = p.grass;
+    if (kind === "dirt" || kind === "path") colors = p.dirt;
+    if (kind === "water") colors = p.water;
+    if (kind === "stone" || kind === "cave") colors = p.stone;
+    if (kind === "snow") colors = p.snow;
+    ctx.fillStyle = colors[0];
+    ctx.fillRect(0, 0, 32, 32);
+
+    if (kind === "water") {
+      ctx.fillStyle = colors[1];
+      for (let y = 4; y < 32; y += 8) {
+        ctx.globalAlpha = 0.6;
+        ctx.fillRect(0, y, 32, 2);
+      }
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = colors[2];
+      for (let i = 0; i < 5; i++) {
+        ctx.beginPath();
+        const y = this.rng.int(3, 28);
+        ctx.moveTo(this.rng.int(-4, 5), y);
+        ctx.quadraticCurveTo(16, y + this.rng.int(-3, 3), 36, y + this.rng.int(-2, 2));
+        ctx.stroke();
+      }
+      return c;
+    }
+
+    if (kind === "snow") {
+      ctx.fillStyle = colors[1];
+      for (let i = 0; i < 28; i++) ctx.fillRect(this.rng.int(0, 31), this.rng.int(0, 31), this.rng.int(1, 3), 1);
+      ctx.fillStyle = colors[2];
+      for (let i = 0; i < 8; i++) ctx.fillRect(this.rng.int(0, 31), this.rng.int(0, 31), 1, 1);
+      return c;
+    }
+
+    if (kind === "cave") {
+      ctx.fillStyle = "#242720";
+      for (let i = 0; i < 18; i++) ctx.fillRect(this.rng.int(0, 31), this.rng.int(0, 31), this.rng.int(2, 6), this.rng.int(1, 3));
+      return c;
+    }
+
+    if (kind === "path") {
+      ctx.fillStyle = colors[1];
+      for (let i = 0; i < 36; i++) ctx.fillRect(this.rng.int(0, 31), this.rng.int(0, 31), this.rng.int(1, 4), 1);
+      return c;
+    }
+
+    ctx.fillStyle = colors[1];
+    for (let i = 0; i < 24; i++) ctx.fillRect(this.rng.int(0, 31), this.rng.int(0, 31), this.rng.int(1, 3), 1);
+    ctx.fillStyle = colors[2];
+    for (let i = 0; i < 12; i++) ctx.fillRect(this.rng.int(0, 31), this.rng.int(0, 31), 1, 1);
+    return c;
+  },
+
+  makePlayerSprite() {
+    const [c, ctx] = this.canvas(32, 36);
+    ctx.fillStyle = "rgba(0,0,0,.3)";
+    ctx.beginPath(); ctx.ellipse(16, 30, 9, 4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#8d6b45";
+    ctx.fillRect(11, 12, 10, 16);
+    ctx.fillStyle = "#d3aa73";
+    ctx.fillRect(13, 6, 6, 7);
+    ctx.fillStyle = "#4c3224";
+    ctx.fillRect(10, 12, 3, 16);
+    ctx.fillRect(20, 12, 3, 16);
+    ctx.fillStyle = "#2b2419";
+    ctx.fillRect(10, 28, 5, 5);
+    ctx.fillRect(18, 28, 5, 5);
+    ctx.strokeStyle = "#c99d55";
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(21, 13); ctx.lineTo(28, 7); ctx.stroke();
+    return c;
+  },
+
+  makePineSprite() {
+    const [c, ctx] = this.canvas(42, 52);
+    ctx.fillStyle = "rgba(0,0,0,.24)";
+    ctx.beginPath(); ctx.ellipse(21, 45, 13, 5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#4d3423";
+    ctx.fillRect(18, 29, 6, 17);
+    for (const [y, w, col] of [[9, 28, "#244826"], [18, 34, "#1f3d22"], [28, 38, "#19331e"]]) {
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.moveTo(21, y);
+      ctx.lineTo(21 - w/2, y + 24);
+      ctx.lineTo(21 + w/2, y + 24);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.fillStyle = "#3f6838";
+    ctx.fillRect(18, 18, 3, 3);
+    return c;
+  },
+
+  makeBirchSprite() {
+    const [c, ctx] = this.canvas(38, 50);
+    ctx.fillStyle = "rgba(0,0,0,.22)";
+    ctx.beginPath(); ctx.ellipse(19, 44, 12, 4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#d8c892"; ctx.fillRect(16, 16, 6, 30);
+    ctx.fillStyle = "#3f2f24";
+    for (let y = 18; y < 42; y += 7) ctx.fillRect(16, y, 6, 2);
+    ctx.fillStyle = "#9cbd72";
+    ctx.beginPath(); ctx.arc(15, 15, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#78995c";
+    ctx.beginPath(); ctx.arc(24, 16, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#adc784";
+    ctx.beginPath(); ctx.arc(19, 9, 8, 0, Math.PI * 2); ctx.fill();
+    return c;
+  },
+
+  makeBoulderSprite() {
+    const [c, ctx] = this.canvas(34, 30);
+    ctx.fillStyle = "rgba(0,0,0,.25)";
+    ctx.beginPath(); ctx.ellipse(17, 24, 12, 4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#585d53";
+    ctx.beginPath();
+    ctx.moveTo(7, 22); ctx.lineTo(4, 13); ctx.lineTo(11, 5); ctx.lineTo(24, 4); ctx.lineTo(31, 13); ctx.lineTo(27, 24); ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#777d70";
+    ctx.fillRect(12, 8, 8, 3);
+    ctx.fillStyle = "#363a33";
+    ctx.fillRect(8, 18, 7, 3);
+    return c;
+  },
+
+  makeFlintSprite() {
+    const [c, ctx] = this.canvas(30, 26);
+    ctx.fillStyle = "rgba(0,0,0,.25)";
+    ctx.beginPath(); ctx.ellipse(15, 22, 10, 3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#30332f";
+    ctx.beginPath(); ctx.moveTo(8, 21); ctx.lineTo(5, 12); ctx.lineTo(13, 4); ctx.lineTo(24, 9); ctx.lineTo(21, 22); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#8ca09c";
+    ctx.fillRect(12, 7, 4, 2);
+    ctx.fillStyle = "#d4e3d7";
+    ctx.fillRect(17, 9, 2, 2);
+    return c;
+  },
+
+  makeBushSprite() {
+    const [c, ctx] = this.canvas(34, 28);
+    ctx.fillStyle = "rgba(0,0,0,.18)";
+    ctx.beginPath(); ctx.ellipse(17, 23, 12, 3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#345c2c";
+    for (const [x,y,r] of [[10,15,8],[17,11,9],[23,16,8]]) { ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); }
+    ctx.fillStyle = "#7ba35e";
+    ctx.fillRect(14, 8, 2, 2);
+    return c;
+  },
+
+  makeDeerSprite() {
+    const [c, ctx] = this.canvas(44, 30);
+    ctx.fillStyle = "rgba(0,0,0,.24)";
+    ctx.beginPath(); ctx.ellipse(22, 25, 14, 3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#8a5b34";
+    ctx.beginPath(); ctx.ellipse(22, 15, 13, 7, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(34, 11, 6, 4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#51341e"; ctx.lineWidth = 2;
+    for (const x of [15, 22, 28]) { ctx.beginPath(); ctx.moveTo(x, 20); ctx.lineTo(x - 2, 27); ctx.stroke(); }
+    ctx.strokeStyle = "#d0b06f"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(36, 8); ctx.lineTo(40, 3); ctx.moveTo(36, 8); ctx.lineTo(41, 9); ctx.stroke();
+    return c;
+  },
+
+  makeHumanSprite(tunic, hood) {
+    const [c, ctx] = this.canvas(30, 36);
+    ctx.fillStyle = "rgba(0,0,0,.24)";
+    ctx.beginPath(); ctx.ellipse(15, 31, 9, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = tunic; ctx.fillRect(10, 13, 10, 16);
+    ctx.fillStyle = hood; ctx.fillRect(11, 6, 8, 8);
+    ctx.fillStyle = "#c99b68"; ctx.fillRect(12, 8, 4, 4);
+    ctx.fillStyle = "#2b211b"; ctx.fillRect(9, 29, 5, 4); ctx.fillRect(17, 29, 5, 4);
+    return c;
+  },
+
+  makeCampSprite() {
+    const [c, ctx] = this.canvas(42, 36);
+    ctx.fillStyle = "rgba(0,0,0,.25)";
+    ctx.beginPath(); ctx.ellipse(21, 29, 14, 4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#65452a"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(11, 27); ctx.lineTo(31, 22); ctx.moveTo(13, 22); ctx.lineTo(30, 28); ctx.stroke();
+    ctx.fillStyle = "#e36d35"; ctx.beginPath(); ctx.moveTo(20, 24); ctx.quadraticCurveTo(13, 16, 22, 8); ctx.quadraticCurveTo(28, 17, 22, 24); ctx.fill();
+    ctx.fillStyle = "#ffd166"; ctx.beginPath(); ctx.moveTo(21, 24); ctx.quadraticCurveTo(17, 18, 22, 13); ctx.quadraticCurveTo(25, 18, 23, 24); ctx.fill();
+    return c;
+  },
+
+  makeHutSprite() {
+    const [c, ctx] = this.canvas(56, 46);
+    ctx.fillStyle = "rgba(0,0,0,.25)";
+    ctx.beginPath(); ctx.ellipse(28, 40, 22, 5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#695239"; ctx.fillRect(10, 20, 36, 20);
+    ctx.fillStyle = "#997747"; ctx.beginPath(); ctx.moveTo(6, 22); ctx.lineTo(28, 6); ctx.lineTo(50, 22); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#2a2118"; ctx.fillRect(24, 28, 9, 12);
+    ctx.fillStyle = "#c7a25e"; ctx.fillRect(13, 25, 8, 5);
+    return c;
+  },
+
+  makeIcon(kind) {
+    const [c, ctx] = this.canvas(24, 24);
+    ctx.fillStyle = "rgba(0,0,0,.2)";
+    ctx.beginPath(); ctx.arc(12, 12, 11, 0, Math.PI * 2); ctx.fill();
+    if (kind === "stick") {
+      ctx.strokeStyle = "#b8894b"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(7,18); ctx.lineTo(17,6); ctx.stroke();
+    } else if (kind === "stone") {
+      ctx.fillStyle = "#81877b"; ctx.beginPath(); ctx.ellipse(12,13,7,5, -.3, 0, Math.PI*2); ctx.fill();
+    } else if (kind === "flint") {
+      ctx.fillStyle = "#2f3835"; ctx.beginPath(); ctx.moveTo(7,17); ctx.lineTo(10,6); ctx.lineTo(18,10); ctx.lineTo(15,18); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#d3e5df"; ctx.fillRect(13,9,2,2);
+    } else if (kind === "bark") {
+      ctx.fillStyle = "#d6c285"; ctx.fillRect(7,6,10,13); ctx.fillStyle = "#5b432e"; ctx.fillRect(8,9,8,2); ctx.fillRect(8,14,8,2);
+    } else if (kind === "grass") {
+      ctx.strokeStyle = "#8fc06b"; ctx.lineWidth = 2; for(let x=7;x<=17;x+=3){ctx.beginPath();ctx.moveTo(x,19);ctx.lineTo(x+this.rng.int(-3,3),7);ctx.stroke();}
+    } else if (kind === "food") {
+      ctx.fillStyle = "#b64f3e"; ctx.beginPath(); ctx.arc(12,13,6,0,Math.PI*2); ctx.fill();
+    }
+    return c;
+  },
+
+  renderAtlasCards() {
+    if (!DOM.atlasGrid) return;
+    DOM.atlasGrid.innerHTML = "";
+    const entries = [
+      ["grass tile", this.tiles[TILE.GRASS]],
+      ["water tile", this.tiles[TILE.WATER]],
+      ["snow tile", this.tiles[TILE.SNOW]],
+      ["player", this.sprites.player],
+      ["pine", this.sprites.pine],
+      ["birch", this.sprites.birch],
+      ["deer", this.sprites.deer],
+      ["campfire", this.sprites.camp],
+      ["hut", this.sprites.hut],
+      ["flint icon", this.icons.flint]
+    ];
+    for (const [label, source] of entries) {
+      const card = document.createElement("div");
+      card.className = "atlasCard";
+      const c = document.createElement("canvas");
+      c.width = 160; c.height = 96;
+      const ctx = c.getContext("2d");
+      ctx.imageSmoothingEnabled = false;
+      ctx.fillStyle = "#0b0d0b"; ctx.fillRect(0,0,c.width,c.height);
+      const scale = Math.floor(Math.min(4, Math.max(1, 72 / Math.max(source.width, source.height))));
+      const w = source.width * scale;
+      const h = source.height * scale;
+      ctx.drawImage(source, Math.floor((c.width-w)/2), Math.floor((c.height-h)/2), w, h);
+      const cap = document.createElement("div");
+      cap.className = "cap";
+      cap.textContent = label;
+      card.append(c, cap);
+      DOM.atlasGrid.append(card);
+    }
+  }
+};
+
+/* SECTION 07: WORLDGEN + TILEMAP */
+class TileMap {
+  constructor(w, h) {
+    this.w = w;
+    this.h = h;
+    this.ground = new Uint16Array(w * h);
+    this.object = new Uint16Array(w * h);
+    this.flags = new Uint16Array(w * h);
+    this.biome = new Uint8Array(w * h);
+  }
+  idx(x, y) { return y * this.w + x; }
+  inside(x, y) { return x >= 0 && y >= 0 && x < this.w && y < this.h; }
+  getGround(x, y) { return this.inside(x,y) ? this.ground[this.idx(x,y)] : TILE.STONE; }
+  getObject(x, y) { return this.inside(x,y) ? this.object[this.idx(x,y)] : OBJ.BOULDER; }
+  getFlags(x, y) { return this.inside(x,y) ? this.flags[this.idx(x,y)] : FLAG.BLOCKED; }
+  set(x, y, ground, object = OBJ.NONE, flags = 0, biome = 0) {
+    if (!this.inside(x,y)) return;
+    const i = this.idx(x,y);
+    this.ground[i] = ground;
+    this.object[i] = object;
+    this.flags[i] = flags;
+    this.biome[i] = biome;
+  }
+  isBlockedTile(x, y) {
+    if (!this.inside(x,y)) return true;
+    return !!(this.flags[this.idx(x,y)] & FLAG.BLOCKED);
+  }
+  isHarvestTile(x, y) {
+    if (!this.inside(x,y)) return false;
+    return !!(this.flags[this.idx(x,y)] & FLAG.HARVEST);
+  }
+}
+
+const WORLDGEN = {
+  generate(seed) {
+    const rng = RNG.fromSeed(seed + ":world");
+    const map = new TileMap(CONFIG.mapW, CONFIG.mapH);
+
+    for (let y = 0; y < map.h; y++) {
+      for (let x = 0; x < map.w; x++) {
+        const edge = x < 2 || y < 2 || x > map.w - 3 || y > map.h - 3;
+        let ground = TILE.GRASS;
+        let obj = OBJ.NONE;
+        let flags = 0;
+
+        const n = this.valueNoise(x, y, seed);
+        if (n < 0.18) ground = TILE.STONE;
+        if (n > 0.80) ground = TILE.SNOW;
+
+        if (edge) { ground = TILE.STONE; obj = OBJ.BOULDER; flags |= FLAG.BLOCKED; }
+
+        map.set(x, y, ground, obj, flags, 1);
+      }
+    }
+
+    this.carveRiver(map, rng);
+    this.carvePath(map, 10, 10, 82, 78, rng);
+    this.placeObjects(map, rng);
+    this.placeVillageClearing(map);
+
+    return map;
+  },
+
+  valueNoise(x, y, seed) {
+    // Cheap deterministic smooth-ish value from nearby hashed lattice points.
+    const sx = Math.floor(x / 7);
+    const sy = Math.floor(y / 7);
+    let total = 0;
+    let weight = 0;
+    for (let oy = -1; oy <= 1; oy++) {
+      for (let ox = -1; ox <= 1; ox++) {
+        const d = Math.max(0.001, Math.hypot((x/7)-(sx+ox), (y/7)-(sy+oy)));
+        const w = 1 / d;
+        const r = RNG.fromSeed(seed + ":" + (sx+ox) + ":" + (sy+oy)).float();
+        total += r * w;
+        weight += w;
+      }
+    }
+    return total / weight;
+  },
+
+  carveRiver(map, rng) {
+    let x = rng.int(14, 28);
+    for (let y = 0; y < map.h; y++) {
+      x += rng.int(-1, 1);
+      x = Math.max(5, Math.min(map.w - 6, x));
+      const width = 2 + Math.floor(Math.sin(y * 0.18) * 1.5 + 1.5);
+      for (let dx = -width; dx <= width; dx++) {
+        const tx = x + dx;
+        if (!map.inside(tx, y)) continue;
+        map.set(tx, y, TILE.WATER, OBJ.NONE, FLAG.WATER | FLAG.BLOCKED, 2);
+      }
+      if (y % 19 === 0) {
+        for (let dx = -width - 1; dx <= width + 1; dx++) {
+          const tx = x + dx;
+          if (!map.inside(tx, y)) continue;
+          map.set(tx, y, TILE.PATH, OBJ.NONE, 0, 2);
+        }
+      }
+    }
+  },
+
+  carvePath(map, x0, y0, x1, y1, rng) {
+    let x = x0, y = y0;
+    for (let guard = 0; guard < 400 && (x !== x1 || y !== y1); guard++) {
+      map.set(x, y, TILE.PATH, OBJ.NONE, 0, 1);
+      if (rng.float() < 0.55) x += Math.sign(x1 - x);
+      else y += Math.sign(y1 - y);
+      x = Math.max(2, Math.min(map.w - 3, x));
+      y = Math.max(2, Math.min(map.h - 3, y));
+      for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) {
+        if (rng.chance(0.55)) map.set(x + ox, y + oy, TILE.PATH, OBJ.NONE, 0, 1);
+      }
+    }
+  },
+
+  placeObjects(map, rng) {
+    for (let y = 3; y < map.h - 3; y++) {
+      for (let x = 3; x < map.w - 3; x++) {
+        const i = map.idx(x, y);
+        if (map.flags[i] & FLAG.BLOCKED) continue;
+        if (map.ground[i] === TILE.PATH || map.ground[i] === TILE.WATER) continue;
+
+        const roll = rng.float();
+        if (roll < 0.055) this.placeBlocker(map, x, y, rng.chance(0.68) ? OBJ.PINE : OBJ.BIRCH);
+        else if (roll < 0.075) this.placeBlocker(map, x, y, OBJ.BOULDER);
+        else if (roll < 0.087) map.set(x, y, map.ground[i], OBJ.FLINT, FLAG.HARVEST, 1);
+        else if (roll < 0.105) map.set(x, y, map.ground[i], OBJ.BUSH, FLAG.HARVEST, 1);
+      }
+    }
+  },
+
+  placeBlocker(map, x, y, obj) {
+    const i = map.idx(x, y);
+    map.object[i] = obj;
+    map.flags[i] |= FLAG.BLOCKED;
+  },
+
+  placeVillageClearing(map) {
+    const cx = 78, cy = 78;
+    for (let y = cy - 7; y <= cy + 7; y++) {
+      for (let x = cx - 7; x <= cx + 7; x++) {
+        if (!map.inside(x,y)) continue;
+        const d = Math.hypot(x - cx, y - cy);
+        if (d < 7.6) map.set(x, y, TILE.DIRT, OBJ.NONE, 0, 3);
+      }
+    }
+    map.set(cx, cy, TILE.DIRT, OBJ.CAMP, FLAG.WARM, 3);
+    map.set(cx + 4, cy - 2, TILE.DIRT, OBJ.VILLAGER, FLAG.TRIGGER, 3);
+    map.set(cx - 4, cy + 2, TILE.DIRT, OBJ.EXIT, FLAG.TRIGGER, 3);
+  }
+};
+
+/* SECTION 08: ENTITIES + COLLISION */
+const GAME = {
+  seed: CONFIG.defaultSeed,
+  rng: RNG.fromSeed(CONFIG.defaultSeed),
+  map: null,
+  entities: [],
+  particles: [],
+  player: null,
+  camera: { x: 0, y: 0 },
+  inventory: { stick: 0, stone: 0, flint: 0, bark: 0, grass: 0, food: 0 },
+  survival: { health: 100, stamina: 100, hunger: 8, warmth: 100, wetness: 0 },
+  village: { buildings: ["fire"], completedDungeons: [] },
+  facts: { discovered: [] },
+  scene: "overworld",
+  debug: false,
+  minimap: true,
+  dialogueTimer: 0,
+  frame: 0,
+  fps: 0,
+  longFrames: 0,
+  running: false,
+
+  init(seed = CONFIG.defaultSeed) {
+    this.seed = seed;
+    this.rng = RNG.fromSeed(seed);
+    ASSETS.build(seed);
+    this.map = WORLDGEN.generate(seed);
+    this.entities = [];
+    this.particles = [];
+    this.inventory = { stick: 0, stone: 0, flint: 0, bark: 0, grass: 0, food: 0 };
+    this.survival = { health: 100, stamina: 100, hunger: 8, warmth: 100, wetness: 0 };
+    this.village = { buildings: ["fire"], completedDungeons: [] };
+    this.facts = { discovered: [] };
+    this.player = this.spawn("player", 10.5 * CONFIG.tileSize, 10.5 * CONFIG.tileSize, { save: true });
+    this.spawn("deer", 34 * CONFIG.tileSize, 34 * CONFIG.tileSize, {});
+    this.spawn("deer", 38 * CONFIG.tileSize, 32 * CONFIG.tileSize, {});
+    this.spawn("rival", 62 * CONFIG.tileSize, 48 * CONFIG.tileSize, { alert: 0 });
+    this.spawn("npc", 82 * CONFIG.tileSize, 76 * CONFIG.tileSize, { factId: "copper_axe" });
+    this.camera.x = this.player.x;
+    this.camera.y = this.player.y;
+    this.say("Engine", "Seeded procedural forest loaded. Gather flint, bark, grass, and sticks. This is a starter, not final gameplay.");
+  },
+
+  reseed() {
+    const next = Math.floor(Math.random() * 99999999);
+    this.init(next);
+    AUDIO.click();
+  },
+
+  spawn(type, x, y, data = {}) {
+    const e = {
+      id: type + "_" + Math.random().toString(36).slice(2, 9),
+      type, x, y,
+      vx: 0, vy: 0,
+      radius: type === "player" ? CONFIG.playerRadius : 9,
+      hp: 10,
+      age: 0,
+      data
+    };
+    if (type === "player") e.radius = CONFIG.playerRadius;
+    if (type === "deer") e.radius = 10;
+    if (type === "npc") e.radius = 10;
+    if (type === "rival") e.radius = 11;
+    this.entities.push(e);
+    return e;
+  },
+
+  update(dt, actions) {
+    this.frame++;
+    if (actions.debugPressed) this.debug = !this.debug;
+    if (actions.mapPressed) this.minimap = !this.minimap;
+    if (actions.menuPressed) this.say("Menu", "This starter uses MENU as a hook. Codex should connect it to pause/settings/inventory.");
+
+    this.updatePlayer(dt, actions);
+    this.updateEntities(dt);
+    this.updateParticles(dt);
+    this.updateSurvival(dt, actions);
+    this.updateCamera(dt);
+    this.updateHUD();
+    if (this.dialogueTimer > 0) {
+      this.dialogueTimer -= dt;
+      if (this.dialogueTimer <= 0) DOM.dialogue.classList.remove("show");
+    }
+  },
+
+  updatePlayer(dt, actions) {
+    const p = this.player;
+    let speed = CONFIG.baseSpeed;
+    const sprinting = actions.sprintHeld && this.survival.stamina > 1 && (actions.moveX || actions.moveY);
+    if (sprinting) {
+      speed = CONFIG.sprintSpeed;
+      this.survival.stamina = Math.max(0, this.survival.stamina - dt * 22);
+    } else {
+      this.survival.stamina = Math.min(100, this.survival.stamina + dt * 13);
+    }
+
+    const dx = actions.moveX * speed * dt;
+    const dy = actions.moveY * speed * dt;
+    if (Math.abs(dx) + Math.abs(dy) > 0.01) {
+      this.moveCircle(p, dx, dy);
+      if (this.frame % 18 === 0) AUDIO.step();
+      if (this.frame % 6 === 0) this.spawnParticle(p.x, p.y + 8, "#8a7658", 0.35);
+    }
+
+    if (actions.usePressed) this.useNearby();
+  },
+
+  moveCircle(e, dx, dy) {
+    // Sliding collision: resolve X then Y.
+    if (!this.collidesAt(e.x + dx, e.y, e.radius)) e.x += dx;
+    else e.vx = 0;
+    if (!this.collidesAt(e.x, e.y + dy, e.radius)) e.y += dy;
+    else e.vy = 0;
+  },
+
+  collidesAt(x, y, radius) {
+    const ts = CONFIG.tileSize;
+    const minX = Math.floor((x - radius) / ts);
+    const maxX = Math.floor((x + radius) / ts);
+    const minY = Math.floor((y - radius) / ts);
+    const maxY = Math.floor((y + radius) / ts);
+    for (let ty = minY; ty <= maxY; ty++) {
+      for (let tx = minX; tx <= maxX; tx++) {
+        if (!this.map.inside(tx, ty) || this.map.isBlockedTile(tx, ty)) return true;
+      }
+    }
+    return false;
+  },
+
+  useNearby() {
+    const p = this.player;
+    const ts = CONFIG.tileSize;
+    const tx = Math.floor(p.x / ts);
+    const ty = Math.floor(p.y / ts);
+
+    let best = null;
+    let bestD = Infinity;
+
+    for (let oy = -1; oy <= 1; oy++) {
+      for (let ox = -1; ox <= 1; ox++) {
+        const x = tx + ox, y = ty + oy;
+        if (!this.map.inside(x, y)) continue;
+        const obj = this.map.getObject(x, y);
+        const d = Math.hypot((x + 0.5) * ts - p.x, (y + 0.5) * ts - p.y);
+        if (obj && d < bestD) { best = { x, y, obj, d }; bestD = d; }
+      }
+    }
+
+    for (const e of this.entities) {
+      if (e === p) continue;
+      const d = Math.hypot(e.x - p.x, e.y - p.y);
+      if (d < 34 && d < bestD) { best = { entity: e, d }; bestD = d; }
+    }
+
+    if (!best || bestD > 38) {
+      this.say("Ötzi", "Nothing close enough to use. Move near a resource, NPC, camp, or exit.");
+      AUDIO.click();
+      return;
+    }
+
+    if (best.entity) {
+      if (best.entity.type === "npc") {
+        const fact = FACTS[best.entity.data.factId] || FACTS.copper_axe;
+        if (!this.facts.discovered.includes(fact.id)) this.facts.discovered.push(fact.id);
+        this.say("Village Elder", fact.text + " [" + fact.status + "]");
+        AUDIO.unlockSound();
+      } else if (best.entity.type === "deer") {
+        this.say("Deer", "The deer bolts. Later: tracking, bow, hunger, and ethical hunting rules.");
+        best.entity.data.flee = 2.2;
+        AUDIO.noise(0.12, 0.05, 900);
+      } else if (best.entity.type === "rival") {
+        this.say("Rival", "A rival watches the trail. Later: warning, chase, trade, or story conflict.");
+        best.entity.data.alert = 2.5;
+        AUDIO.tone(180, 0.1, "sawtooth", 0.045, -40);
+      }
+      return;
+    }
+
+    const i = this.map.idx(best.x, best.y);
+    const obj = best.obj;
+    let item = null;
+    if (obj === OBJ.PINE) item = "stick";
+    else if (obj === OBJ.BIRCH) item = "bark";
+    else if (obj === OBJ.BOULDER) item = "stone";
+    else if (obj === OBJ.FLINT) item = "flint";
+    else if (obj === OBJ.BUSH) item = this.rng.chance(0.5) ? "grass" : "food";
+    else if (obj === OBJ.CAMP) {
+      this.survival.warmth = Math.min(100, this.survival.warmth + 20);
+      this.survival.wetness = Math.max(0, this.survival.wetness - 15);
+      this.say("Campfire", "Warmth restored. Later: fuel, embers, drying, cooking, and safe rest.");
+      AUDIO.craft();
+      return;
+    } else if (obj === OBJ.EXIT) {
+      this.completeDungeon("flint_cave");
+      return;
+    } else if (obj === OBJ.VILLAGER) {
+      this.say("Villager", "Complete resource runs to unlock simple village functions: heal, trade, upgrade, farm, fish.");
+      AUDIO.click();
+      return;
+    }
+
+    if (item) {
+      this.inventory[item] = (this.inventory[item] || 0) + 1;
+      this.map.object[i] = OBJ.NONE;
+      this.map.flags[i] &= ~(FLAG.BLOCKED | FLAG.HARVEST);
+      this.say("Gathered", "+" + item + ". The map mutation should be saved as a delta, not by saving the whole map.");
+      AUDIO.gather();
+      for (let n = 0; n < 8; n++) this.spawnParticle((best.x + 0.5) * ts, (best.y + 0.5) * ts, "#e7bd6c", 0.6);
+    }
+  },
+
+  completeDungeon(id) {
+    if (!this.village.completedDungeons.includes(id)) this.village.completedDungeons.push(id);
+    if (!this.village.buildings.includes("flint_workshop")) this.village.buildings.push("flint_workshop");
+    this.say("Village unlocked", "Dungeon complete: " + id + ". Auto-built flint workshop. Passive flint gathering can start here.");
+    AUDIO.unlockSound();
+  },
+
+  updateEntities(dt) {
+    const p = this.player;
+    for (const e of this.entities) {
+      if (e === p) continue;
+      e.age += dt;
+
+      if (e.type === "deer") {
+        const d = Math.hypot(e.x - p.x, e.y - p.y);
+        if (d < 90) e.data.flee = 1.8;
+        if (e.data.flee > 0) {
+          e.data.flee -= dt;
+          const ax = (e.x - p.x) / Math.max(1, d);
+          const ay = (e.y - p.y) / Math.max(1, d);
+          this.moveCircle(e, ax * 80 * dt, ay * 80 * dt);
+        } else {
+          const wobbleX = Math.sin(e.age * 1.2 + e.x) * 8 * dt;
+          const wobbleY = Math.cos(e.age * 1.1 + e.y) * 8 * dt;
+          this.moveCircle(e, wobbleX, wobbleY);
+        }
+      }
+
+      if (e.type === "rival") {
+        if (e.data.alert > 0) {
+          e.data.alert -= dt;
+          const d = Math.hypot(p.x - e.x, p.y - e.y);
+          const ax = (p.x - e.x) / Math.max(1, d);
+          const ay = (p.y - e.y) / Math.max(1, d);
+          this.moveCircle(e, ax * 44 * dt, ay * 44 * dt);
+        }
+      }
+    }
+  },
+
+  updateParticles(dt) {
+    for (const p of this.particles) {
+      p.age += dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.alpha -= dt * p.decay;
+    }
+    this.particles = this.particles.filter(p => p.alpha > 0 && p.age < 2);
+  },
+
+  spawnParticle(x, y, color, alpha = 0.5) {
+    if (this.particles.length > 120) return;
+    this.particles.push({
+      x, y,
+      vx: this.rng.range(-18, 18),
+      vy: this.rng.range(-26, 8),
+      r: this.rng.range(1, 2.6),
+      color,
+      alpha,
+      decay: this.rng.range(0.5, 1.6),
+      age: 0
+    });
+  },
+
+  updateSurvival(dt, actions) {
+    this.survival.hunger = Math.min(100, this.survival.hunger + dt * 0.08);
+    const tx = Math.floor(this.player.x / CONFIG.tileSize);
+    const ty = Math.floor(this.player.y / CONFIG.tileSize);
+    const flags = this.map.getFlags(tx, ty);
+    if (flags & FLAG.WATER) this.survival.wetness = Math.min(100, this.survival.wetness + dt * 4);
+    const nearCamp = this.nearObject(OBJ.CAMP, 4);
+    if (nearCamp) {
+      this.survival.warmth = Math.min(100, this.survival.warmth + dt * 8);
+      this.survival.wetness = Math.max(0, this.survival.wetness - dt * 6);
+    } else {
+      this.survival.warmth = Math.max(0, this.survival.warmth - dt * (0.5 + this.survival.wetness * 0.012));
+    }
+  },
+
+  nearObject(objId, radiusTiles) {
+    const tx = Math.floor(this.player.x / CONFIG.tileSize);
+    const ty = Math.floor(this.player.y / CONFIG.tileSize);
+    for (let y = ty - radiusTiles; y <= ty + radiusTiles; y++) {
+      for (let x = tx - radiusTiles; x <= tx + radiusTiles; x++) {
+        if (this.map.inside(x,y) && this.map.getObject(x,y) === objId) return true;
+      }
+    }
+    return false;
+  },
+
+  updateCamera(dt) {
+    const targetX = this.player.x;
+    const targetY = this.player.y;
+    const k = 1 - Math.pow(CONFIG.cameraLag, dt * 60);
+    this.camera.x += (targetX - this.camera.x) * k;
+    this.camera.y += (targetY - this.camera.y) * k;
+  },
+
+  say(speaker, text) {
+    DOM.dialogue.innerHTML = "<strong>" + escapeHtml(speaker) + ":</strong> " + escapeHtml(text);
+    DOM.dialogue.classList.add("show");
+    this.dialogueTimer = 5.2;
+  },
+
+  updateHUD() {
+    const s = this.survival;
+    DOM.stats.innerHTML = [
+      chip("HP " + Math.round(s.health), s.health < 30 ? "bad" : "good"),
+      chip("STA " + Math.round(s.stamina), s.stamina < 24 ? "warn" : "good"),
+      chip("WARM " + Math.round(s.warmth), s.warmth < 30 ? "bad" : "good"),
+      chip("HUNGER " + Math.round(s.hunger), s.hunger > 70 ? "bad" : ""),
+      chip("INV " + Object.values(this.inventory).reduce((a,b)=>a+b,0), "")
+    ].join("");
+    const tileX = Math.floor(this.player.x / CONFIG.tileSize);
+    const tileY = Math.floor(this.player.y / CONFIG.tileSize);
+    DOM.meta.innerHTML = [
+      chip("seed " + this.seed, ""),
+      chip("tile " + tileX + "," + tileY, ""),
+      chip("entities " + this.entities.length, ""),
+      chip("fps " + Math.round(this.fps), ""),
+      chip("DPR " + (window.devicePixelRatio || 1).toFixed(2), "")
+    ].join("");
+  }
+};
+
+function chip(text, cls) { return '<span class="chip ' + (cls || "") + '">' + escapeHtml(text) + "</span>"; }
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[ch]));
+}
+
+const FACTS = {
+  copper_axe: {
+    id: "copper_axe",
+    status: "verified archaeology placeholder",
+    source: "Add museum/archaeology source URL in facts.js",
+    text: "Ötzi carried a copper axe. In the final game, this line must cite a reliable archaeology source."
+  }
+};
+
+/* SECTION 09: CAMERA + RENDER */
+const RENDER = {
+  draw() {
+    const ctx = CTX;
+    const w = DOM.canvas.width;
+    const h = DOM.canvas.height;
+    ctx.imageSmoothingEnabled = false;
+    ctx.fillStyle = "#111610";
+    ctx.fillRect(0, 0, w, h);
+
+    const ts = CONFIG.tileSize;
+    const cam = GAME.camera;
+    const left = cam.x - w / 2;
+    const top = cam.y - h / 2;
+    const startX = Math.max(0, Math.floor(left / ts) - 2);
+    const startY = Math.max(0, Math.floor(top / ts) - 2);
+    const endX = Math.min(GAME.map.w - 1, Math.ceil((left + w) / ts) + 2);
+    const endY = Math.min(GAME.map.h - 1, Math.ceil((top + h) / ts) + 2);
+
+    for (let ty = startY; ty <= endY; ty++) {
+      for (let tx = startX; tx <= endX; tx++) {
+        const sx = Math.floor(tx * ts - left);
+        const sy = Math.floor(ty * ts - top);
+        const tile = GAME.map.getGround(tx, ty);
+        ctx.drawImage(ASSETS.tiles[tile] || ASSETS.tiles[TILE.GRASS], sx, sy, ts, ts);
+      }
+    }
+
+    // Objects under entities.
+    for (let ty = startY; ty <= endY; ty++) {
+      for (let tx = startX; tx <= endX; tx++) {
+        const obj = GAME.map.getObject(tx, ty);
+        if (!obj) continue;
+        const sx = Math.floor((tx + 0.5) * ts - left);
+        const sy = Math.floor((ty + 0.5) * ts - top);
+        this.drawObject(ctx, obj, sx, sy);
+      }
+    }
+
+    // Entities sorted by y for top-down occlusion.
+    const visible = GAME.entities.slice().sort((a,b) => a.y - b.y);
+    for (const e of visible) this.drawEntity(ctx, e, Math.floor(e.x - left), Math.floor(e.y - top));
+
+    // Particles.
+    for (const p of GAME.particles) {
+      ctx.globalAlpha = Math.max(0, p.alpha);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(Math.floor(p.x - left), Math.floor(p.y - top), p.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    this.drawAtmosphere(ctx, w, h);
+    if (GAME.minimap) this.drawMinimap(ctx, w, h);
+    if (GAME.debug) this.drawDebug(ctx, left, top, startX, startY, endX, endY);
+  },
+
+  drawObject(ctx, obj, sx, sy) {
+    const sprite = {
+      [OBJ.PINE]: ASSETS.sprites.pine,
+      [OBJ.BIRCH]: ASSETS.sprites.birch,
+      [OBJ.BOULDER]: ASSETS.sprites.boulder,
+      [OBJ.FLINT]: ASSETS.sprites.flint,
+      [OBJ.BUSH]: ASSETS.sprites.bush,
+      [OBJ.CAMP]: ASSETS.sprites.camp,
+      [OBJ.EXIT]: ASSETS.sprites.hut,
+      [OBJ.VILLAGER]: ASSETS.sprites.villager
+    }[obj];
+    if (!sprite) return;
+    const scale = obj === OBJ.EXIT ? 1.2 : 1;
+    ctx.drawImage(sprite, Math.floor(sx - sprite.width * scale / 2), Math.floor(sy - sprite.height * scale + 12), sprite.width * scale, sprite.height * scale);
+  },
+
+  drawEntity(ctx, e, sx, sy) {
+    let sprite = ASSETS.sprites.player;
+    if (e.type === "deer") sprite = ASSETS.sprites.deer;
+    if (e.type === "rival") sprite = ASSETS.sprites.rival;
+    if (e.type === "npc") sprite = ASSETS.sprites.villager;
+
+    let alpha = 1;
+    if (e.type === "deer" && e.data.flee > 0) alpha = 0.9 + Math.sin(GAME.frame * 0.7) * 0.1;
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(sprite, Math.floor(sx - sprite.width / 2), Math.floor(sy - sprite.height + 12));
+    ctx.globalAlpha = 1;
+
+    if (e.type === "npc") {
+      ctx.fillStyle = "#e7bd6c";
+      ctx.beginPath();
+      ctx.arc(sx + 8, sy - 30, 4 + Math.sin(GAME.frame * 0.08) * 1.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    if (e.type === "rival" && e.data.alert > 0) {
+      ctx.strokeStyle = "#e36d63";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(sx, sy - 16, 16 + Math.sin(GAME.frame * 0.2) * 3, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  },
+
+  drawAtmosphere(ctx, w, h) {
+    const warm = GAME.survival.warmth;
+    const wet = GAME.survival.wetness;
+    if (warm < 55) {
+      const a = Math.min(0.34, (55 - warm) / 100);
+      const g = ctx.createRadialGradient(w/2, h/2, Math.min(w,h)*0.18, w/2, h/2, Math.max(w,h)*0.62);
+      g.addColorStop(0, "rgba(0,0,0,0)");
+      g.addColorStop(1, `rgba(80,110,145,${a})`);
+      ctx.fillStyle = g;
+      ctx.fillRect(0,0,w,h);
+    }
+    if (wet > 10) {
+      ctx.globalAlpha = Math.min(0.22, wet / 180);
+      ctx.fillStyle = "#bcd4e6";
+      for (let i = 0; i < 26; i++) {
+        const x = (i * 47 + GAME.frame * 2) % w;
+        const y = (i * 83 + GAME.frame * 5) % h;
+        ctx.fillRect(x, y, 1, 8);
+      }
+      ctx.globalAlpha = 1;
+    }
+  },
+
+  drawMinimap(ctx, w, h) {
+    const size = 86;
+    const pad = 9;
+    const x0 = w - size - pad;
+    const y0 = pad;
+    ctx.fillStyle = "rgba(5,7,6,.72)";
+    ctx.fillRect(x0 - 4, y0 - 4, size + 8, size + 8);
+    ctx.strokeStyle = "rgba(231,189,108,.7)";
+    ctx.strokeRect(x0 - 4, y0 - 4, size + 8, size + 8);
+    const sx = size / GAME.map.w;
+    const sy = size / GAME.map.h;
+    for (let y = 0; y < GAME.map.h; y += 2) {
+      for (let x = 0; x < GAME.map.w; x += 2) {
+        const g = GAME.map.getGround(x,y);
+        ctx.fillStyle = g === TILE.WATER ? "#2c788a" : g === TILE.SNOW ? "#d6d4bd" : g === TILE.PATH ? "#806545" : "#36522f";
+        ctx.fillRect(x0 + x*sx, y0 + y*sy, Math.ceil(sx*2), Math.ceil(sy*2));
+      }
+    }
+    ctx.fillStyle = "#ffd166";
+    ctx.fillRect(x0 + (GAME.player.x / CONFIG.tileSize) * sx - 2, y0 + (GAME.player.y / CONFIG.tileSize) * sy - 2, 4, 4);
+  },
+
+  drawDebug(ctx, left, top, startX, startY, endX, endY) {
+    const ts = CONFIG.tileSize;
+    ctx.save();
+    ctx.globalAlpha = 0.85;
+    ctx.lineWidth = 1;
+    for (let y = startY; y <= endY; y++) {
+      for (let x = startX; x <= endX; x++) {
+        const sx = Math.floor(x * ts - left);
+        const sy = Math.floor(y * ts - top);
+        ctx.strokeStyle = "rgba(255,255,255,.08)";
+        ctx.strokeRect(sx, sy, ts, ts);
+        const flags = GAME.map.getFlags(x,y);
+        if (flags & FLAG.BLOCKED) {
+          ctx.fillStyle = "rgba(227,109,99,.20)";
+          ctx.fillRect(sx, sy, ts, ts);
+        }
+        if (flags & FLAG.HARVEST) {
+          ctx.fillStyle = "rgba(231,189,108,.20)";
+          ctx.fillRect(sx+4, sy+4, ts-8, ts-8);
+        }
+      }
+    }
+    for (const e of GAME.entities) {
+      const sx = Math.floor(e.x - left), sy = Math.floor(e.y - top);
+      ctx.strokeStyle = e.type === "player" ? "#ffd166" : "#8fc0a9";
+      ctx.beginPath();
+      ctx.arc(sx, sy, e.radius, 0, Math.PI*2);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    ctx.fillStyle = "rgba(0,0,0,.65)";
+    ctx.fillRect(8, 36, 226, 100);
+    ctx.fillStyle = "#f3ead7";
+    ctx.font = "10px ui-monospace, monospace";
+    const lines = [
+      "DEBUG",
+      "canvas " + DOM.canvas.width + "x" + DOM.canvas.height,
+      "css " + Math.round(VIEWPORT.cssW) + "x" + Math.round(VIEWPORT.cssH),
+      "dpr " + (window.devicePixelRatio || 1).toFixed(2),
+      "scene " + GAME.scene,
+      "seed " + GAME.seed,
+      "pointers " + INPUT.pointers.size,
+      "save v" + CONFIG.saveVersion
+    ];
+    lines.forEach((line, i) => ctx.fillText(line, 14, 52 + i * 11));
+  }
+};
+
+/* SECTION 10: SAVE */
+const SAVE = {
+  snapshot() {
+    return {
+      version: CONFIG.saveVersion,
+      engineVersion: CONFIG.engineVersion,
+      savedAt: new Date().toISOString(),
+      seed: GAME.seed,
+      scene: GAME.scene,
+      player: {
+        x: GAME.player.x,
+        y: GAME.player.y
+      },
+      survival: GAME.survival,
+      inventory: GAME.inventory,
+      village: GAME.village,
+      facts: GAME.facts,
+      settings: {
+        debug: GAME.debug,
+        minimap: GAME.minimap
+      }
+    };
+  },
+
+  apply(data) {
+    if (!data || typeof data !== "object") throw new Error("Bad save data");
+    if (data.version !== CONFIG.saveVersion) throw new Error("Unsupported save version " + data.version);
+    GAME.init(data.seed || CONFIG.defaultSeed);
+    if (data.player) {
+      GAME.player.x = data.player.x;
+      GAME.player.y = data.player.y;
+    }
+    GAME.survival = { ...GAME.survival, ...(data.survival || {}) };
+    GAME.inventory = { ...GAME.inventory, ...(data.inventory || {}) };
+    GAME.village = { ...GAME.village, ...(data.village || {}) };
+    GAME.facts = { ...GAME.facts, ...(data.facts || {}) };
+    GAME.debug = !!data.settings?.debug;
+    GAME.minimap = data.settings?.minimap !== false;
+  },
+
+  save() {
+    const data = this.snapshot();
+    try {
+      localStorage.setItem(CONFIG.saveKey, JSON.stringify(data));
+      GAME.say("Save", "Saved to localStorage. Export string fallback is also available.");
+      AUDIO.click();
+      return true;
+    } catch (err) {
+      GAME.say("Save warning", "localStorage failed. Use Export save string. " + err.message);
+      return false;
+    }
+  },
+
+  load() {
+    try {
+      const raw = localStorage.getItem(CONFIG.saveKey);
+      if (!raw) return false;
+      this.apply(JSON.parse(raw));
+      GAME.say("Load", "Save loaded.");
+      return true;
+    } catch (err) {
+      GAME.say("Load warning", "Could not load save: " + err.message);
+      return false;
+    }
+  },
+
+  exportString() {
+    const json = JSON.stringify(this.snapshot());
+    return btoa(unescape(encodeURIComponent(json)));
+  },
+
+  importString(str) {
+    const json = decodeURIComponent(escape(atob(str)));
+    this.apply(JSON.parse(json));
+  }
+};
+
+/* SECTION 11: TEST_HOOKS */
+window.__OTZI_TEST__ = {
+  snapshot: () => ({
+    engineVersion: CONFIG.engineVersion,
+    scene: GAME.scene,
+    seed: GAME.seed,
+    player: { x: GAME.player?.x, y: GAME.player?.y, tileX: Math.floor((GAME.player?.x || 0) / CONFIG.tileSize), tileY: Math.floor((GAME.player?.y || 0) / CONFIG.tileSize) },
+    inventory: { ...GAME.inventory },
+    survival: { ...GAME.survival },
+    village: JSON.parse(JSON.stringify(GAME.village)),
+    facts: JSON.parse(JSON.stringify(GAME.facts)),
+    entities: GAME.entities.length,
+    particles: GAME.particles.length,
+    debug: GAME.debug,
+    minimap: GAME.minimap,
+    canvas: { w: DOM.canvas.width, h: DOM.canvas.height, cssW: VIEWPORT.cssW, cssH: VIEWPORT.cssH, dpr: window.devicePixelRatio || 1 },
+    activePointers: INPUT.pointers.size
+  }),
+  setSeed: (seed) => GAME.init(seed),
+  teleportToVillage: () => { GAME.player.x = 78.5 * CONFIG.tileSize; GAME.player.y = 78.5 * CONFIG.tileSize; },
+  completeDungeon: (id = "flint_cave") => GAME.completeDungeon(id),
+  give: (item, n = 1) => { GAME.inventory[item] = (GAME.inventory[item] || 0) + n; },
+  exportSave: () => SAVE.exportString(),
+  importSave: (str) => SAVE.importString(str),
+  toggleDebug: () => { GAME.debug = !GAME.debug; }
+};
+
+/* SECTION 12: MAIN LOOP */
+let accumulator = 0;
+let lastT = 0;
+let fpsAccum = 0;
+let fpsFrames = 0;
+
+function frame(t) {
+  if (!lastT) lastT = t;
+  let dt = Math.min(0.1, (t - lastT) / 1000);
+  lastT = t;
+
+  if (dt > 0.05) GAME.longFrames++;
+  accumulator += dt;
+
+  let steps = 0;
+  while (accumulator >= CONFIG.fixedDt && steps < CONFIG.maxStepsPerFrame) {
+    const actions = INPUT.sample();
+    GAME.update(CONFIG.fixedDt, actions);
+    accumulator -= CONFIG.fixedDt;
+    steps++;
+  }
+  if (steps === CONFIG.maxStepsPerFrame) accumulator = 0;
+
+  RENDER.draw();
+
+  fpsAccum += dt;
+  fpsFrames++;
+  if (fpsAccum >= 0.5) {
+    GAME.fps = fpsFrames / fpsAccum;
+    fpsAccum = 0;
+    fpsFrames = 0;
+  }
+
+  requestAnimationFrame(frame);
+}
+
+function init() {
+  VIEWPORT.resize();
+  INPUT.init();
+  GAME.init(CONFIG.defaultSeed);
+  SAVE.load();
+
+  const resizeHandler = () => VIEWPORT.resize();
+  window.addEventListener("resize", resizeHandler);
+  window.addEventListener("orientationchange", () => setTimeout(resizeHandler, 80));
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", resizeHandler);
+    window.visualViewport.addEventListener("scroll", resizeHandler);
+  }
+
+  DOM.startBtn.addEventListener("click", async () => {
+    await AUDIO.unlock();
+    if (!GAME.running) {
+      GAME.running = true;
+      requestAnimationFrame(frame);
+    }
+  });
+  DOM.reseedBtn.addEventListener("click", () => GAME.reseed());
+  DOM.debugBtn.addEventListener("click", () => { GAME.debug = !GAME.debug; AUDIO.click(); });
+  DOM.saveBtn.addEventListener("click", () => SAVE.save());
+  DOM.exportBtn.addEventListener("click", async () => {
+    const str = SAVE.exportString();
+    try {
+      await navigator.clipboard.writeText(str);
+      GAME.say("Export", "Save string copied to clipboard.");
+    } catch (_) {
+      prompt("Copy save string:", str);
+    }
+  });
+
+  // Start rendering immediately for documentation preview, but audio remains locked until Start.
+  if (!GAME.running) {
+    GAME.running = true;
+    requestAnimationFrame(frame);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
