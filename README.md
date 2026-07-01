@@ -16,6 +16,12 @@ dist/index.html
 
 No required external runtime assets, CDNs, fonts, sounds, or network calls.
 
+## Live Pages build
+
+```text
+https://falloutmule.github.io/otzi-iceman-game/
+```
+
 ## Development
 
 ```bash
