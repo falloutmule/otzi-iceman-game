@@ -42,11 +42,12 @@ Fix and verify Milestone 1 mobile controls on the existing Otzi GitHub Pages pro
 
 ## Current exact state
 
-- verified: Working branch is `fix/mobile-controls-m1`.
+- verified: Fix branch `fix/mobile-controls-m1` was created and pushed.
+- verified: `main` was fast-forwarded to the fix commit and pushed.
 - verified: Runtime target remains `dist/index.html`.
 - verified: Default local server port remains `8099`.
 - verified: This remains Milestone 1 only; no crafting depth, dungeons, new progression, or new engine dependency was added.
-- proposed: GitHub Pages deployment will be verified after the branch is merged/pushed to `main`.
+- verified: GitHub Pages deployment succeeded for run `28548947556`.
 
 ## Remaining blockers
 
@@ -55,7 +56,7 @@ Fix and verify Milestone 1 mobile controls on the existing Otzi GitHub Pages pro
 
 ## Next actionable step
 
-- proposed: Deploy to GitHub Pages, then open `https://falloutmule.github.io/otzi-iceman-game/` on Samsung Galaxy S21 Ultra Chrome and test USE, MAP, CRAFT/MENU, DODGE/SPRINT, and MOVE.
+- proposed: Open `https://falloutmule.github.io/otzi-iceman-game/` on Samsung Galaxy S21 Ultra Chrome and test USE, MAP, CRAFT/MENU, DODGE/SPRINT, and MOVE.
 
 ## Evidence
 
@@ -70,7 +71,9 @@ Fix and verify Milestone 1 mobile controls on the existing Otzi GitHub Pages pro
 ## Live URLs
 
 - verified: Repository: `https://github.com/falloutmule/otzi-iceman-game`
-- proposed: GitHub Pages: `https://falloutmule.github.io/otzi-iceman-game/`
+- verified: GitHub Pages: `https://falloutmule.github.io/otzi-iceman-game/`
+- verified: Live GitHub Pages returned HTTP 200 with response length `38117`.
+- verified: Live HTML contains the deployed mobile controls fix strings.
 
 ## Samsung Galaxy S21 Ultra status
 
