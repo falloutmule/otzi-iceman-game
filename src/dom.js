@@ -10,12 +10,28 @@ OTZI.dom = {
     this.uiRoot.innerHTML = `
       <div class="topbar">
         <div>
-          <strong>The Legend of &Ouml;tzi the Iceman</strong>
+          <strong>&Ouml;tzi M1</strong>
           <span id="statusLine">Milestone 1 engine shell</span>
         </div>
         <button id="debugBtn" type="button" aria-label="Toggle debug">D</button>
       </div>
+      <div id="toast" class="toast" hidden></div>
+      <div id="inventoryChip" class="inventory-chip">FLINT: 0</div>
       <div id="debugPanel" class="debug-panel" hidden></div>
+      <div id="minimapPanel" class="minimap-panel" hidden aria-label="Trail map preview">
+        <div class="panel-title">TRAIL MAP</div>
+        <canvas id="minimapCanvas" width="116" height="116" aria-hidden="true"></canvas>
+      </div>
+      <div id="menuPanel" class="menu-panel" hidden role="dialog" aria-modal="false" aria-label="Craft and menu placeholder">
+        <div class="panel-title">CRAFT / MENU</div>
+        <p>Craft/Menu placeholder &mdash; control path works.</p>
+        <dl>
+          <div><dt>Seed</dt><dd id="menuSeed">-</dd></div>
+          <div><dt>Flint</dt><dd id="menuFlint">0</dd></div>
+          <div><dt>Stamina</dt><dd id="menuStamina">100</dd></div>
+        </dl>
+        <button id="menuCloseBtn" type="button">Close</button>
+      </div>
       <div class="start-panel" id="startPanel">
         <h1>The Legend of &Ouml;tzi the Iceman</h1>
         <p>Canvas 2D survival adventure engine shell.</p>
@@ -39,6 +55,16 @@ OTZI.dom = {
     this.startBtn = document.getElementById("startBtn");
     this.debugBtn = document.getElementById("debugBtn");
     this.debugPanel = document.getElementById("debugPanel");
+    this.toast = document.getElementById("toast");
+    this.inventoryChip = document.getElementById("inventoryChip");
+    this.minimapPanel = document.getElementById("minimapPanel");
+    this.minimapCanvas = document.getElementById("minimapCanvas");
+    this.minimapCtx = this.minimapCanvas.getContext("2d", { alpha: false });
+    this.menuPanel = document.getElementById("menuPanel");
+    this.menuSeed = document.getElementById("menuSeed");
+    this.menuFlint = document.getElementById("menuFlint");
+    this.menuStamina = document.getElementById("menuStamina");
+    this.menuCloseBtn = document.getElementById("menuCloseBtn");
     this.statusLine = document.getElementById("statusLine");
     this.moveZone = document.getElementById("moveZone");
     this.stickKnob = document.getElementById("stickKnob");

@@ -7,15 +7,26 @@ OTZI.input = {
   moveVector: { x: 0, y: 0 },
   aimVector: { x: 0, y: 0 },
   pressed: { use: false, sprint: false, menu: false, debug: false, map: false },
+  sprintHeld: false,
   init() {
     window.addEventListener("keydown", (ev) => {
       this.keys.add(ev.code);
       if (ev.code === "KeyD") this.pressed.debug = true;
       if (ev.code === "KeyE" || ev.code === "Space") this.pressed.use = true;
       if (ev.code === "KeyM") this.pressed.map = true;
+      if (ev.code === "Escape" && OTZI.game.menuOpen) {
+        OTZI.game.menuOpen = false;
+        this.clearAll();
+        OTZI.dialogue.toast("Craft/Menu closed");
+      }
       if (ev.code === "KeyR") OTZI.game.setSeed("otzi-" + Date.now().toString(36));
     });
     window.addEventListener("keyup", (ev) => this.keys.delete(ev.code));
+    window.addEventListener("blur", () => this.clearAll());
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) this.clearAll();
+    });
+    window.addEventListener("orientationchange", () => this.clearAll());
     this.bindMoveZone();
     this.bindButton(OTZI.dom.useBtn, "use");
     this.bindButton(OTZI.dom.sprintBtn, "sprint");
@@ -28,13 +39,16 @@ OTZI.input = {
       ev.preventDefault();
       el.setPointerCapture?.(ev.pointerId);
       this.pressed[name] = true;
+      if (name === "sprint") this.sprintHeld = true;
     });
     const clear = (ev) => {
       ev.preventDefault();
       el.releasePointerCapture?.(ev.pointerId);
+      if (name === "sprint") this.sprintHeld = false;
     };
     el.addEventListener("pointerup", clear);
     el.addEventListener("pointercancel", clear);
+    el.addEventListener("lostpointercapture", clear);
   },
   bindMoveZone() {
     const zone = OTZI.dom.moveZone;
@@ -75,6 +89,7 @@ OTZI.input = {
   consumePressed() {
     const out = { ...this.pressed };
     this.pressed.use = false;
+    this.pressed.sprint = false;
     this.pressed.menu = false;
     this.pressed.debug = false;
     this.pressed.map = false;
@@ -84,6 +99,10 @@ OTZI.input = {
     this.pointers.clear();
     this.moveVector.x = 0;
     this.moveVector.y = 0;
+    this.aimVector.x = 0;
+    this.aimVector.y = 0;
+    this.sprintHeld = false;
+    for (const key of Object.keys(this.pressed)) this.pressed[key] = false;
     OTZI.dom.stickKnob.style.transform = "translate(0, 0)";
   }
 };

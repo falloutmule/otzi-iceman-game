@@ -43,15 +43,31 @@ body { overscroll-behavior:none; }
 #worldCanvas { display:block; width:100%; height:100%; image-rendering:pixelated; background:#102016; }
 #uiRoot { position:absolute; inset:0; pointer-events:none; }
 button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-radius:8px; background:#1d251f; color:var(--ink); font-weight:800; min-width:44px; min-height:44px; }
-.topbar { position:absolute; left:10px; right:10px; top:10px; display:flex; justify-content:space-between; gap:10px; align-items:flex-start; pointer-events:none; text-shadow:0 2px 8px #000; }
-.topbar span { display:block; color:var(--muted); font-size:12px; }
+.topbar { position:absolute; left:10px; right:10px; top:8px; display:flex; justify-content:space-between; gap:10px; align-items:flex-start; pointer-events:none; text-shadow:0 2px 8px #000; }
+.topbar strong { display:block; max-width:calc(100vw - 82px); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:18px; }
+.topbar span { display:block; max-width:calc(100vw - 82px); color:var(--muted); font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .topbar button { pointer-events:auto; width:46px; }
 .start-panel { position:absolute; inset:0; display:grid; place-content:center; gap:12px; padding:24px; text-align:center; background:linear-gradient(180deg,rgba(8,11,10,.84),rgba(8,11,10,.54)); pointer-events:auto; }
 .start-panel[hidden] { display:none; }
 .start-panel h1 { margin:0; font-size:clamp(28px,8vw,52px); letter-spacing:0; }
 .start-panel p { margin:0; color:var(--muted); }
 #startBtn { padding:12px 18px; background:#513d1e; border-color:#a88345; }
-.debug-panel { position:absolute; left:10px; right:10px; top:62px; padding:6px 8px; border:1px solid rgba(231,189,108,.35); background:rgba(0,0,0,.56); color:#ffe6a8; font:11px ui-monospace,Consolas,monospace; pointer-events:none; }
+.toast { position:absolute; left:10px; right:76px; top:54px; min-height:34px; display:flex; align-items:center; padding:7px 10px; border:1px solid rgba(231,189,108,.5); border-radius:8px; background:rgba(25,20,12,.84); color:#ffe3a5; font-weight:800; box-shadow:0 8px 28px rgba(0,0,0,.34); }
+.toast[hidden] { display:none; }
+.inventory-chip { position:absolute; left:10px; top:94px; padding:5px 8px; border:1px solid rgba(143,192,169,.4); border-radius:8px; background:rgba(9,18,14,.72); color:#c7f0dc; font:700 12px ui-monospace,Consolas,monospace; }
+.debug-panel { position:absolute; left:10px; right:10px; top:126px; padding:6px 8px; border:1px solid rgba(231,189,108,.35); border-radius:8px; background:rgba(0,0,0,.62); color:#ffe6a8; font:11px ui-monospace,Consolas,monospace; pointer-events:none; }
+.minimap-panel { position:absolute; right:10px; top:145px; width:132px; padding:7px; border:1px solid rgba(143,192,169,.45); border-radius:8px; background:rgba(5,12,9,.82); box-shadow:0 10px 30px rgba(0,0,0,.32); pointer-events:none; }
+.minimap-panel[hidden] { display:none; }
+.minimap-panel canvas { display:block; width:116px; height:116px; border:1px solid rgba(243,234,215,.16); image-rendering:pixelated; }
+.panel-title { margin:0 0 5px; color:#e7bd6c; font-size:11px; font-weight:900; letter-spacing:.06em; }
+.menu-panel { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(340px,calc(100vw - 28px)); padding:14px; border:1px solid rgba(231,189,108,.5); border-radius:8px; background:rgba(12,15,13,.94); box-shadow:0 20px 70px rgba(0,0,0,.55); pointer-events:auto; }
+.menu-panel[hidden] { display:none; }
+.menu-panel p { margin:4px 0 12px; color:var(--ink); }
+.menu-panel dl { margin:0 0 12px; display:grid; gap:6px; }
+.menu-panel dl div { display:flex; justify-content:space-between; gap:16px; border-bottom:1px solid rgba(243,234,215,.1); padding-bottom:4px; }
+.menu-panel dt { color:var(--muted); }
+.menu-panel dd { margin:0; font-weight:800; }
+.menu-panel button { width:100%; background:#513d1e; border-color:#a88345; }
 .controls { position:absolute; left:0; right:0; bottom:0; height:min(31dvh,230px); min-height:164px; pointer-events:none; }
 .stick-zone { position:absolute; left:16px; bottom:16px; width:132px; height:132px; pointer-events:auto; touch-action:none; }
 .stick-label { position:absolute; left:0; top:-20px; color:var(--muted); font-size:11px; font-weight:800; }

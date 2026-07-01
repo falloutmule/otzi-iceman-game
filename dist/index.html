@@ -13,15 +13,31 @@ body { overscroll-behavior:none; }
 #worldCanvas { display:block; width:100%; height:100%; image-rendering:pixelated; background:#102016; }
 #uiRoot { position:absolute; inset:0; pointer-events:none; }
 button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-radius:8px; background:#1d251f; color:var(--ink); font-weight:800; min-width:44px; min-height:44px; }
-.topbar { position:absolute; left:10px; right:10px; top:10px; display:flex; justify-content:space-between; gap:10px; align-items:flex-start; pointer-events:none; text-shadow:0 2px 8px #000; }
-.topbar span { display:block; color:var(--muted); font-size:12px; }
+.topbar { position:absolute; left:10px; right:10px; top:8px; display:flex; justify-content:space-between; gap:10px; align-items:flex-start; pointer-events:none; text-shadow:0 2px 8px #000; }
+.topbar strong { display:block; max-width:calc(100vw - 82px); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:18px; }
+.topbar span { display:block; max-width:calc(100vw - 82px); color:var(--muted); font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .topbar button { pointer-events:auto; width:46px; }
 .start-panel { position:absolute; inset:0; display:grid; place-content:center; gap:12px; padding:24px; text-align:center; background:linear-gradient(180deg,rgba(8,11,10,.84),rgba(8,11,10,.54)); pointer-events:auto; }
 .start-panel[hidden] { display:none; }
 .start-panel h1 { margin:0; font-size:clamp(28px,8vw,52px); letter-spacing:0; }
 .start-panel p { margin:0; color:var(--muted); }
 #startBtn { padding:12px 18px; background:#513d1e; border-color:#a88345; }
-.debug-panel { position:absolute; left:10px; right:10px; top:62px; padding:6px 8px; border:1px solid rgba(231,189,108,.35); background:rgba(0,0,0,.56); color:#ffe6a8; font:11px ui-monospace,Consolas,monospace; pointer-events:none; }
+.toast { position:absolute; left:10px; right:76px; top:54px; min-height:34px; display:flex; align-items:center; padding:7px 10px; border:1px solid rgba(231,189,108,.5); border-radius:8px; background:rgba(25,20,12,.84); color:#ffe3a5; font-weight:800; box-shadow:0 8px 28px rgba(0,0,0,.34); }
+.toast[hidden] { display:none; }
+.inventory-chip { position:absolute; left:10px; top:94px; padding:5px 8px; border:1px solid rgba(143,192,169,.4); border-radius:8px; background:rgba(9,18,14,.72); color:#c7f0dc; font:700 12px ui-monospace,Consolas,monospace; }
+.debug-panel { position:absolute; left:10px; right:10px; top:126px; padding:6px 8px; border:1px solid rgba(231,189,108,.35); border-radius:8px; background:rgba(0,0,0,.62); color:#ffe6a8; font:11px ui-monospace,Consolas,monospace; pointer-events:none; }
+.minimap-panel { position:absolute; right:10px; top:145px; width:132px; padding:7px; border:1px solid rgba(143,192,169,.45); border-radius:8px; background:rgba(5,12,9,.82); box-shadow:0 10px 30px rgba(0,0,0,.32); pointer-events:none; }
+.minimap-panel[hidden] { display:none; }
+.minimap-panel canvas { display:block; width:116px; height:116px; border:1px solid rgba(243,234,215,.16); image-rendering:pixelated; }
+.panel-title { margin:0 0 5px; color:#e7bd6c; font-size:11px; font-weight:900; letter-spacing:.06em; }
+.menu-panel { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(340px,calc(100vw - 28px)); padding:14px; border:1px solid rgba(231,189,108,.5); border-radius:8px; background:rgba(12,15,13,.94); box-shadow:0 20px 70px rgba(0,0,0,.55); pointer-events:auto; }
+.menu-panel[hidden] { display:none; }
+.menu-panel p { margin:4px 0 12px; color:var(--ink); }
+.menu-panel dl { margin:0 0 12px; display:grid; gap:6px; }
+.menu-panel dl div { display:flex; justify-content:space-between; gap:16px; border-bottom:1px solid rgba(243,234,215,.1); padding-bottom:4px; }
+.menu-panel dt { color:var(--muted); }
+.menu-panel dd { margin:0; font-weight:800; }
+.menu-panel button { width:100%; background:#513d1e; border-color:#a88345; }
 .controls { position:absolute; left:0; right:0; bottom:0; height:min(31dvh,230px); min-height:164px; pointer-events:none; }
 .stick-zone { position:absolute; left:16px; bottom:16px; width:132px; height:132px; pointer-events:auto; touch-action:none; }
 .stick-label { position:absolute; left:0; top:-20px; color:var(--muted); font-size:11px; font-weight:800; }
@@ -84,12 +100,28 @@ OTZI.dom = {
     this.uiRoot.innerHTML = `
       <div class="topbar">
         <div>
-          <strong>The Legend of &Ouml;tzi the Iceman</strong>
+          <strong>&Ouml;tzi M1</strong>
           <span id="statusLine">Milestone 1 engine shell</span>
         </div>
         <button id="debugBtn" type="button" aria-label="Toggle debug">D</button>
       </div>
+      <div id="toast" class="toast" hidden></div>
+      <div id="inventoryChip" class="inventory-chip">FLINT: 0</div>
       <div id="debugPanel" class="debug-panel" hidden></div>
+      <div id="minimapPanel" class="minimap-panel" hidden aria-label="Trail map preview">
+        <div class="panel-title">TRAIL MAP</div>
+        <canvas id="minimapCanvas" width="116" height="116" aria-hidden="true"></canvas>
+      </div>
+      <div id="menuPanel" class="menu-panel" hidden role="dialog" aria-modal="false" aria-label="Craft and menu placeholder">
+        <div class="panel-title">CRAFT / MENU</div>
+        <p>Craft/Menu placeholder &mdash; control path works.</p>
+        <dl>
+          <div><dt>Seed</dt><dd id="menuSeed">-</dd></div>
+          <div><dt>Flint</dt><dd id="menuFlint">0</dd></div>
+          <div><dt>Stamina</dt><dd id="menuStamina">100</dd></div>
+        </dl>
+        <button id="menuCloseBtn" type="button">Close</button>
+      </div>
       <div class="start-panel" id="startPanel">
         <h1>The Legend of &Ouml;tzi the Iceman</h1>
         <p>Canvas 2D survival adventure engine shell.</p>
@@ -113,6 +145,16 @@ OTZI.dom = {
     this.startBtn = document.getElementById("startBtn");
     this.debugBtn = document.getElementById("debugBtn");
     this.debugPanel = document.getElementById("debugPanel");
+    this.toast = document.getElementById("toast");
+    this.inventoryChip = document.getElementById("inventoryChip");
+    this.minimapPanel = document.getElementById("minimapPanel");
+    this.minimapCanvas = document.getElementById("minimapCanvas");
+    this.minimapCtx = this.minimapCanvas.getContext("2d", { alpha: false });
+    this.menuPanel = document.getElementById("menuPanel");
+    this.menuSeed = document.getElementById("menuSeed");
+    this.menuFlint = document.getElementById("menuFlint");
+    this.menuStamina = document.getElementById("menuStamina");
+    this.menuCloseBtn = document.getElementById("menuCloseBtn");
     this.statusLine = document.getElementById("statusLine");
     this.moveZone = document.getElementById("moveZone");
     this.stickKnob = document.getElementById("stickKnob");
@@ -209,15 +251,26 @@ OTZI.input = {
   moveVector: { x: 0, y: 0 },
   aimVector: { x: 0, y: 0 },
   pressed: { use: false, sprint: false, menu: false, debug: false, map: false },
+  sprintHeld: false,
   init() {
     window.addEventListener("keydown", (ev) => {
       this.keys.add(ev.code);
       if (ev.code === "KeyD") this.pressed.debug = true;
       if (ev.code === "KeyE" || ev.code === "Space") this.pressed.use = true;
       if (ev.code === "KeyM") this.pressed.map = true;
+      if (ev.code === "Escape" && OTZI.game.menuOpen) {
+        OTZI.game.menuOpen = false;
+        this.clearAll();
+        OTZI.dialogue.toast("Craft/Menu closed");
+      }
       if (ev.code === "KeyR") OTZI.game.setSeed("otzi-" + Date.now().toString(36));
     });
     window.addEventListener("keyup", (ev) => this.keys.delete(ev.code));
+    window.addEventListener("blur", () => this.clearAll());
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) this.clearAll();
+    });
+    window.addEventListener("orientationchange", () => this.clearAll());
     this.bindMoveZone();
     this.bindButton(OTZI.dom.useBtn, "use");
     this.bindButton(OTZI.dom.sprintBtn, "sprint");
@@ -230,13 +283,16 @@ OTZI.input = {
       ev.preventDefault();
       el.setPointerCapture?.(ev.pointerId);
       this.pressed[name] = true;
+      if (name === "sprint") this.sprintHeld = true;
     });
     const clear = (ev) => {
       ev.preventDefault();
       el.releasePointerCapture?.(ev.pointerId);
+      if (name === "sprint") this.sprintHeld = false;
     };
     el.addEventListener("pointerup", clear);
     el.addEventListener("pointercancel", clear);
+    el.addEventListener("lostpointercapture", clear);
   },
   bindMoveZone() {
     const zone = OTZI.dom.moveZone;
@@ -277,6 +333,7 @@ OTZI.input = {
   consumePressed() {
     const out = { ...this.pressed };
     this.pressed.use = false;
+    this.pressed.sprint = false;
     this.pressed.menu = false;
     this.pressed.debug = false;
     this.pressed.map = false;
@@ -286,6 +343,10 @@ OTZI.input = {
     this.pointers.clear();
     this.moveVector.x = 0;
     this.moveVector.y = 0;
+    this.aimVector.x = 0;
+    this.aimVector.y = 0;
+    this.sprintHeld = false;
+    for (const key of Object.keys(this.pressed)) this.pressed[key] = false;
     OTZI.dom.stickKnob.style.transform = "translate(0, 0)";
   }
 };
@@ -313,7 +374,8 @@ OTZI.actionMap = {
     return {
       moveX: x,
       moveY: y,
-      sprint: pressed.sprint || input.keys.has("ShiftLeft") || input.keys.has("ShiftRight"),
+      sprint: input.sprintHeld || input.keys.has("ShiftLeft") || input.keys.has("ShiftRight"),
+      sprintPressed: pressed.sprint,
       usePressed: pressed.use,
       menuPressed: pressed.menu,
       debugPressed: pressed.debug,
@@ -570,9 +632,16 @@ OTZI.scenes = {
 var OTZI = window.OTZI || (window.OTZI = {});
 OTZI.dialogue = {
   message: "",
+  toastUntil: 0,
   say(text) {
     this.message = text;
     OTZI.dom.statusLine.textContent = text;
+  },
+  toast(text, seconds = 1.4) {
+    this.say(text);
+    this.toastUntil = performance.now() + seconds * 1000;
+    OTZI.dom.toast.textContent = text;
+    OTZI.dom.toast.hidden = false;
   }
 };
 
@@ -692,6 +761,18 @@ var OTZI = window.OTZI || (window.OTZI = {});
 OTZI.renderUi = {
   sync() {
     const game = OTZI.game;
+    OTZI.dom.inventoryChip.textContent = `FLINT: ${game.inventory.flint || 0}`;
+    if (!OTZI.dom.toast.hidden && performance.now() > OTZI.dialogue.toastUntil) {
+      OTZI.dom.toast.hidden = true;
+    }
+    OTZI.dom.minimapPanel.hidden = !game.minimap;
+    if (game.minimap) this.drawMinimap();
+    OTZI.dom.menuPanel.hidden = !game.menuOpen;
+    if (game.menuOpen) {
+      OTZI.dom.menuSeed.textContent = game.seed;
+      OTZI.dom.menuFlint.textContent = String(game.inventory.flint || 0);
+      OTZI.dom.menuStamina.textContent = Math.round(game.player.stamina).toString();
+    }
     if (!game.debug) {
       OTZI.dom.debugPanel.hidden = true;
       return;
@@ -705,8 +786,33 @@ OTZI.renderUi = {
       `fps ${game.fps.toFixed(1)}`,
       `entities ${game.entities.length}`,
       `pointers ${OTZI.input.pointers.size}`,
-      `canvas ${OTZI.viewport.internalW}x${OTZI.viewport.internalH}`
+      `canvas ${OTZI.viewport.internalW}x${OTZI.viewport.internalH}`,
+      `flint ${game.inventory.flint || 0}`
     ].join(" | ");
+  },
+  drawMinimap() {
+    const ctx = OTZI.dom.minimapCtx;
+    const map = OTZI.game.map;
+    const w = OTZI.dom.minimapCanvas.width;
+    const h = OTZI.dom.minimapCanvas.height;
+    ctx.fillStyle = "#07100c";
+    ctx.fillRect(0, 0, w, h);
+    const sx = w / map.w;
+    const sy = h / map.h;
+    for (let y = 0; y < map.h; y += 3) {
+      for (let x = 0; x < map.w; x += 3) {
+        const flags = map.getFlags(x, y);
+        const ground = map.getGround(x, y);
+        ctx.fillStyle = flags & OTZI.FLAG.BLOCKED ? "#172a1d" :
+          ground === OTZI.TILE.PATH ? "#9a784b" :
+          ground === OTZI.TILE.WATER ? "#2d6f86" : "#315b36";
+        ctx.fillRect(Math.floor(x * sx), Math.floor(y * sy), Math.ceil(sx * 3), Math.ceil(sy * 3));
+      }
+    }
+    ctx.fillStyle = "#f0c666";
+    ctx.beginPath();
+    ctx.arc((OTZI.game.player.x / OTZI.CFG.tileSize) * sx, (OTZI.game.player.y / OTZI.CFG.tileSize) * sy, 3, 0, Math.PI * 2);
+    ctx.fill();
   }
 };
 
@@ -819,6 +925,9 @@ OTZI.installTestHooks = function installTestHooks() {
         entityCount: g.entities.length,
         particleCount: 0,
         debug: g.debug,
+        minimap: g.minimap,
+        menuOpen: g.menuOpen,
+        status: OTZI.dialogue.message,
         viewport: {
           cssW: OTZI.viewport.cssW,
           cssH: OTZI.viewport.cssH,
@@ -828,7 +937,8 @@ OTZI.installTestHooks = function installTestHooks() {
         },
         input: {
           pointerCount: OTZI.input.pointers.size,
-          movePointerActive: Array.from(OTZI.input.pointers.values()).includes("move")
+          movePointerActive: Array.from(OTZI.input.pointers.values()).includes("move"),
+          sprintHeld: OTZI.input.sprintHeld
         }
       };
     },
@@ -861,7 +971,8 @@ OTZI.game = {
   seed: OTZI.CFG.defaultSeed,
   fps: 0,
   debug: false,
-  minimap: true,
+  minimap: false,
+  menuOpen: false,
   setSeed(seed) {
     this.seed = seed || OTZI.CFG.defaultSeed;
     this.map = OTZI.worldgen.generate(this.seed);
@@ -874,11 +985,30 @@ OTZI.game = {
   },
   update(dt, actions) {
     if (actions.debugPressed) OTZI.debug.toggle();
-    if (actions.mapPressed) this.minimap = !this.minimap;
+    if (actions.mapPressed) {
+      this.minimap = !this.minimap;
+      OTZI.dialogue.toast(this.minimap ? "Trail map open" : "Trail map closed");
+    }
+    if (actions.menuPressed) {
+      this.menuOpen = !this.menuOpen;
+      OTZI.input.clearAll();
+      if (this.menuOpen) this.minimap = false;
+      OTZI.dialogue.toast(this.menuOpen ? "Craft/Menu opened" : "Craft/Menu closed");
+    }
     if (actions.usePressed) {
       OTZI.inventory.add("flint", 1);
-      OTZI.dialogue.say("Gathered flint. Starter interaction path works.");
+      OTZI.dialogue.toast("Gathered flint +1");
       OTZI.audio.blip(660, 0.04);
+    }
+    if (actions.sprintPressed) {
+      this.player.stamina = Math.max(0, this.player.stamina - 8);
+      OTZI.dialogue.toast("Dodge/Sprint burst");
+      OTZI.audio.blip(330, 0.035);
+    }
+    if (this.menuOpen) {
+      actions.moveX = 0;
+      actions.moveY = 0;
+      actions.sprint = false;
     }
     const speed = actions.sprint ? OTZI.CFG.sprintSpeed : OTZI.CFG.playerSpeed;
     OTZI.collision.moveCircle(this.player, actions.moveX * speed * dt, actions.moveY * speed * dt);
@@ -932,6 +1062,11 @@ OTZI.game = {
       OTZI.dom.startPanel.hidden = true;
       OTZI.game.running = true;
     });
+    OTZI.dom.menuCloseBtn.addEventListener("click", () => {
+      OTZI.game.menuOpen = false;
+      OTZI.input.clearAll();
+      OTZI.dialogue.toast("Craft/Menu closed");
+    });
 
     OTZI.game.running = true;
     requestAnimationFrame(frame);
@@ -945,6 +1080,6 @@ OTZI.game = {
 })();
 
   </script>
-  <!-- build: 2026-07-01T20:58:36.122Z modules:25 -->
+  <!-- build: 2026-07-01T21:26:26.195Z modules:25 -->
 </body>
 </html>

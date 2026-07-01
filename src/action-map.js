@@ -19,7 +19,8 @@ OTZI.actionMap = {
     return {
       moveX: x,
       moveY: y,
-      sprint: pressed.sprint || input.keys.has("ShiftLeft") || input.keys.has("ShiftRight"),
+      sprint: input.sprintHeld || input.keys.has("ShiftLeft") || input.keys.has("ShiftRight"),
+      sprintPressed: pressed.sprint,
       usePressed: pressed.use,
       menuPressed: pressed.menu,
       debugPressed: pressed.debug,

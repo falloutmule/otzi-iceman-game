@@ -7,7 +7,8 @@ OTZI.game = {
   seed: OTZI.CFG.defaultSeed,
   fps: 0,
   debug: false,
-  minimap: true,
+  minimap: false,
+  menuOpen: false,
   setSeed(seed) {
     this.seed = seed || OTZI.CFG.defaultSeed;
     this.map = OTZI.worldgen.generate(this.seed);
@@ -20,11 +21,30 @@ OTZI.game = {
   },
   update(dt, actions) {
     if (actions.debugPressed) OTZI.debug.toggle();
-    if (actions.mapPressed) this.minimap = !this.minimap;
+    if (actions.mapPressed) {
+      this.minimap = !this.minimap;
+      OTZI.dialogue.toast(this.minimap ? "Trail map open" : "Trail map closed");
+    }
+    if (actions.menuPressed) {
+      this.menuOpen = !this.menuOpen;
+      OTZI.input.clearAll();
+      if (this.menuOpen) this.minimap = false;
+      OTZI.dialogue.toast(this.menuOpen ? "Craft/Menu opened" : "Craft/Menu closed");
+    }
     if (actions.usePressed) {
       OTZI.inventory.add("flint", 1);
-      OTZI.dialogue.say("Gathered flint. Starter interaction path works.");
+      OTZI.dialogue.toast("Gathered flint +1");
       OTZI.audio.blip(660, 0.04);
+    }
+    if (actions.sprintPressed) {
+      this.player.stamina = Math.max(0, this.player.stamina - 8);
+      OTZI.dialogue.toast("Dodge/Sprint burst");
+      OTZI.audio.blip(330, 0.035);
+    }
+    if (this.menuOpen) {
+      actions.moveX = 0;
+      actions.moveY = 0;
+      actions.sprint = false;
     }
     const speed = actions.sprint ? OTZI.CFG.sprintSpeed : OTZI.CFG.playerSpeed;
     OTZI.collision.moveCircle(this.player, actions.moveX * speed * dt, actions.moveY * speed * dt);
@@ -77,6 +97,11 @@ OTZI.game = {
       await OTZI.audio.unlock();
       OTZI.dom.startPanel.hidden = true;
       OTZI.game.running = true;
+    });
+    OTZI.dom.menuCloseBtn.addEventListener("click", () => {
+      OTZI.game.menuOpen = false;
+      OTZI.input.clearAll();
+      OTZI.dialogue.toast("Craft/Menu closed");
     });
 
     OTZI.game.running = true;

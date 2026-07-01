@@ -28,6 +28,9 @@ OTZI.installTestHooks = function installTestHooks() {
         entityCount: g.entities.length,
         particleCount: 0,
         debug: g.debug,
+        minimap: g.minimap,
+        menuOpen: g.menuOpen,
+        status: OTZI.dialogue.message,
         viewport: {
           cssW: OTZI.viewport.cssW,
           cssH: OTZI.viewport.cssH,
@@ -37,7 +40,8 @@ OTZI.installTestHooks = function installTestHooks() {
         },
         input: {
           pointerCount: OTZI.input.pointers.size,
-          movePointerActive: Array.from(OTZI.input.pointers.values()).includes("move")
+          movePointerActive: Array.from(OTZI.input.pointers.values()).includes("move"),
+          sprintHeld: OTZI.input.sprintHeld
         }
       };
     },

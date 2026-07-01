@@ -2,10 +2,11 @@ Command:
   npx.cmd playwright test
 
 Result:
-  Running 2 tests using 2 workers
+  Running 3 tests using 3 workers
   ok 1 tests\smoke.spec.js:5:1 - otzi milestone 1 smoke
   ok 2 tests\baseline-starter.spec.js:5:1 - starter reference baseline loads
-  2 passed (4.1s)
+  ok 3 tests\mobile-controls.spec.js:5:1 - milestone 1 mobile controls are visible and responsive
+  3 passed (4.0s)
 
 Notes:
   Port 8080 was already occupied by another local service returning JSON 404 responses.
