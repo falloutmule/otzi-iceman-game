@@ -49,11 +49,12 @@ Fix the Milestone 1 field layout and gather behavior on the existing Otzi GitHub
 
 ## Current exact state
 
-- verified: Working branch is `fix/field-layout-and-gather`.
+- verified: Fix branch `fix/field-layout-and-gather` was created and pushed.
+- verified: `main` was fast-forwarded to the fix commit and pushed.
 - verified: Runtime target remains `dist/index.html`.
 - verified: Default local server port remains `8099`.
 - verified: This remains Milestone 1 only; no Phaser, external assets, dungeons, crafting depth, or new progression systems were added.
-- proposed: Main branch and GitHub Pages deployment will be updated after this verified branch is pushed and merged/fast-forwarded.
+- verified: GitHub Pages deployment succeeded for run `28550716668`.
 
 ## Remaining blockers
 
@@ -62,7 +63,7 @@ Fix the Milestone 1 field layout and gather behavior on the existing Otzi GitHub
 
 ## Next actionable step
 
-- proposed: Deploy to GitHub Pages, then open `https://falloutmule.github.io/otzi-iceman-game/` on Samsung Galaxy S21 Ultra Chrome and retest the new layout, MAP tab, and gather behavior near actual resource nodes.
+- proposed: Open `https://falloutmule.github.io/otzi-iceman-game/` on Samsung Galaxy S21 Ultra Chrome and retest the new layout, MAP tab, and gather behavior near actual resource nodes.
 
 ## Evidence
 
@@ -79,7 +80,9 @@ Fix the Milestone 1 field layout and gather behavior on the existing Otzi GitHub
 ## Live URLs
 
 - verified: Repository: `https://github.com/falloutmule/otzi-iceman-game`
-- proposed: GitHub Pages: `https://falloutmule.github.io/otzi-iceman-game/`
+- verified: GitHub Pages: `https://falloutmule.github.io/otzi-iceman-game/`
+- verified: Live GitHub Pages returned HTTP 200 with response length `41388`.
+- verified: Live HTML contains the deployed field-layout and gather fix strings.
 
 ## Samsung Galaxy S21 Ultra status
 
