@@ -44,20 +44,20 @@ Finish the Milestone 1 layout cleanup by deploying the existing AIM removal and 
 
 ## Current exact state
 
-- verified: Working branch is `fix/remove-aim-clean-layout`.
+- verified: Branch `fix/remove-aim-clean-layout` was pushed.
 - verified: Latest local commit before this MAP move is `87465ef Remove unused AIM control from Milestone 1 layout`.
 - verified: Runtime target remains `dist/index.html`.
 - verified: Default local server port remains `8099`.
-- proposed: Push branch, fast-forward `main`, and deploy GitHub Pages when network approval is available.
+- verified: `main` was fast-forwarded to `45d9ce0` and pushed.
+- verified: GitHub Pages deployment succeeded for run `28553999194`.
 
 ## Remaining blockers
 
-- proposed: GitHub push and Pages deployment still need to happen for the live site to reflect this branch.
 - untested: Real Samsung Galaxy S21 Ultra Chrome confirmation is still required from the user after deployment.
 
 ## Next actionable step
 
-- proposed: Push `fix/remove-aim-clean-layout`, fast-forward `main`, wait for GitHub Pages, then open `https://falloutmule.github.io/otzi-iceman-game/` on Samsung Galaxy S21 Ultra Chrome and confirm AIM is gone, MAP is in the stats bar, and controls still work.
+- proposed: Open `https://falloutmule.github.io/otzi-iceman-game/` on Samsung Galaxy S21 Ultra Chrome and confirm AIM is gone, MAP is in the stats bar, and controls still work.
 
 ## Evidence
 
@@ -73,7 +73,11 @@ Finish the Milestone 1 layout cleanup by deploying the existing AIM removal and 
 ## Live URLs
 
 - verified: Repository: `https://github.com/falloutmule/otzi-iceman-game`
-- proposed: GitHub Pages: `https://falloutmule.github.io/otzi-iceman-game/`
+- verified: GitHub Pages: `https://falloutmule.github.io/otzi-iceman-game/`
+- verified: Live GitHub Pages returned HTTP 200 with response length `40743`.
+- verified: Live HTML has no runtime AIM control strings.
+- verified: Live HTML contains MAP in the HUD layout.
+- verified: Live HTML no longer contains edge-mounted MAP `writing-mode:vertical-rl` CSS.
 
 ## Samsung Galaxy S21 Ultra status
 
