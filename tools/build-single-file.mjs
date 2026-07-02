@@ -60,9 +60,9 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 .status-line { min-width:0; color:#ffe3a5; font-weight:800; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 #debugBtn { width:46px; }
 .debug-panel { grid-area:stats; align-self:start; justify-self:stretch; margin:3px 56px 0 8px; padding:5px 8px; border:1px solid rgba(231,189,108,.35); border-radius:8px; background:rgba(0,0,0,.78); color:#ffe6a8; font:10px ui-monospace,Consolas,monospace; pointer-events:none; z-index:6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.minimap-panel { position:absolute; right:8px; top:56px; width:120px; padding:6px; border:1px solid rgba(143,192,169,.45); border-radius:8px; background:rgba(5,12,9,.82); box-shadow:0 10px 30px rgba(0,0,0,.32); pointer-events:none; z-index:3; }
+.minimap-panel { position:absolute; right:8px; top:56px; width:136px; padding:8px; border:1px solid rgba(143,192,169,.45); border-radius:8px; background:rgba(5,12,9,.86); box-shadow:0 10px 30px rgba(0,0,0,.32); pointer-events:none; z-index:3; }
 .minimap-panel[hidden] { display:none; }
-.minimap-panel canvas { display:block; width:104px; height:104px; border:1px solid rgba(243,234,215,.16); image-rendering:pixelated; }
+.minimap-panel canvas { display:block; width:120px; height:120px; border:1px solid rgba(243,234,215,.16); image-rendering:pixelated; }
 .inventory-panel { position:absolute; left:8px; top:56px; width:min(180px,calc(100vw - 18px)); padding:8px; border:1px solid rgba(143,192,169,.45); border-radius:8px; background:rgba(5,12,9,.86); box-shadow:0 10px 30px rgba(0,0,0,.32); pointer-events:none; z-index:3; }
 .inventory-panel[hidden] { display:none; }
 .inventory-panel dl { margin:0; display:grid; gap:4px; }

@@ -3,7 +3,7 @@ var OTZI = window.OTZI || (window.OTZI = {});
 
 OTZI.CFG = {
   engineVersion: "otzi-screen-grid-0.2.0",
-  saveVersion: 3,
+  saveVersion: 4,
   worldgenVersion: 2,
   saveKey: "otzi_screen_grid_save_v3",
   defaultSeed: "otzi-m1",
@@ -22,5 +22,6 @@ OTZI.CFG = {
   interactRadius: 26,
   resourceNodeRadius: 10,
   transitionEdgePad: 18,
+  screenTransitionDuration: 0.18,
   dprCap: 2
 };

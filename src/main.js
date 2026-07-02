@@ -16,6 +16,23 @@ OTZI.game = {
   focusedResource: null,
   focusedEntranceId: null,
   focusedEntrance: null,
+  transition: {
+    active: false,
+    kind: "screen_slide",
+    direction: null,
+    fromScreenId: null,
+    toScreenId: null,
+    elapsed: 0,
+    duration: OTZI.CFG.screenTransitionDuration,
+    fromArea: null,
+    toArea: null,
+    fromPlayer: null,
+    toPlayer: null,
+    fromCamera: null,
+    toCamera: null,
+    targetX: null,
+    targetY: null
+  },
   currentArea: null,
   currentScreen: null,
   currentRoom: null,
@@ -36,6 +53,23 @@ OTZI.game = {
     this.focusedResource = null;
     this.focusedEntranceId = null;
     this.focusedEntrance = null;
+    this.transition = {
+      active: false,
+      kind: "screen_slide",
+      direction: null,
+      fromScreenId: null,
+      toScreenId: null,
+      elapsed: 0,
+      duration: OTZI.CFG.screenTransitionDuration,
+      fromArea: null,
+      toArea: null,
+      fromPlayer: null,
+      toPlayer: null,
+      fromCamera: null,
+      toCamera: null,
+      targetX: null,
+      targetY: null
+    };
     this.enterOverworldScreen(this.world.homeX, this.world.homeY, { keepScene: true });
   },
   setActiveArea(area) {
@@ -55,12 +89,12 @@ OTZI.game = {
       y: Math.max(min, Math.min(maxY, pos.y))
     };
   },
-  placePlayerForEntry(edge, carry) {
+  computeEntryPosition(map, edge, carry) {
     const ts = OTZI.CFG.tileSize;
-    const min = ts * 1.25;
-    const maxX = this.map.w * ts - min;
-    const maxY = this.map.h * ts - min;
-    const center = { x: this.map.w * ts / 2, y: this.map.h * ts / 2 };
+    const min = Math.max(ts * 1.25, OTZI.CFG.transitionEdgePad + ts * 0.45);
+    const maxX = map.w * ts - min;
+    const maxY = map.h * ts - min;
+    const center = { x: map.w * ts / 2, y: map.h * ts / 2 };
     const next = { x: center.x, y: center.y };
     if (edge === "w") {
       next.x = min;
@@ -75,6 +109,10 @@ OTZI.game = {
       next.x = Math.max(min, Math.min(maxX, carry?.x ?? center.x));
       next.y = maxY;
     }
+    return next;
+  },
+  placePlayerForEntry(edge, carry) {
+    const next = this.computeEntryPosition(this.map, edge, carry);
     this.player.x = next.x;
     this.player.y = next.y;
   },
@@ -93,6 +131,51 @@ OTZI.game = {
     OTZI.input.clearAll();
     OTZI.camera.update();
     this.updateFocusState();
+  },
+  beginScreenTransition(direction, x, y, entrySide, carry) {
+    const toArea = OTZI.worldGrid.getOverworldScreen(this.world, this.seed, x, y);
+    OTZI.worldGrid.markDiscovered(this.world, x, y);
+    toArea.discovered = true;
+    const toPlayer = this.computeEntryPosition(toArea.map, entrySide, carry);
+    const toCamera = OTZI.camera.targetFor(toArea.map, toPlayer);
+    this.transition = {
+      active: true,
+      kind: "screen_slide",
+      direction,
+      fromScreenId: this.currentScreen.id,
+      toScreenId: toArea.id,
+      elapsed: 0,
+      duration: OTZI.CFG.screenTransitionDuration,
+      fromArea: this.currentScreen,
+      toArea,
+      fromPlayer: { x: this.player.x, y: this.player.y, radius: this.player.radius },
+      toPlayer: { x: toPlayer.x, y: toPlayer.y, radius: this.player.radius },
+      fromCamera: { x: OTZI.camera.x, y: OTZI.camera.y },
+      toCamera,
+      targetX: x,
+      targetY: y
+    };
+    OTZI.input.clearAll();
+    this.focusedTargetType = null;
+    this.focusedResourceId = null;
+    this.focusedResource = null;
+    this.focusedEntranceId = null;
+    this.focusedEntrance = null;
+  },
+  finishScreenTransition() {
+    const t = this.transition;
+    this.transition.active = false;
+    this.enterOverworldScreen(t.targetX, t.targetY, { keepScene: true, restorePlayer: true });
+    this.player.x = t.toPlayer.x;
+    this.player.y = t.toPlayer.y;
+    OTZI.camera.update();
+    OTZI.input.clearAll();
+    this.updateFocusState();
+  },
+  updateTransition(dt) {
+    if (!this.transition.active) return;
+    this.transition.elapsed = Math.min(this.transition.duration, this.transition.elapsed + dt);
+    if (this.transition.elapsed >= this.transition.duration) this.finishScreenTransition();
   },
   ensureDungeon(id) {
     if (!this.currentDungeon || this.currentDungeon.id !== id) {
@@ -159,6 +242,7 @@ OTZI.game = {
     this.focusedTargetType = entrance ? "entrance" : resource ? "resource" : null;
   },
   tryUse() {
+    if (this.transition.active) return false;
     if (this.focusedEntrance) {
       if (this.focusedEntrance.targetScene === "dungeon") {
         this.enterDungeon(this.focusedEntrance.dungeonId);
@@ -172,6 +256,7 @@ OTZI.game = {
     return this.tryGather();
   },
   tryGather() {
+    if (this.transition.active) return false;
     const node = this.focusedResourceId ? OTZI.resources.getById(this.resourceNodes, this.focusedResourceId) : null;
     if (!node) {
       OTZI.dialogue.toast("No resource nearby");
@@ -192,29 +277,34 @@ OTZI.game = {
     return true;
   },
   maybeTransitionScreen() {
-    if (this.scene !== "overworld" || !this.currentScreen) return false;
+    if (this.transition.active || this.scene !== "overworld" || !this.currentScreen) return false;
     const pad = OTZI.CFG.transitionEdgePad;
     const maxX = this.map.w * OTZI.CFG.tileSize - pad;
     const maxY = this.map.h * OTZI.CFG.tileSize - pad;
     if (this.player.x <= pad && this.currentScreen.exits.w) {
-      this.enterOverworldScreen(this.world.currentX - 1, this.world.currentY, { entrySide: "e", carry: { y: this.player.y } });
+      this.beginScreenTransition("west", this.world.currentX - 1, this.world.currentY, "e", { y: this.player.y });
       return true;
     }
     if (this.player.x >= maxX && this.currentScreen.exits.e) {
-      this.enterOverworldScreen(this.world.currentX + 1, this.world.currentY, { entrySide: "w", carry: { y: this.player.y } });
+      this.beginScreenTransition("east", this.world.currentX + 1, this.world.currentY, "w", { y: this.player.y });
       return true;
     }
     if (this.player.y <= pad && this.currentScreen.exits.n) {
-      this.enterOverworldScreen(this.world.currentX, this.world.currentY - 1, { entrySide: "s", carry: { x: this.player.x } });
+      this.beginScreenTransition("north", this.world.currentX, this.world.currentY - 1, "s", { x: this.player.x });
       return true;
     }
     if (this.player.y >= maxY && this.currentScreen.exits.s) {
-      this.enterOverworldScreen(this.world.currentX, this.world.currentY + 1, { entrySide: "n", carry: { x: this.player.x } });
+      this.beginScreenTransition("south", this.world.currentX, this.world.currentY + 1, "n", { x: this.player.x });
       return true;
     }
     return false;
   },
   update(dt, actions) {
+    if (this.transition.active) {
+      OTZI.input.clearAll();
+      this.updateTransition(dt);
+      return;
+    }
     if (actions.debugPressed) OTZI.debug.toggle();
     if (actions.mapPressed) {
       this.minimap = !this.minimap;

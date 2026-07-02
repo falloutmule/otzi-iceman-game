@@ -27,9 +27,6 @@ OTZI.save = {
         rooms: OTZI.worldGrid.collectAreaStates(g.currentDungeon.rooms),
         returnScreen: g.returnScreen
       } : null,
-      resources: {
-        depleted: OTZI.resources.depletedDeltas(g.resourceNodes)
-      },
       village: g.village,
       facts: g.facts
     };

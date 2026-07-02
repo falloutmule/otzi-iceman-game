@@ -65,21 +65,43 @@ test("screen-grid mobile shell supports transitions, screen-local gather, and Fl
   await page.locator("#useBtn").tap();
   await expect(page.locator("#statusLine")).toContainText("No resource nearby");
 
-  const afterEast = await page.evaluate(() => window.__OTZI_TEST__.placeAndStepEdge("e"));
+  const eastActive = await page.evaluate(() => window.__OTZI_TEST__.placeAndStepEdge("e", 1));
+  expect(eastActive.transition.active).toBe(true);
+  expect(eastActive.transition.direction).toBe("east");
+  await page.screenshot({ path: "artifacts/screenshots/screen-slide-east.png", fullPage: true });
+  const afterEast = await page.evaluate(() => window.__OTZI_TEST__.stepUntilTransitionSettles());
   expect(afterEast.world.currentX).toBe(initial.world.currentX + 1);
   expect(afterEast.world.discoveredCount).toBe(2);
-  const afterSouth = await page.evaluate(() => window.__OTZI_TEST__.placeAndStepEdge("s"));
+  expect(afterEast.transition.active).toBe(false);
+  expect(afterEast.input.pointerCount).toBe(0);
+  const southActive = await page.evaluate(() => window.__OTZI_TEST__.placeAndStepEdge("s", 1));
+  expect(southActive.transition.active).toBe(true);
+  expect(southActive.transition.direction).toBe("south");
+  const afterSouth = await page.evaluate(() => window.__OTZI_TEST__.stepUntilTransitionSettles());
   expect(afterSouth.world.currentY).toBe(initial.world.currentY + 1);
   expect(afterSouth.world.discoveredCount).toBe(3);
-  const backNorth = await page.evaluate(() => window.__OTZI_TEST__.placeAndStepEdge("n"));
+  const northActive = await page.evaluate(() => window.__OTZI_TEST__.placeAndStepEdge("n", 1));
+  expect(northActive.transition.active).toBe(true);
+  expect(northActive.transition.direction).toBe("north");
+  await page.screenshot({ path: "artifacts/screenshots/screen-slide-north.png", fullPage: true });
+  const backNorth = await page.evaluate(() => window.__OTZI_TEST__.stepUntilTransitionSettles());
   expect(backNorth.world.currentY).toBe(initial.world.currentY);
-  const backWest = await page.evaluate(() => window.__OTZI_TEST__.placeAndStepEdge("w"));
+  const westActive = await page.evaluate(() => window.__OTZI_TEST__.placeAndStepEdge("w", 1));
+  expect(westActive.transition.active).toBe(true);
+  expect(westActive.transition.direction).toBe("west");
+  const backWest = await page.evaluate(() => window.__OTZI_TEST__.stepUntilTransitionSettles());
   expect(backWest.world.currentX).toBe(initial.world.currentX);
+  expect(backWest.transition.active).toBe(false);
 
   await page.locator("#mapTab").tap();
   await expect(page.locator("#minimapPanel")).toBeVisible();
+  await expect(page.locator("#minimapTitle")).toContainText("OVERWORLD MAP");
   await page.screenshot({ path: "artifacts/screenshots/hud-map-button-minimap-open.png", fullPage: true });
+  await page.screenshot({ path: "artifacts/screenshots/overworld-discovered-minimap.png", fullPage: true });
   await page.screenshot({ path: "artifacts/screenshots/clear-game-viewport-no-controls.png", fullPage: true });
+  await page.locator("#inventoryBtn").tap();
+  await expect(page.locator("#inventoryPanel")).toBeVisible();
+  await expect(page.locator("#minimapPanel")).toBeHidden();
 
   await page.evaluate(() => window.__OTZI_TEST__.teleportToNearestResource("flint"));
   await page.waitForTimeout(1200);
@@ -98,6 +120,7 @@ test("screen-grid mobile shell supports transitions, screen-local gather, and Fl
   expect(afterGather.resourceNodes.depleted).toBe(1);
   await page.screenshot({ path: "artifacts/screenshots/gather-success-flint.png", fullPage: true });
   await page.screenshot({ path: "artifacts/screenshots/gather-focused-resource-only.png", fullPage: true });
+  await page.screenshot({ path: "artifacts/screenshots/post-transition-resource-gather.png", fullPage: true });
 
   await page.locator("#inventoryBtn").tap();
   await expect(page.locator("#inventoryPanel")).toBeVisible();
@@ -139,7 +162,17 @@ test("screen-grid mobile shell supports transitions, screen-local gather, and Fl
   expect(inDungeon.dungeon?.currentRoomId).toBeTruthy();
   await page.locator("#mapTab").tap();
   await expect(page.locator("#minimapPanel")).toBeVisible();
-  await page.screenshot({ path: "artifacts/screenshots/hud-map-button-minimap-open.png", fullPage: true });
+  await expect(page.locator("#minimapTitle")).toContainText("FLINT SCAR MAP");
+  await page.screenshot({ path: "artifacts/screenshots/dungeon-room-minimap.png", fullPage: true });
+  const dungeonSaved = await page.evaluate(() => window.__OTZI_TEST__.saveNow());
+  expect(dungeonSaved).toBe(true);
+  await page.reload();
+  await expect(page.locator("#worldCanvas")).toBeVisible();
+  await page.getByRole("button", { name: /start/i }).tap();
+  const dungeonReload = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
+  expect(dungeonReload.scene).toBe("dungeon");
+  expect(dungeonReload.dungeon.active).toBe(true);
+  expect(dungeonReload.dungeon.id).toBe("flint_scar");
   await page.evaluate(() => window.__OTZI_TEST__.teleportToFocusedEntrance());
   await page.waitForTimeout(1200);
   await expect(page.locator("#statusLine")).toContainText("USE: enter Forest Exit");
@@ -148,6 +181,9 @@ test("screen-grid mobile shell supports transitions, screen-local gather, and Fl
   const backOutside = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(backOutside.scene).toBe("overworld");
   expect(backOutside.world.currentScreenId).toBe("overworld_5_4");
+  await page.locator("#mapTab").tap();
+  await expect(page.locator("#minimapTitle")).toContainText("OVERWORLD MAP");
+  await page.screenshot({ path: "artifacts/screenshots/flint-scar-enter-exit.png", fullPage: true });
 
   await page.locator("#menuBtn").tap();
   await expect(page.locator("#menuPanel")).toBeVisible();
@@ -159,6 +195,8 @@ test("screen-grid mobile shell supports transitions, screen-local gather, and Fl
   expect(afterReset.inventory.flint).toBe(0);
   expect(afterReset.scene).toBe("overworld");
   expect(afterReset.world.currentScreenId).toBe("overworld_4_4");
+  expect(afterReset.world.discoveredCount).toBe(1);
+  expect(afterReset.dungeon.discoveredCount).toBe(0);
 
   const beforeMove = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   const zone = await page.locator("#moveZone").boundingBox();

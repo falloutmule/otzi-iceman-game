@@ -11,7 +11,7 @@ OTZI.dom = {
       <section id="gameShell" class="game-shell" aria-label="Game viewport">
         <div id="minimapPanel" class="minimap-panel" hidden aria-label="Trail map preview">
           <div class="panel-title" id="minimapTitle">TRAIL MAP</div>
-          <canvas id="minimapCanvas" width="104" height="104" aria-hidden="true"></canvas>
+          <canvas id="minimapCanvas" width="120" height="120" aria-hidden="true"></canvas>
         </div>
         <div id="inventoryPanel" class="inventory-panel" hidden aria-label="Pack inventory">
           <div class="panel-title">PACK</div>

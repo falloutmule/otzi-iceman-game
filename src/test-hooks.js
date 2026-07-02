@@ -38,15 +38,24 @@ OTZI.installTestHooks = function installTestHooks() {
           currentX: g.world.currentX,
           currentY: g.world.currentY,
           currentScreenId: g.currentScreen ? g.currentScreen.id : null,
-          discoveredCount: Object.keys(g.world.discovered).length
+          discoveredCount: Object.keys(g.world.discovered).length,
+          gridW: g.world.gridW,
+          gridH: g.world.gridH
         },
-        dungeon: g.currentDungeon ? {
-          id: g.currentDungeon.id,
-          currentX: g.currentDungeon.currentX,
-          currentY: g.currentDungeon.currentY,
+        dungeon: {
+          active: !!g.currentDungeon && g.scene === "dungeon",
+          id: g.currentDungeon ? g.currentDungeon.id : null,
+          currentX: g.currentDungeon ? g.currentDungeon.currentX : null,
+          currentY: g.currentDungeon ? g.currentDungeon.currentY : null,
           currentRoomId: g.currentRoom ? g.currentRoom.id : null,
-          discoveredCount: Object.keys(g.currentDungeon.discovered).length
-        } : null,
+          discoveredCount: g.currentDungeon ? Object.keys(g.currentDungeon.discovered).length : 0
+        },
+        transition: {
+          active: g.transition.active,
+          direction: g.transition.direction,
+          elapsed: g.transition.elapsed,
+          duration: g.transition.duration
+        },
         nearestResource: (() => {
           const node = g.findNearestResource();
           return node ? {
@@ -94,6 +103,13 @@ OTZI.installTestHooks = function installTestHooks() {
     setSeed(seed) { OTZI.game.setSeed(seed); },
     stepFrames(n = 1) {
       for (let i = 0; i < n; i++) OTZI.game.update(OTZI.CFG.fixedDt, OTZI.actionMap.sample());
+    },
+    stepUntilTransitionSettles(maxFrames = 30) {
+      for (let i = 0; i < maxFrames; i++) {
+        if (!OTZI.game.transition.active) break;
+        OTZI.game.update(OTZI.CFG.fixedDt, OTZI.actionMap.sample());
+      }
+      return this.snapshot();
     },
     teleportToVillage() {
       OTZI.game.enterOverworldScreen(OTZI.game.world.homeX, OTZI.game.world.homeY);

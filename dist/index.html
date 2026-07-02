@@ -26,9 +26,9 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 .status-line { min-width:0; color:#ffe3a5; font-weight:800; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 #debugBtn { width:46px; }
 .debug-panel { grid-area:stats; align-self:start; justify-self:stretch; margin:3px 56px 0 8px; padding:5px 8px; border:1px solid rgba(231,189,108,.35); border-radius:8px; background:rgba(0,0,0,.78); color:#ffe6a8; font:10px ui-monospace,Consolas,monospace; pointer-events:none; z-index:6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.minimap-panel { position:absolute; right:8px; top:56px; width:120px; padding:6px; border:1px solid rgba(143,192,169,.45); border-radius:8px; background:rgba(5,12,9,.82); box-shadow:0 10px 30px rgba(0,0,0,.32); pointer-events:none; z-index:3; }
+.minimap-panel { position:absolute; right:8px; top:56px; width:136px; padding:8px; border:1px solid rgba(143,192,169,.45); border-radius:8px; background:rgba(5,12,9,.86); box-shadow:0 10px 30px rgba(0,0,0,.32); pointer-events:none; z-index:3; }
 .minimap-panel[hidden] { display:none; }
-.minimap-panel canvas { display:block; width:104px; height:104px; border:1px solid rgba(243,234,215,.16); image-rendering:pixelated; }
+.minimap-panel canvas { display:block; width:120px; height:120px; border:1px solid rgba(243,234,215,.16); image-rendering:pixelated; }
 .inventory-panel { position:absolute; left:8px; top:56px; width:min(180px,calc(100vw - 18px)); padding:8px; border:1px solid rgba(143,192,169,.45); border-radius:8px; background:rgba(5,12,9,.86); box-shadow:0 10px 30px rgba(0,0,0,.32); pointer-events:none; z-index:3; }
 .inventory-panel[hidden] { display:none; }
 .inventory-panel dl { margin:0; display:grid; gap:4px; }
@@ -90,7 +90,7 @@ var OTZI = window.OTZI || (window.OTZI = {});
 
 OTZI.CFG = {
   engineVersion: "otzi-screen-grid-0.2.0",
-  saveVersion: 3,
+  saveVersion: 4,
   worldgenVersion: 2,
   saveKey: "otzi_screen_grid_save_v3",
   defaultSeed: "otzi-m1",
@@ -109,6 +109,7 @@ OTZI.CFG = {
   interactRadius: 26,
   resourceNodeRadius: 10,
   transitionEdgePad: 18,
+  screenTransitionDuration: 0.18,
   dprCap: 2
 };
 
@@ -127,7 +128,7 @@ OTZI.dom = {
       <section id="gameShell" class="game-shell" aria-label="Game viewport">
         <div id="minimapPanel" class="minimap-panel" hidden aria-label="Trail map preview">
           <div class="panel-title" id="minimapTitle">TRAIL MAP</div>
-          <canvas id="minimapCanvas" width="104" height="104" aria-hidden="true"></canvas>
+          <canvas id="minimapCanvas" width="120" height="120" aria-hidden="true"></canvas>
         </div>
         <div id="inventoryPanel" class="inventory-panel" hidden aria-label="Pack inventory">
           <div class="panel-title">PACK</div>
@@ -1093,16 +1094,21 @@ var OTZI = window.OTZI || (window.OTZI = {});
 OTZI.camera = {
   x: 0,
   y: 0,
-  update() {
+  targetFor(map, player) {
     const vp = OTZI.viewport;
-    const p = OTZI.game.player;
-    const map = OTZI.game.map;
     const worldW = (map?.w || OTZI.CFG.screenTileW) * OTZI.CFG.tileSize;
     const worldH = (map?.h || OTZI.CFG.screenTileH) * OTZI.CFG.tileSize;
-    this.x = Math.max(0, Math.min(worldW - vp.cssW, p.x - vp.cssW / 2));
-    this.y = Math.max(0, Math.min(worldH - vp.cssH, p.y - vp.cssH * 0.42));
-    this.x = Math.floor(this.x);
-    this.y = Math.floor(this.y);
+    return {
+      x: Math.floor(Math.max(0, Math.min(worldW - vp.cssW, player.x - vp.cssW / 2))),
+      y: Math.floor(Math.max(0, Math.min(worldH - vp.cssH, player.y - vp.cssH * 0.42)))
+    };
+  },
+  update() {
+    const map = OTZI.game.map;
+    const p = OTZI.game.player;
+    const target = this.targetFor(map, p);
+    this.x = target.x;
+    this.y = target.y;
   },
   worldToScreen(x, y) {
     return { x: x - this.x, y: y - this.y };
@@ -1233,18 +1239,75 @@ OTZI.renderWorld = {
   draw() {
     const ctx = OTZI.dom.ctx;
     const vp = OTZI.viewport;
-    const cam = OTZI.camera;
-    const cfg = OTZI.CFG;
-    const map = OTZI.game.map;
-    const pal = OTZI.assets.palette;
     ctx.fillStyle = "#0b0e0d";
     ctx.fillRect(0, 0, vp.cssW, vp.cssH);
-
+    const transition = OTZI.game.transition;
+    if (transition.active) {
+      this.drawScreenTransition(ctx, transition);
+      return;
+    }
+    this.drawArea(ctx, {
+      area: OTZI.game.currentArea,
+      camera: { x: OTZI.camera.x, y: OTZI.camera.y },
+      player: OTZI.game.player,
+      focusId: OTZI.game.focusedTargetType === "resource" ? OTZI.game.focusedResourceId : null,
+      entranceId: OTZI.game.focusedTargetType === "entrance" ? OTZI.game.focusedEntranceId : null,
+      offsetX: 0,
+      offsetY: 0,
+      debug: OTZI.game.debug
+    });
+  },
+  drawScreenTransition(ctx, transition) {
+    const vp = OTZI.viewport;
+    const p = Math.max(0, Math.min(1, transition.elapsed / transition.duration));
+    let fromOffsetX = 0;
+    let fromOffsetY = 0;
+    let toOffsetX = 0;
+    let toOffsetY = 0;
+    if (transition.direction === "east") {
+      fromOffsetX = -vp.cssW * p;
+      toOffsetX = vp.cssW * (1 - p);
+    } else if (transition.direction === "west") {
+      fromOffsetX = vp.cssW * p;
+      toOffsetX = -vp.cssW * (1 - p);
+    } else if (transition.direction === "north") {
+      fromOffsetY = vp.cssH * p;
+      toOffsetY = -vp.cssH * (1 - p);
+    } else if (transition.direction === "south") {
+      fromOffsetY = -vp.cssH * p;
+      toOffsetY = vp.cssH * (1 - p);
+    }
+    this.drawArea(ctx, {
+      area: transition.fromArea,
+      camera: transition.fromCamera,
+      player: transition.fromPlayer,
+      focusId: null,
+      entranceId: null,
+      offsetX: fromOffsetX,
+      offsetY: fromOffsetY,
+      debug: false
+    });
+    this.drawArea(ctx, {
+      area: transition.toArea,
+      camera: transition.toCamera,
+      player: transition.toPlayer,
+      focusId: null,
+      entranceId: null,
+      offsetX: toOffsetX,
+      offsetY: toOffsetY,
+      debug: false
+    });
+  },
+  drawArea(ctx, state) {
+    const area = state.area;
+    const cam = state.camera;
+    const cfg = OTZI.CFG;
+    const pal = OTZI.assets.palette;
+    const map = area.map;
     const startX = Math.max(0, Math.floor(cam.x / cfg.tileSize) - 1);
     const startY = Math.max(0, Math.floor(cam.y / cfg.tileSize) - 1);
-    const endX = Math.min(map.w - 1, Math.ceil((cam.x + vp.cssW) / cfg.tileSize) + 1);
-    const endY = Math.min(map.h - 1, Math.ceil((cam.y + vp.cssH) / cfg.tileSize) + 1);
-
+    const endX = Math.min(map.w - 1, Math.ceil((cam.x + OTZI.viewport.cssW) / cfg.tileSize) + 1);
+    const endY = Math.min(map.h - 1, Math.ceil((cam.y + OTZI.viewport.cssH) / cfg.tileSize) + 1);
     for (let y = startY; y <= endY; y++) {
       for (let x = startX; x <= endX; x++) {
         const t = map.getGround(x, y);
@@ -1260,56 +1323,55 @@ OTZI.renderWorld = {
           t === OTZI.TILE.BERRY ? "#315b36" :
           t === OTZI.TILE.DEPLETED ? "#4d4b3d" :
           t === OTZI.TILE.DARK_GRASS ? pal.darkGrass : pal.grass;
-        ctx.fillRect(x * cfg.tileSize - cam.x, y * cfg.tileSize - cam.y, cfg.tileSize, cfg.tileSize);
+        const dx = x * cfg.tileSize - cam.x + state.offsetX;
+        const dy = y * cfg.tileSize - cam.y + state.offsetY;
+        ctx.fillRect(dx, dy, cfg.tileSize, cfg.tileSize);
         if (t === OTZI.TILE.TREE) {
           ctx.fillStyle = "#102516";
-          ctx.fillRect(x * cfg.tileSize - cam.x + 6, y * cfg.tileSize - cam.y + 4, 12, 17);
+          ctx.fillRect(dx + 6, dy + 4, 12, 17);
         }
         if (t === OTZI.TILE.ROCK) {
           ctx.fillStyle = "#8b8d83";
-          ctx.fillRect(x * cfg.tileSize - cam.x + 5, y * cfg.tileSize - cam.y + 7, 14, 10);
+          ctx.fillRect(dx + 5, dy + 7, 14, 10);
         }
         if (t === OTZI.TILE.DEADWOOD) {
           ctx.fillStyle = "#9b6b3e";
-          ctx.fillRect(x * cfg.tileSize - cam.x + 4, y * cfg.tileSize - cam.y + 13, 16, 5);
+          ctx.fillRect(dx + 4, dy + 13, 16, 5);
         }
         if (t === OTZI.TILE.STONE) {
           ctx.fillStyle = "#a5aaa0";
-          ctx.fillRect(x * cfg.tileSize - cam.x + 7, y * cfg.tileSize - cam.y + 9, 10, 8);
+          ctx.fillRect(dx + 7, dy + 9, 10, 8);
         }
         if (t === OTZI.TILE.BIRCH) {
           ctx.fillStyle = "#f1ead0";
-          ctx.fillRect(x * cfg.tileSize - cam.x + 9, y * cfg.tileSize - cam.y + 4, 7, 18);
+          ctx.fillRect(dx + 9, dy + 4, 7, 18);
           ctx.fillStyle = "#332d24";
-          ctx.fillRect(x * cfg.tileSize - cam.x + 10, y * cfg.tileSize - cam.y + 8, 5, 2);
+          ctx.fillRect(dx + 10, dy + 8, 5, 2);
         }
         if (t === OTZI.TILE.GRASS_CLUMP) {
           ctx.fillStyle = "#9bd35e";
-          ctx.fillRect(x * cfg.tileSize - cam.x + 5, y * cfg.tileSize - cam.y + 13, 3, 7);
-          ctx.fillRect(x * cfg.tileSize - cam.x + 11, y * cfg.tileSize - cam.y + 9, 3, 11);
-          ctx.fillRect(x * cfg.tileSize - cam.x + 17, y * cfg.tileSize - cam.y + 12, 3, 8);
+          ctx.fillRect(dx + 5, dy + 13, 3, 7);
+          ctx.fillRect(dx + 11, dy + 9, 3, 11);
+          ctx.fillRect(dx + 17, dy + 12, 3, 8);
         }
         if (t === OTZI.TILE.BERRY) {
           ctx.fillStyle = "#233a20";
-          ctx.fillRect(x * cfg.tileSize - cam.x + 5, y * cfg.tileSize - cam.y + 7, 14, 12);
+          ctx.fillRect(dx + 5, dy + 7, 14, 12);
           ctx.fillStyle = "#c43d4b";
-          ctx.fillRect(x * cfg.tileSize - cam.x + 9, y * cfg.tileSize - cam.y + 9, 3, 3);
-          ctx.fillRect(x * cfg.tileSize - cam.x + 14, y * cfg.tileSize - cam.y + 13, 3, 3);
+          ctx.fillRect(dx + 9, dy + 9, 3, 3);
+          ctx.fillRect(dx + 14, dy + 13, 3, 3);
         }
         if (t === OTZI.TILE.DEPLETED) {
           ctx.fillStyle = "rgba(0,0,0,.22)";
-          ctx.fillRect(x * cfg.tileSize - cam.x + 7, y * cfg.tileSize - cam.y + 9, 10, 6);
+          ctx.fillRect(dx + 7, dy + 9, 10, 6);
         }
       }
     }
-
-    const focusId = OTZI.game.focusedTargetType === "resource" ? OTZI.game.focusedResourceId : null;
-    const entranceId = OTZI.game.focusedTargetType === "entrance" ? OTZI.game.focusedEntranceId : null;
-    for (const entrance of OTZI.game.entrances || []) this.drawEntranceNode(ctx, entrance, entranceId === entrance.id);
-    for (const node of OTZI.game.resourceNodes) this.drawResourceNode(ctx, node, focusId === node.id);
-    for (const e of OTZI.game.entities) this.drawEntity(ctx, e, pal.deer);
-    this.drawEntity(ctx, OTZI.game.player, pal.player);
-    if (OTZI.game.debug) OTZI.debug.draw(ctx, startX, startY, endX, endY);
+    for (const entrance of area.entrances || []) this.drawEntranceNode(ctx, entrance, state.entranceId === entrance.id, cam, state.offsetX, state.offsetY);
+    for (const node of area.resources) this.drawResourceNode(ctx, node, state.focusId === node.id, cam, state.offsetX, state.offsetY);
+    for (const e of area.entities || []) this.drawEntity(ctx, e, pal.deer, cam, state.offsetX, state.offsetY);
+    this.drawEntity(ctx, state.player, pal.player, cam, state.offsetX, state.offsetY);
+    if (state.debug) OTZI.debug.draw(ctx, startX, startY, endX, endY);
   },
   resourceColor(resource) {
     return {
@@ -1321,9 +1383,9 @@ OTZI.renderWorld = {
       food: "#d94c5c"
     }[resource] || "#ffffff";
   },
-  drawResourceNode(ctx, node, highlighted) {
+  drawResourceNode(ctx, node, highlighted, camera, offsetX = 0, offsetY = 0) {
     if (node.depleted) return;
-    const p = OTZI.camera.worldToScreen(node.x, node.y);
+    const p = this.project(camera, node.x, node.y, offsetX, offsetY);
     if (p.x < -32 || p.y < -36 || p.x > OTZI.viewport.cssW + 32 || p.y > OTZI.viewport.cssH + 32) return;
     const x = Math.floor(p.x);
     const y = Math.floor(p.y);
@@ -1336,8 +1398,8 @@ OTZI.renderWorld = {
     }
     ctx.restore();
   },
-  drawEntranceNode(ctx, entrance, highlighted) {
-    const p = OTZI.camera.worldToScreen(entrance.x, entrance.y);
+  drawEntranceNode(ctx, entrance, highlighted, camera, offsetX = 0, offsetY = 0) {
+    const p = this.project(camera, entrance.x, entrance.y, offsetX, offsetY);
     if (p.x < -32 || p.y < -36 || p.x > OTZI.viewport.cssW + 32 || p.y > OTZI.viewport.cssH + 32) return;
     const x = Math.floor(p.x);
     const y = Math.floor(p.y);
@@ -1439,14 +1501,20 @@ OTZI.renderWorld = {
     ctx.fillStyle = "#ffe8a8";
     ctx.fillText(label, x, y - 21);
   },
-  drawEntity(ctx, e, color) {
-    const p = OTZI.camera.worldToScreen(e.x, e.y);
+  drawEntity(ctx, e, color, camera, offsetX = 0, offsetY = 0) {
+    const p = this.project(camera, e.x, e.y, offsetX, offsetY);
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.arc(p.x, p.y, e.radius, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = "rgba(0,0,0,.25)";
     ctx.fillRect(p.x - e.radius, p.y + e.radius + 2, e.radius * 2, 3);
+  },
+  project(camera, x, y, offsetX, offsetY) {
+    return {
+      x: x - camera.x + offsetX,
+      y: y - camera.y + offsetY
+    };
   }
 };
 
@@ -1463,7 +1531,8 @@ OTZI.renderUi = {
     OTZI.dom.hungerChip.textContent = `HUNGER ${Math.round(game.player.hunger)}`;
     OTZI.dom.warmthChip.textContent = `WARMTH ${Math.round(game.player.warmth)}`;
     if (!OTZI.dialogue.hasActiveToast()) {
-      OTZI.dialogue.message = game.focusedEntrance ? `USE: enter ${game.focusedEntrance.label}` :
+      OTZI.dialogue.message = game.transition.active ? `Traveling ${game.transition.direction}` :
+        game.focusedEntrance ? `USE: enter ${game.focusedEntrance.label}` :
         game.focusedResource ? `USE: gather ${game.focusedResource.resource}` : "No resource nearby";
       OTZI.dom.statusLine.textContent = OTZI.dialogue.message;
     }
@@ -1505,6 +1574,7 @@ OTZI.renderUi = {
     OTZI.dom.debugPanel.textContent = [
       `seed ${game.seed}`,
       areaDebug,
+      `transition ${game.transition.active ? `${game.transition.direction} ${game.transition.elapsed.toFixed(2)}/${game.transition.duration.toFixed(2)}` : "none"}`,
       `tile ${tileX},${tileY}`,
       `entry ${game.focusedEntrance ? `${game.focusedEntrance.label} ${game.focusedEntrance.id}` : "none"}`,
       `focus ${game.focusedResource ? `${game.focusedResource.resource} ${game.focusedResource.id} tile ${game.focusedResource.tileX},${game.focusedResource.tileY} dist ${game.focusedResource.dist.toFixed(1)}` : "none"}`,
@@ -1524,44 +1594,69 @@ OTZI.renderUi = {
     ctx.fillRect(0, 0, w, h);
     const game = OTZI.game;
     if (game.scene === "dungeon" && game.currentDungeon) {
-      OTZI.dom.minimapTitle.textContent = "FLINT SCAR";
+      OTZI.dom.minimapTitle.textContent = "FLINT SCAR MAP";
       const dungeon = game.currentDungeon;
       const cellW = Math.floor(w / dungeon.gridW);
       const cellH = Math.floor(h / dungeon.gridH);
+      ctx.font = "700 9px ui-monospace,Consolas,monospace";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
       for (let y = 0; y < dungeon.gridH; y++) {
         for (let x = 0; x < dungeon.gridW; x++) {
           const discovered = OTZI.worldGrid.isDiscovered(dungeon, x, y);
+          const room = discovered ? OTZI.worldGrid.getDungeonRoom(dungeon, game.seed, x, y) : null;
           ctx.fillStyle = discovered ? "#4d4b3d" : "#101611";
           ctx.fillRect(x * cellW + 1, y * cellH + 1, cellW - 2, cellH - 2);
+          ctx.strokeStyle = "rgba(243,234,215,.14)";
+          ctx.strokeRect(x * cellW + 1, y * cellH + 1, cellW - 2, cellH - 2);
+          if (room && room.entrances.some((entry) => entry.kind === "exit")) {
+            ctx.fillStyle = "#d9c79a";
+            ctx.fillText("E", x * cellW + cellW / 2, y * cellH + cellH / 2);
+          }
         }
       }
       ctx.fillStyle = "#f0c666";
       ctx.fillRect(dungeon.currentX * cellW + 4, dungeon.currentY * cellH + 4, cellW - 8, cellH - 8);
+      ctx.fillStyle = "#09120d";
+      ctx.fillText("@", dungeon.currentX * cellW + cellW / 2, dungeon.currentY * cellH + cellH / 2);
       return;
     }
     OTZI.dom.minimapTitle.textContent = "OVERWORLD MAP";
     const world = game.world;
     const cellW = Math.floor(w / world.gridW);
     const cellH = Math.floor(h / world.gridH);
+    ctx.font = "700 8px ui-monospace,Consolas,monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
     for (let y = 0; y < world.gridH; y++) {
       for (let x = 0; x < world.gridW; x++) {
         if (!OTZI.worldGrid.isDiscovered(world, x, y)) {
           ctx.fillStyle = "#0e140f";
           ctx.fillRect(x * cellW + 1, y * cellH + 1, cellW - 2, cellH - 2);
+          ctx.strokeStyle = "rgba(243,234,215,.08)";
+          ctx.strokeRect(x * cellW + 1, y * cellH + 1, cellW - 2, cellH - 2);
+          ctx.fillStyle = "#516255";
+          ctx.fillText("?", x * cellW + cellW / 2, y * cellH + cellH / 2);
           continue;
         }
         const screen = OTZI.worldGrid.getOverworldScreen(world, game.seed, x, y);
         ctx.fillStyle = screen.kind === "village_crossroads" ? "#9a784b" :
           screen.kind === "flint_scar" ? "#c9d0d4" : "#315b36";
         ctx.fillRect(x * cellW + 1, y * cellH + 1, cellW - 2, cellH - 2);
-        if (screen.kind === "flint_scar") {
-          ctx.fillStyle = "#ffe3a5";
-          ctx.fillRect(x * cellW + Math.floor(cellW / 2) - 2, y * cellH + Math.floor(cellH / 2) - 2, 4, 4);
-        }
+        ctx.strokeStyle = "rgba(243,234,215,.14)";
+        ctx.strokeRect(x * cellW + 1, y * cellH + 1, cellW - 2, cellH - 2);
+        ctx.fillStyle = "#f6ead0";
+        if (screen.kind === "village_crossroads") ctx.fillText("V", x * cellW + cellW / 2, y * cellH + cellH / 2);
+        else if (screen.kind === "flint_scar") ctx.fillText("C", x * cellW + cellW / 2, y * cellH + cellH / 2);
+        else if (screen.kind === "trail_forest") ctx.fillText(".", x * cellW + cellW / 2, y * cellH + cellH / 2);
       }
     }
+    const markerX = game.transition.active && game.transition.targetX != null ? game.transition.targetX : world.currentX;
+    const markerY = game.transition.active && game.transition.targetY != null ? game.transition.targetY : world.currentY;
     ctx.fillStyle = "#f0c666";
-    ctx.fillRect(world.currentX * cellW + 4, world.currentY * cellH + 4, cellW - 8, cellH - 8);
+    ctx.fillRect(markerX * cellW + 4, markerY * cellH + 4, cellW - 8, cellH - 8);
+    ctx.fillStyle = "#09120d";
+    ctx.fillText("@", markerX * cellW + cellW / 2, markerY * cellH + cellH / 2);
   }
 };
 
@@ -1619,9 +1714,6 @@ OTZI.save = {
         rooms: OTZI.worldGrid.collectAreaStates(g.currentDungeon.rooms),
         returnScreen: g.returnScreen
       } : null,
-      resources: {
-        depleted: OTZI.resources.depletedDeltas(g.resourceNodes)
-      },
       village: g.village,
       facts: g.facts
     };
@@ -1735,15 +1827,24 @@ OTZI.installTestHooks = function installTestHooks() {
           currentX: g.world.currentX,
           currentY: g.world.currentY,
           currentScreenId: g.currentScreen ? g.currentScreen.id : null,
-          discoveredCount: Object.keys(g.world.discovered).length
+          discoveredCount: Object.keys(g.world.discovered).length,
+          gridW: g.world.gridW,
+          gridH: g.world.gridH
         },
-        dungeon: g.currentDungeon ? {
-          id: g.currentDungeon.id,
-          currentX: g.currentDungeon.currentX,
-          currentY: g.currentDungeon.currentY,
+        dungeon: {
+          active: !!g.currentDungeon && g.scene === "dungeon",
+          id: g.currentDungeon ? g.currentDungeon.id : null,
+          currentX: g.currentDungeon ? g.currentDungeon.currentX : null,
+          currentY: g.currentDungeon ? g.currentDungeon.currentY : null,
           currentRoomId: g.currentRoom ? g.currentRoom.id : null,
-          discoveredCount: Object.keys(g.currentDungeon.discovered).length
-        } : null,
+          discoveredCount: g.currentDungeon ? Object.keys(g.currentDungeon.discovered).length : 0
+        },
+        transition: {
+          active: g.transition.active,
+          direction: g.transition.direction,
+          elapsed: g.transition.elapsed,
+          duration: g.transition.duration
+        },
         nearestResource: (() => {
           const node = g.findNearestResource();
           return node ? {
@@ -1791,6 +1892,13 @@ OTZI.installTestHooks = function installTestHooks() {
     setSeed(seed) { OTZI.game.setSeed(seed); },
     stepFrames(n = 1) {
       for (let i = 0; i < n; i++) OTZI.game.update(OTZI.CFG.fixedDt, OTZI.actionMap.sample());
+    },
+    stepUntilTransitionSettles(maxFrames = 30) {
+      for (let i = 0; i < maxFrames; i++) {
+        if (!OTZI.game.transition.active) break;
+        OTZI.game.update(OTZI.CFG.fixedDt, OTZI.actionMap.sample());
+      }
+      return this.snapshot();
     },
     teleportToVillage() {
       OTZI.game.enterOverworldScreen(OTZI.game.world.homeX, OTZI.game.world.homeY);
@@ -1933,6 +2041,23 @@ OTZI.game = {
   focusedResource: null,
   focusedEntranceId: null,
   focusedEntrance: null,
+  transition: {
+    active: false,
+    kind: "screen_slide",
+    direction: null,
+    fromScreenId: null,
+    toScreenId: null,
+    elapsed: 0,
+    duration: OTZI.CFG.screenTransitionDuration,
+    fromArea: null,
+    toArea: null,
+    fromPlayer: null,
+    toPlayer: null,
+    fromCamera: null,
+    toCamera: null,
+    targetX: null,
+    targetY: null
+  },
   currentArea: null,
   currentScreen: null,
   currentRoom: null,
@@ -1953,6 +2078,23 @@ OTZI.game = {
     this.focusedResource = null;
     this.focusedEntranceId = null;
     this.focusedEntrance = null;
+    this.transition = {
+      active: false,
+      kind: "screen_slide",
+      direction: null,
+      fromScreenId: null,
+      toScreenId: null,
+      elapsed: 0,
+      duration: OTZI.CFG.screenTransitionDuration,
+      fromArea: null,
+      toArea: null,
+      fromPlayer: null,
+      toPlayer: null,
+      fromCamera: null,
+      toCamera: null,
+      targetX: null,
+      targetY: null
+    };
     this.enterOverworldScreen(this.world.homeX, this.world.homeY, { keepScene: true });
   },
   setActiveArea(area) {
@@ -1972,12 +2114,12 @@ OTZI.game = {
       y: Math.max(min, Math.min(maxY, pos.y))
     };
   },
-  placePlayerForEntry(edge, carry) {
+  computeEntryPosition(map, edge, carry) {
     const ts = OTZI.CFG.tileSize;
-    const min = ts * 1.25;
-    const maxX = this.map.w * ts - min;
-    const maxY = this.map.h * ts - min;
-    const center = { x: this.map.w * ts / 2, y: this.map.h * ts / 2 };
+    const min = Math.max(ts * 1.25, OTZI.CFG.transitionEdgePad + ts * 0.45);
+    const maxX = map.w * ts - min;
+    const maxY = map.h * ts - min;
+    const center = { x: map.w * ts / 2, y: map.h * ts / 2 };
     const next = { x: center.x, y: center.y };
     if (edge === "w") {
       next.x = min;
@@ -1992,6 +2134,10 @@ OTZI.game = {
       next.x = Math.max(min, Math.min(maxX, carry?.x ?? center.x));
       next.y = maxY;
     }
+    return next;
+  },
+  placePlayerForEntry(edge, carry) {
+    const next = this.computeEntryPosition(this.map, edge, carry);
     this.player.x = next.x;
     this.player.y = next.y;
   },
@@ -2010,6 +2156,51 @@ OTZI.game = {
     OTZI.input.clearAll();
     OTZI.camera.update();
     this.updateFocusState();
+  },
+  beginScreenTransition(direction, x, y, entrySide, carry) {
+    const toArea = OTZI.worldGrid.getOverworldScreen(this.world, this.seed, x, y);
+    OTZI.worldGrid.markDiscovered(this.world, x, y);
+    toArea.discovered = true;
+    const toPlayer = this.computeEntryPosition(toArea.map, entrySide, carry);
+    const toCamera = OTZI.camera.targetFor(toArea.map, toPlayer);
+    this.transition = {
+      active: true,
+      kind: "screen_slide",
+      direction,
+      fromScreenId: this.currentScreen.id,
+      toScreenId: toArea.id,
+      elapsed: 0,
+      duration: OTZI.CFG.screenTransitionDuration,
+      fromArea: this.currentScreen,
+      toArea,
+      fromPlayer: { x: this.player.x, y: this.player.y, radius: this.player.radius },
+      toPlayer: { x: toPlayer.x, y: toPlayer.y, radius: this.player.radius },
+      fromCamera: { x: OTZI.camera.x, y: OTZI.camera.y },
+      toCamera,
+      targetX: x,
+      targetY: y
+    };
+    OTZI.input.clearAll();
+    this.focusedTargetType = null;
+    this.focusedResourceId = null;
+    this.focusedResource = null;
+    this.focusedEntranceId = null;
+    this.focusedEntrance = null;
+  },
+  finishScreenTransition() {
+    const t = this.transition;
+    this.transition.active = false;
+    this.enterOverworldScreen(t.targetX, t.targetY, { keepScene: true, restorePlayer: true });
+    this.player.x = t.toPlayer.x;
+    this.player.y = t.toPlayer.y;
+    OTZI.camera.update();
+    OTZI.input.clearAll();
+    this.updateFocusState();
+  },
+  updateTransition(dt) {
+    if (!this.transition.active) return;
+    this.transition.elapsed = Math.min(this.transition.duration, this.transition.elapsed + dt);
+    if (this.transition.elapsed >= this.transition.duration) this.finishScreenTransition();
   },
   ensureDungeon(id) {
     if (!this.currentDungeon || this.currentDungeon.id !== id) {
@@ -2076,6 +2267,7 @@ OTZI.game = {
     this.focusedTargetType = entrance ? "entrance" : resource ? "resource" : null;
   },
   tryUse() {
+    if (this.transition.active) return false;
     if (this.focusedEntrance) {
       if (this.focusedEntrance.targetScene === "dungeon") {
         this.enterDungeon(this.focusedEntrance.dungeonId);
@@ -2089,6 +2281,7 @@ OTZI.game = {
     return this.tryGather();
   },
   tryGather() {
+    if (this.transition.active) return false;
     const node = this.focusedResourceId ? OTZI.resources.getById(this.resourceNodes, this.focusedResourceId) : null;
     if (!node) {
       OTZI.dialogue.toast("No resource nearby");
@@ -2109,29 +2302,34 @@ OTZI.game = {
     return true;
   },
   maybeTransitionScreen() {
-    if (this.scene !== "overworld" || !this.currentScreen) return false;
+    if (this.transition.active || this.scene !== "overworld" || !this.currentScreen) return false;
     const pad = OTZI.CFG.transitionEdgePad;
     const maxX = this.map.w * OTZI.CFG.tileSize - pad;
     const maxY = this.map.h * OTZI.CFG.tileSize - pad;
     if (this.player.x <= pad && this.currentScreen.exits.w) {
-      this.enterOverworldScreen(this.world.currentX - 1, this.world.currentY, { entrySide: "e", carry: { y: this.player.y } });
+      this.beginScreenTransition("west", this.world.currentX - 1, this.world.currentY, "e", { y: this.player.y });
       return true;
     }
     if (this.player.x >= maxX && this.currentScreen.exits.e) {
-      this.enterOverworldScreen(this.world.currentX + 1, this.world.currentY, { entrySide: "w", carry: { y: this.player.y } });
+      this.beginScreenTransition("east", this.world.currentX + 1, this.world.currentY, "w", { y: this.player.y });
       return true;
     }
     if (this.player.y <= pad && this.currentScreen.exits.n) {
-      this.enterOverworldScreen(this.world.currentX, this.world.currentY - 1, { entrySide: "s", carry: { x: this.player.x } });
+      this.beginScreenTransition("north", this.world.currentX, this.world.currentY - 1, "s", { x: this.player.x });
       return true;
     }
     if (this.player.y >= maxY && this.currentScreen.exits.s) {
-      this.enterOverworldScreen(this.world.currentX, this.world.currentY + 1, { entrySide: "n", carry: { x: this.player.x } });
+      this.beginScreenTransition("south", this.world.currentX, this.world.currentY + 1, "n", { x: this.player.x });
       return true;
     }
     return false;
   },
   update(dt, actions) {
+    if (this.transition.active) {
+      OTZI.input.clearAll();
+      this.updateTransition(dt);
+      return;
+    }
     if (actions.debugPressed) OTZI.debug.toggle();
     if (actions.mapPressed) {
       this.minimap = !this.minimap;
@@ -2248,6 +2446,6 @@ OTZI.game = {
 })();
 
   </script>
-  <!-- build: 2026-07-02T10:04:39.805Z modules:29 -->
+  <!-- build: 2026-07-02T10:30:50.277Z modules:29 -->
 </body>
 </html>
