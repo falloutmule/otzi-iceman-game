@@ -10,6 +10,7 @@ OTZI.game = {
   minimap: false,
   inventoryOpen: false,
   menuOpen: false,
+  resetConfirm: false,
   setSeed(seed) {
     this.seed = seed || OTZI.CFG.defaultSeed;
     this.map = OTZI.worldgen.generate(this.seed);
@@ -130,6 +131,17 @@ OTZI.game = {
     });
     OTZI.dom.craftCrudeToolBtn.addEventListener("click", () => {
       OTZI.crafting.craft("crude_cutting_tool");
+    });
+    OTZI.dom.resetSaveBtn.addEventListener("click", () => {
+      if (!OTZI.game.resetConfirm) {
+        OTZI.game.resetConfirm = true;
+        OTZI.dialogue.toast("Tap reset again to confirm");
+        return;
+      }
+      OTZI.save.clear();
+    });
+    OTZI.dom.fullscreenBtn.addEventListener("click", () => {
+      OTZI.fullscreen.toggle();
     });
 
     OTZI.game.running = true;

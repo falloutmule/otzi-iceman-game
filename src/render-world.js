@@ -75,9 +75,46 @@ OTZI.renderWorld = {
       }
     }
 
+    const nearest = OTZI.game.findNearestResource();
+    for (const node of OTZI.game.resourceNodes) this.drawResourceNode(ctx, node, nearest?.id === node.id);
     for (const e of OTZI.game.entities) this.drawEntity(ctx, e, pal.deer);
     this.drawEntity(ctx, OTZI.game.player, pal.player);
     if (OTZI.game.debug) OTZI.debug.draw(ctx, startX, startY, endX, endY);
+  },
+  resourceColor(resource) {
+    return {
+      flint: "#d9e4d8",
+      stick: "#c8894e",
+      stone: "#b7bbb2",
+      bark: "#f1ead0",
+      grass: "#a8e36c",
+      food: "#d94c5c"
+    }[resource] || "#ffffff";
+  },
+  drawResourceNode(ctx, node, highlighted) {
+    if (node.depleted) return;
+    const p = OTZI.camera.worldToScreen(node.x, node.y);
+    if (p.x < -16 || p.y < -16 || p.x > OTZI.viewport.cssW + 16 || p.y > OTZI.viewport.cssH + 16) return;
+    const x = Math.floor(p.x);
+    const y = Math.floor(p.y);
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,.35)";
+    ctx.fillRect(x - 7, y + 7, 14, 3);
+    if (highlighted) {
+      ctx.strokeStyle = "#ffe08a";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(x, y, 10, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.fillStyle = this.resourceColor(node.resource);
+    ctx.strokeStyle = "rgba(0,0,0,.78)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, y, highlighted ? 6 : 5, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fill();
+    ctx.restore();
   },
   drawEntity(ctx, e, color) {
     const p = OTZI.camera.worldToScreen(e.x, e.y);

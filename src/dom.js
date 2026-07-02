@@ -70,6 +70,8 @@ OTZI.dom = {
           <div><dt>Stamina</dt><dd id="menuStamina">100</dd></div>
         </dl>
         <button id="craftCrudeToolBtn" type="button">Craft Crude Cutting Tool</button>
+        <button id="fullscreenBtn" type="button">Fullscreen</button>
+        <button id="resetSaveBtn" type="button">Reset Save</button>
         <button id="menuCloseBtn" type="button">Close</button>
       </div>
     `;
@@ -107,6 +109,8 @@ OTZI.dom = {
     this.menuCrudeTool = document.getElementById("menuCrudeTool");
     this.menuStamina = document.getElementById("menuStamina");
     this.craftCrudeToolBtn = document.getElementById("craftCrudeToolBtn");
+    this.fullscreenBtn = document.getElementById("fullscreenBtn");
+    this.resetSaveBtn = document.getElementById("resetSaveBtn");
     this.menuCloseBtn = document.getElementById("menuCloseBtn");
     this.statusLine = document.getElementById("statusLine");
     this.moveZone = document.getElementById("moveZone");

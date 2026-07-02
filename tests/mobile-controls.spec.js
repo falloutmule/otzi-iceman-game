@@ -99,6 +99,12 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
     expect(nearResource.nearestResource?.kind).toBe("resource");
     expect(nearResource.nearestResource?.saveDeltaId).toBeTruthy();
     const gatheredNodeId = nearResource.nearestResource.id;
+    if (resource === "flint") {
+      await page.waitForTimeout(1500);
+      await expect(page.locator("#statusLine")).toContainText("Nearby: flint");
+      await page.screenshot({ path: "artifacts/screenshots/bugpass-resource-markers.png", fullPage: true });
+      await page.screenshot({ path: "artifacts/screenshots/bugpass-nearby-resource-highlight.png", fullPage: true });
+    }
     await page.locator("#useBtn").tap();
     await expect(page.locator("#statusLine")).toContainText(`Gathered ${resource} +1`);
     const afterUse = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
@@ -108,6 +114,10 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
     const depletedNode = await page.evaluate((id) => window.__OTZI_TEST__.resourceNode(id), gatheredNodeId);
     expect(depletedNode.depleted).toBe(true);
     expect(depletedNode.amount).toBe(0);
+    if (resource === "flint") {
+      await page.screenshot({ path: "artifacts/screenshots/bugpass-gather-visible-resource.png", fullPage: true });
+      await page.screenshot({ path: "artifacts/screenshots/bugpass-depleted-resource.png", fullPage: true });
+    }
     previous = afterUse;
   }
   await page.locator("#inventoryBtn").tap();
@@ -188,6 +198,35 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
   await expect(page.locator("#invStone")).toHaveText("1");
   await expect(page.locator("#invBark")).toHaveText("1");
   await expect(page.locator("#invFood")).toHaveText("1");
+  await page.locator("#menuBtn").tap();
+  await expect(page.locator("#menuPanel")).toBeVisible();
+  await expect(page.locator("#fullscreenBtn")).toBeVisible();
+  await page.locator("#fullscreenBtn").tap();
+  await expect(page.locator("#statusLine")).toContainText(/Fullscreen/);
+  await expect(page.locator("#resetSaveBtn")).toBeVisible();
+  await page.locator("#resetSaveBtn").tap();
+  await expect(page.locator("#statusLine")).toContainText("Tap reset again to confirm");
+  await expect(page.locator("#resetSaveBtn")).toHaveText("Confirm Reset Save");
+  await page.locator("#resetSaveBtn").tap();
+  await expect(page.locator("#statusLine")).toContainText("Save reset");
+  const afterReset = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
+  expect(afterReset.inventory.flint).toBe(0);
+  expect(afterReset.inventory.stick).toBe(0);
+  expect(afterReset.inventory.stone).toBe(0);
+  expect(afterReset.inventory.bark).toBe(0);
+  expect(afterReset.inventory.grass).toBe(0);
+  expect(afterReset.inventory.food).toBe(0);
+  expect(afterReset.inventory.crudeTool).toBe(0);
+  expect(afterReset.resourceNodes.depleted).toBe(0);
+  await page.locator("#inventoryBtn").tap();
+  await expect(page.locator("#inventoryPanel")).toBeVisible();
+  await expect(page.locator("#invFlint")).toHaveText("0");
+  await page.screenshot({ path: "artifacts/screenshots/bugpass-pack-popup-after-reset.png", fullPage: true });
+  await page.locator("#menuBtn").tap();
+  await expect(page.locator("#menuPanel")).toBeVisible();
+  await page.screenshot({ path: "artifacts/screenshots/bugpass-menu-fullscreen-reset.png", fullPage: true });
+  await page.locator("#menuCloseBtn").tap();
+  await expect(page.locator("#menuPanel")).toBeHidden();
 
   const beforeSprint = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   await page.locator("#sprintBtn").tap();

@@ -101,8 +101,8 @@ OTZI.CFG = {
   maxStepsPerFrame: 5,
   playerSpeed: 118,
   sprintSpeed: 166,
-  gatherRadius: 42,
-  resourceNodeRadius: 42,
+  gatherRadius: 28,
+  resourceNodeRadius: 24,
   dprCap: 2
 };
 
@@ -180,6 +180,8 @@ OTZI.dom = {
           <div><dt>Stamina</dt><dd id="menuStamina">100</dd></div>
         </dl>
         <button id="craftCrudeToolBtn" type="button">Craft Crude Cutting Tool</button>
+        <button id="fullscreenBtn" type="button">Fullscreen</button>
+        <button id="resetSaveBtn" type="button">Reset Save</button>
         <button id="menuCloseBtn" type="button">Close</button>
       </div>
     `;
@@ -217,6 +219,8 @@ OTZI.dom = {
     this.menuCrudeTool = document.getElementById("menuCrudeTool");
     this.menuStamina = document.getElementById("menuStamina");
     this.craftCrudeToolBtn = document.getElementById("craftCrudeToolBtn");
+    this.fullscreenBtn = document.getElementById("fullscreenBtn");
+    this.resetSaveBtn = document.getElementById("resetSaveBtn");
     this.menuCloseBtn = document.getElementById("menuCloseBtn");
     this.statusLine = document.getElementById("statusLine");
     this.moveZone = document.getElementById("moveZone");
@@ -778,6 +782,35 @@ OTZI.survival = {
 
 
 
+/* MODULE: fullscreen.js */
+/* SECTION 08D: FULLSCREEN */
+var OTZI = window.OTZI || (window.OTZI = {});
+
+OTZI.fullscreen = {
+  async toggle() {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        OTZI.dialogue.toast("Fullscreen off");
+        return true;
+      }
+      const target = OTZI.dom.app || document.documentElement;
+      if (!target.requestFullscreen) {
+        OTZI.dialogue.toast("Fullscreen unavailable");
+        return false;
+      }
+      await target.requestFullscreen();
+      OTZI.dialogue.toast("Fullscreen on");
+      return true;
+    } catch (_) {
+      OTZI.dialogue.toast("Fullscreen unavailable");
+      return false;
+    }
+  }
+};
+
+
+
 /* MODULE: collision.js */
 /* SECTION 08B: COLLISION */
 var OTZI = window.OTZI || (window.OTZI = {});
@@ -1018,9 +1051,46 @@ OTZI.renderWorld = {
       }
     }
 
+    const nearest = OTZI.game.findNearestResource();
+    for (const node of OTZI.game.resourceNodes) this.drawResourceNode(ctx, node, nearest?.id === node.id);
     for (const e of OTZI.game.entities) this.drawEntity(ctx, e, pal.deer);
     this.drawEntity(ctx, OTZI.game.player, pal.player);
     if (OTZI.game.debug) OTZI.debug.draw(ctx, startX, startY, endX, endY);
+  },
+  resourceColor(resource) {
+    return {
+      flint: "#d9e4d8",
+      stick: "#c8894e",
+      stone: "#b7bbb2",
+      bark: "#f1ead0",
+      grass: "#a8e36c",
+      food: "#d94c5c"
+    }[resource] || "#ffffff";
+  },
+  drawResourceNode(ctx, node, highlighted) {
+    if (node.depleted) return;
+    const p = OTZI.camera.worldToScreen(node.x, node.y);
+    if (p.x < -16 || p.y < -16 || p.x > OTZI.viewport.cssW + 16 || p.y > OTZI.viewport.cssH + 16) return;
+    const x = Math.floor(p.x);
+    const y = Math.floor(p.y);
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,.35)";
+    ctx.fillRect(x - 7, y + 7, 14, 3);
+    if (highlighted) {
+      ctx.strokeStyle = "#ffe08a";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(x, y, 10, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.fillStyle = this.resourceColor(node.resource);
+    ctx.strokeStyle = "rgba(0,0,0,.78)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, y, highlighted ? 6 : 5, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fill();
+    ctx.restore();
   },
   drawEntity(ctx, e, color) {
     const p = OTZI.camera.worldToScreen(e.x, e.y);
@@ -1045,8 +1115,9 @@ OTZI.renderUi = {
     OTZI.dom.staminaChip.textContent = `STAM ${Math.round(game.player.stamina)}`;
     OTZI.dom.hungerChip.textContent = `HUNGER ${Math.round(game.player.hunger)}`;
     OTZI.dom.warmthChip.textContent = `WARMTH ${Math.round(game.player.warmth)}`;
-    if (performance.now() > OTZI.dialogue.toastUntil && OTZI.dialogue.message !== "Milestone 1 engine shell") {
-      OTZI.dialogue.message = "Milestone 1 engine shell";
+    if (performance.now() > OTZI.dialogue.toastUntil) {
+      const nearest = game.findNearestResource();
+      OTZI.dialogue.message = nearest ? `Nearby: ${nearest.resource}` : "Milestone 1 engine shell";
       OTZI.dom.statusLine.textContent = OTZI.dialogue.message;
     }
     OTZI.dom.minimapPanel.hidden = !game.minimap;
@@ -1072,6 +1143,7 @@ OTZI.renderUi = {
       OTZI.dom.menuFood.textContent = String(game.inventory.food || 0);
       OTZI.dom.menuCrudeTool.textContent = String(game.inventory.crudeTool || 0);
       OTZI.dom.menuStamina.textContent = Math.round(game.player.stamina).toString();
+      OTZI.dom.resetSaveBtn.textContent = game.resetConfirm ? "Confirm Reset Save" : "Reset Save";
     }
     if (!game.debug) {
       OTZI.dom.debugPanel.hidden = true;
@@ -1193,6 +1265,19 @@ OTZI.save = {
     } catch (_) {
       return false;
     }
+  },
+  clear() {
+    try {
+      localStorage.removeItem(OTZI.CFG.saveKey);
+    } catch (_) {}
+    OTZI.game.setSeed(OTZI.CFG.defaultSeed);
+    OTZI.game.minimap = false;
+    OTZI.game.inventoryOpen = false;
+    OTZI.game.menuOpen = false;
+    OTZI.game.resetConfirm = false;
+    OTZI.input?.clearAll?.();
+    OTZI.dialogue.toast("Save reset");
+    return true;
   },
   exportString() {
     return btoa(unescape(encodeURIComponent(JSON.stringify(this.snapshot()))));
@@ -1333,6 +1418,7 @@ OTZI.game = {
   minimap: false,
   inventoryOpen: false,
   menuOpen: false,
+  resetConfirm: false,
   setSeed(seed) {
     this.seed = seed || OTZI.CFG.defaultSeed;
     this.map = OTZI.worldgen.generate(this.seed);
@@ -1454,6 +1540,17 @@ OTZI.game = {
     OTZI.dom.craftCrudeToolBtn.addEventListener("click", () => {
       OTZI.crafting.craft("crude_cutting_tool");
     });
+    OTZI.dom.resetSaveBtn.addEventListener("click", () => {
+      if (!OTZI.game.resetConfirm) {
+        OTZI.game.resetConfirm = true;
+        OTZI.dialogue.toast("Tap reset again to confirm");
+        return;
+      }
+      OTZI.save.clear();
+    });
+    OTZI.dom.fullscreenBtn.addEventListener("click", () => {
+      OTZI.fullscreen.toggle();
+    });
 
     OTZI.game.running = true;
     requestAnimationFrame(frame);
@@ -1467,6 +1564,6 @@ OTZI.game = {
 })();
 
   </script>
-  <!-- build: 2026-07-02T01:14:48.821Z modules:27 -->
+  <!-- build: 2026-07-02T08:58:47.799Z modules:28 -->
 </body>
 </html>

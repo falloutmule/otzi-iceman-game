@@ -8,8 +8,9 @@ OTZI.renderUi = {
     OTZI.dom.staminaChip.textContent = `STAM ${Math.round(game.player.stamina)}`;
     OTZI.dom.hungerChip.textContent = `HUNGER ${Math.round(game.player.hunger)}`;
     OTZI.dom.warmthChip.textContent = `WARMTH ${Math.round(game.player.warmth)}`;
-    if (performance.now() > OTZI.dialogue.toastUntil && OTZI.dialogue.message !== "Milestone 1 engine shell") {
-      OTZI.dialogue.message = "Milestone 1 engine shell";
+    if (performance.now() > OTZI.dialogue.toastUntil) {
+      const nearest = game.findNearestResource();
+      OTZI.dialogue.message = nearest ? `Nearby: ${nearest.resource}` : "Milestone 1 engine shell";
       OTZI.dom.statusLine.textContent = OTZI.dialogue.message;
     }
     OTZI.dom.minimapPanel.hidden = !game.minimap;
@@ -35,6 +36,7 @@ OTZI.renderUi = {
       OTZI.dom.menuFood.textContent = String(game.inventory.food || 0);
       OTZI.dom.menuCrudeTool.textContent = String(game.inventory.crudeTool || 0);
       OTZI.dom.menuStamina.textContent = Math.round(game.player.stamina).toString();
+      OTZI.dom.resetSaveBtn.textContent = game.resetConfirm ? "Confirm Reset Save" : "Reset Save";
     }
     if (!game.debug) {
       OTZI.dom.debugPanel.hidden = true;

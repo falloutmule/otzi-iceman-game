@@ -20,6 +20,7 @@ const modules = [
   "entities.js",
   "resources.js",
   "survival.js",
+  "fullscreen.js",
   "collision.js",
   "camera.js",
   "scenes.js",

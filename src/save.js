@@ -50,6 +50,19 @@ OTZI.save = {
       return false;
     }
   },
+  clear() {
+    try {
+      localStorage.removeItem(OTZI.CFG.saveKey);
+    } catch (_) {}
+    OTZI.game.setSeed(OTZI.CFG.defaultSeed);
+    OTZI.game.minimap = false;
+    OTZI.game.inventoryOpen = false;
+    OTZI.game.menuOpen = false;
+    OTZI.game.resetConfirm = false;
+    OTZI.input?.clearAll?.();
+    OTZI.dialogue.toast("Save reset");
+    return true;
+  },
   exportString() {
     return btoa(unescape(encodeURIComponent(JSON.stringify(this.snapshot()))));
   },
