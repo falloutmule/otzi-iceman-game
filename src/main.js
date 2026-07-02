@@ -11,6 +11,8 @@ OTZI.game = {
   inventoryOpen: false,
   menuOpen: false,
   resetConfirm: false,
+  focusedResourceId: null,
+  focusedResource: null,
   setSeed(seed) {
     this.seed = seed || OTZI.CFG.defaultSeed;
     this.map = OTZI.worldgen.generate(this.seed);
@@ -21,6 +23,8 @@ OTZI.game = {
     this.village = OTZI.village.create();
     this.facts = OTZI.facts.create();
     this.scene = "field";
+    this.focusedResourceId = null;
+    this.focusedResource = null;
   },
   update(dt, actions) {
     if (actions.debugPressed) OTZI.debug.toggle();
@@ -60,20 +64,32 @@ OTZI.game = {
     OTZI.survival.update(this.player, dt, sprinting);
     OTZI.entities.update(dt);
     OTZI.camera.update();
+    this.updateFocusedResource();
   },
   findNearestResource() {
-    return OTZI.resources.findNearest(this.resourceNodes, this.player);
+    return OTZI.resources.findNearestVisibleTarget(this.resourceNodes, this.player, this.map);
+  },
+  updateFocusedResource() {
+    const found = OTZI.resources.findNearestVisibleTarget(this.resourceNodes, this.player, this.map);
+    this.focusedResourceId = found ? found.id : null;
+    this.focusedResource = found || null;
   },
   tryGather() {
-    const found = this.findNearestResource();
-    const node = found ? OTZI.resources.getById(this.resourceNodes, found.id) : null;
+    const node = this.focusedResourceId ? OTZI.resources.getById(this.resourceNodes, this.focusedResourceId) : null;
     if (!node) {
       OTZI.dialogue.toast("No resource nearby");
       OTZI.audio.blip(220, 0.035);
       return false;
     }
+    const stillFocused = OTZI.resources.findNearestVisibleTarget(this.resourceNodes, this.player, this.map);
+    if (!stillFocused || stillFocused.id !== node.id || node.depleted) {
+      OTZI.dialogue.toast("Move closer to gather");
+      OTZI.audio.blip(220, 0.035);
+      return false;
+    }
     OTZI.inventory.add(node.resource, node.amount);
     OTZI.resources.deplete(node, this.map);
+    this.updateFocusedResource();
     OTZI.dialogue.toast(`Gathered ${node.resource} +1`);
     OTZI.audio.blip(660, 0.04);
     return true;

@@ -48,6 +48,13 @@ OTZI.installTestHooks = function installTestHooks() {
             dist: node.dist
           } : null;
         })(),
+        focusedResource: g.focusedResource ? {
+          id: g.focusedResource.id,
+          resource: g.focusedResource.resource,
+          tileX: g.focusedResource.tileX,
+          tileY: g.focusedResource.tileY,
+          dist: g.focusedResource.dist
+        } : null,
         resourceNodes: OTZI.resources.count(g.resourceNodes),
         viewport: {
           cssW: OTZI.viewport.cssW,
@@ -70,6 +77,11 @@ OTZI.installTestHooks = function installTestHooks() {
     teleportToVillage() {
       OTZI.game.player.x = OTZI.CFG.mapW * OTZI.CFG.tileSize / 2;
       OTZI.game.player.y = OTZI.CFG.mapH * OTZI.CFG.tileSize / 2;
+      OTZI.game.updateFocusedResource();
+    },
+    teleportAwayFromResources() {
+      this.teleportToVillage();
+      return this.snapshot().focusedResource;
     },
     teleportToNearestResource(resourceType = null) {
       let best = null;
@@ -83,19 +95,34 @@ OTZI.installTestHooks = function installTestHooks() {
         if (!best || dist < best.dist) best = { ...node, dist };
       }
       if (best) {
-        OTZI.game.player.x = best.x - ts * 0.9;
+        OTZI.game.player.x = best.x - ts * 0.8;
         OTZI.game.player.y = best.y;
         OTZI.camera.update();
+        OTZI.game.updateFocusedResource();
       }
       return best;
     },
     teleportToResource(id) {
       const node = OTZI.resources.getById(OTZI.game.resourceNodes, id);
       if (!node) return null;
-      OTZI.game.player.x = node.x - OTZI.CFG.tileSize * 0.9;
+      OTZI.game.player.x = node.x - OTZI.CFG.tileSize * 0.8;
       OTZI.game.player.y = node.y;
       OTZI.camera.update();
+      OTZI.game.updateFocusedResource();
       return { ...node };
+    },
+    focusedResource() {
+      return OTZI.game.focusedResource ? { ...OTZI.game.focusedResource } : null;
+    },
+    spawnResourceDistanceMin() {
+      const spawnX = OTZI.CFG.mapW * OTZI.CFG.tileSize / 2;
+      const spawnY = OTZI.CFG.mapH * OTZI.CFG.tileSize / 2;
+      let best = Infinity;
+      for (const node of OTZI.game.resourceNodes) {
+        if (node.depleted) continue;
+        best = Math.min(best, Math.hypot(node.x - spawnX, node.y - spawnY));
+      }
+      return best;
     },
     resourceNode(id) {
       const node = OTZI.resources.getById(OTZI.game.resourceNodes, id);

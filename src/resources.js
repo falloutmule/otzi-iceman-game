@@ -49,6 +49,19 @@ OTZI.resources = {
     }
     return best;
   },
+  findNearestVisibleTarget(nodes, player, map, resourceType = null) {
+    let best = null;
+    for (const node of nodes) {
+      if (node.depleted) continue;
+      if (resourceType && node.resource !== resourceType) continue;
+      if (!node.resource) continue;
+      if (!(map.getFlags(node.tileX, node.tileY) & OTZI.FLAG.HARVEST)) continue;
+      const dist = Math.hypot(node.x - player.x, node.y - player.y);
+      if (dist > OTZI.CFG.gatherRadius) continue;
+      if (!best || dist < best.dist) best = { ...node, dist };
+    }
+    return best;
+  },
   getById(nodes, id) {
     return nodes.find((node) => node.id === id) || null;
   },

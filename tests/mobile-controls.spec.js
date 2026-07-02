@@ -71,6 +71,9 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
   const initial = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(initial.resourceNodes.total).toBeGreaterThan(0);
   expect(initial.resourceNodes.active).toBeGreaterThan(0);
+  expect(initial.focusedResource).toBeNull();
+  const spawnResourceDistance = await page.evaluate(() => window.__OTZI_TEST__.spawnResourceDistanceMin());
+  expect(spawnResourceDistance).toBeGreaterThan(1.5 * 24);
   for (const resource of ["flint", "stick", "stone", "bark", "grass", "food"]) {
     expect(initial.resourceNodes.byResource[resource].active).toBeGreaterThan(0);
   }
@@ -81,6 +84,8 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
   expect(afterFailedUse.inventory.flint || 0).toBe(initial.inventory.flint || 0);
   expect(afterFailedUse.resourceNodes.depleted).toBe(initial.resourceNodes.depleted);
   await page.screenshot({ path: "artifacts/screenshots/gather-fail-no-resource.png", fullPage: true });
+  await page.screenshot({ path: "artifacts/screenshots/no-invisible-target-open-field.png", fullPage: true });
+  await page.screenshot({ path: "artifacts/screenshots/no-focus-no-gather.png", fullPage: true });
 
   await page.locator("#menuBtn").tap();
   await expect(page.locator("#menuPanel")).toBeVisible();
@@ -95,15 +100,16 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
   for (const resource of ["flint", "stick", "stone", "bark", "grass", "food"]) {
     await page.evaluate((kind) => window.__OTZI_TEST__.teleportToNearestResource(kind), resource);
     const nearResource = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
-    expect(nearResource.nearestResource?.resource).toBe(resource);
-    expect(nearResource.nearestResource?.kind).toBe("resource");
-    expect(nearResource.nearestResource?.saveDeltaId).toBeTruthy();
-    const gatheredNodeId = nearResource.nearestResource.id;
+    expect(nearResource.focusedResource?.resource).toBe(resource);
+    expect(nearResource.focusedResource?.id).toBeTruthy();
+    expect(nearResource.focusedResource?.dist).toBeLessThanOrEqual(24);
+    const gatheredNodeId = nearResource.focusedResource.id;
     if (resource === "flint") {
       await page.waitForTimeout(1500);
-      await expect(page.locator("#statusLine")).toContainText("Nearby: flint");
+      await expect(page.locator("#statusLine")).toContainText("USE: gather flint");
       await page.screenshot({ path: "artifacts/screenshots/bugpass-resource-markers.png", fullPage: true });
       await page.screenshot({ path: "artifacts/screenshots/bugpass-nearby-resource-highlight.png", fullPage: true });
+      await page.screenshot({ path: "artifacts/screenshots/focused-resource-label.png", fullPage: true });
     }
     await page.locator("#useBtn").tap();
     await expect(page.locator("#statusLine")).toContainText(`Gathered ${resource} +1`);
@@ -117,6 +123,12 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
     if (resource === "flint") {
       await page.screenshot({ path: "artifacts/screenshots/bugpass-gather-visible-resource.png", fullPage: true });
       await page.screenshot({ path: "artifacts/screenshots/bugpass-depleted-resource.png", fullPage: true });
+      await page.screenshot({ path: "artifacts/screenshots/gather-focused-resource-only.png", fullPage: true });
+      await page.screenshot({ path: "artifacts/screenshots/depleted-focused-resource.png", fullPage: true });
+      await page.evaluate((id) => window.__OTZI_TEST__.teleportToResource(id), gatheredNodeId);
+      await page.evaluate(() => window.__OTZI_TEST__.stepFrames(2));
+      const afterDepletedTeleport = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
+      expect(afterDepletedTeleport.focusedResource?.id).not.toBe(gatheredNodeId);
     }
     previous = afterUse;
   }
@@ -225,6 +237,7 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
   await page.locator("#menuBtn").tap();
   await expect(page.locator("#menuPanel")).toBeVisible();
   await page.screenshot({ path: "artifacts/screenshots/bugpass-menu-fullscreen-reset.png", fullPage: true });
+  await page.screenshot({ path: "artifacts/screenshots/fullscreen-menu-button.png", fullPage: true });
   await page.locator("#menuCloseBtn").tap();
   await expect(page.locator("#menuPanel")).toBeHidden();
 

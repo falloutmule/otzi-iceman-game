@@ -75,8 +75,8 @@ OTZI.renderWorld = {
       }
     }
 
-    const nearest = OTZI.game.findNearestResource();
-    for (const node of OTZI.game.resourceNodes) this.drawResourceNode(ctx, node, nearest?.id === node.id);
+    const focusId = OTZI.game.focusedResourceId;
+    for (const node of OTZI.game.resourceNodes) this.drawResourceNode(ctx, node, focusId === node.id);
     for (const e of OTZI.game.entities) this.drawEntity(ctx, e, pal.deer);
     this.drawEntity(ctx, OTZI.game.player, pal.player);
     if (OTZI.game.debug) OTZI.debug.draw(ctx, startX, startY, endX, endY);
@@ -94,27 +94,98 @@ OTZI.renderWorld = {
   drawResourceNode(ctx, node, highlighted) {
     if (node.depleted) return;
     const p = OTZI.camera.worldToScreen(node.x, node.y);
-    if (p.x < -16 || p.y < -16 || p.x > OTZI.viewport.cssW + 16 || p.y > OTZI.viewport.cssH + 16) return;
+    if (p.x < -32 || p.y < -36 || p.x > OTZI.viewport.cssW + 32 || p.y > OTZI.viewport.cssH + 32) return;
     const x = Math.floor(p.x);
     const y = Math.floor(p.y);
     ctx.save();
     ctx.fillStyle = "rgba(0,0,0,.35)";
-    ctx.fillRect(x - 7, y + 7, 14, 3);
+    ctx.fillRect(x - 10, y + 10, 20, 4);
+    this.drawResourceIcon(ctx, node.resource, x, y);
     if (highlighted) {
-      ctx.strokeStyle = "#ffe08a";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(x, y, 10, 0, Math.PI * 2);
-      ctx.stroke();
+      this.drawResourceFocus(ctx, node.resource, x, y);
     }
-    ctx.fillStyle = this.resourceColor(node.resource);
+    ctx.restore();
+  },
+  drawResourceIcon(ctx, resource, x, y) {
+    const color = this.resourceColor(resource);
     ctx.strokeStyle = "rgba(0,0,0,.78)";
     ctx.lineWidth = 2;
+    ctx.fillStyle = color;
+    if (resource === "flint") {
+      ctx.beginPath();
+      ctx.moveTo(x, y - 9);
+      ctx.lineTo(x + 8, y);
+      ctx.lineTo(x, y + 9);
+      ctx.lineTo(x - 8, y);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.fill();
+      return;
+    }
+    if (resource === "stick") {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(-0.45);
+      ctx.fillRect(-10, -4, 20, 8);
+      ctx.strokeRect(-10, -4, 20, 8);
+      ctx.restore();
+      return;
+    }
+    if (resource === "bark") {
+      ctx.fillRect(x - 8, y - 10, 16, 20);
+      ctx.strokeRect(x - 8, y - 10, 16, 20);
+      ctx.strokeStyle = "rgba(70,54,35,.8)";
+      ctx.beginPath();
+      ctx.moveTo(x - 3, y - 8);
+      ctx.lineTo(x - 3, y + 8);
+      ctx.moveTo(x + 4, y - 7);
+      ctx.lineTo(x + 4, y + 7);
+      ctx.stroke();
+      return;
+    }
+    if (resource === "grass") {
+      ctx.beginPath();
+      ctx.moveTo(x - 10, y + 8);
+      ctx.lineTo(x - 6, y - 8);
+      ctx.lineTo(x - 1, y + 8);
+      ctx.lineTo(x + 3, y - 10);
+      ctx.lineTo(x + 8, y + 8);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.fill();
+      return;
+    }
+    if (resource === "food") {
+      for (const [dx, dy] of [[-5, -3], [4, -4], [0, 5]]) {
+        ctx.beginPath();
+        ctx.arc(x + dx, y + dy, 6, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fill();
+      }
+      return;
+    }
     ctx.beginPath();
-    ctx.arc(x, y, highlighted ? 6 : 5, 0, Math.PI * 2);
+    ctx.arc(x, y, 9, 0, Math.PI * 2);
     ctx.stroke();
     ctx.fill();
-    ctx.restore();
+  },
+  drawResourceFocus(ctx, resource, x, y) {
+    const label = resource.toUpperCase();
+    ctx.strokeStyle = "#ffe08a";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(x, y, 16, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.font = "800 10px ui-monospace,Consolas,monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    const w = Math.max(44, label.length * 8 + 10);
+    ctx.fillStyle = "rgba(0,0,0,.78)";
+    ctx.fillRect(Math.floor(x - w / 2), y - 34, w, 16);
+    ctx.strokeStyle = "rgba(255,224,138,.45)";
+    ctx.strokeRect(Math.floor(x - w / 2), y - 34, w, 16);
+    ctx.fillStyle = "#ffe8a8";
+    ctx.fillText(label, x, y - 21);
   },
   drawEntity(ctx, e, color) {
     const p = OTZI.camera.worldToScreen(e.x, e.y);

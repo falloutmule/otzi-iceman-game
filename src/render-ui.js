@@ -8,9 +8,9 @@ OTZI.renderUi = {
     OTZI.dom.staminaChip.textContent = `STAM ${Math.round(game.player.stamina)}`;
     OTZI.dom.hungerChip.textContent = `HUNGER ${Math.round(game.player.hunger)}`;
     OTZI.dom.warmthChip.textContent = `WARMTH ${Math.round(game.player.warmth)}`;
-    if (performance.now() > OTZI.dialogue.toastUntil) {
-      const nearest = game.findNearestResource();
-      OTZI.dialogue.message = nearest ? `Nearby: ${nearest.resource}` : "Milestone 1 engine shell";
+    if (!OTZI.dialogue.hasActiveToast()) {
+      const focus = game.focusedResource;
+      OTZI.dialogue.message = focus ? `USE: gather ${focus.resource}` : "No resource nearby";
       OTZI.dom.statusLine.textContent = OTZI.dialogue.message;
     }
     OTZI.dom.minimapPanel.hidden = !game.minimap;
@@ -48,6 +48,7 @@ OTZI.renderUi = {
     OTZI.dom.debugPanel.textContent = [
       `seed ${game.seed}`,
       `tile ${tileX},${tileY}`,
+      `focus ${game.focusedResource ? `${game.focusedResource.resource} ${game.focusedResource.id} tile ${game.focusedResource.tileX},${game.focusedResource.tileY} dist ${game.focusedResource.dist.toFixed(1)}` : "none"}`,
       `fps ${game.fps.toFixed(1)}`,
       `entities ${game.entities.length}`,
       `resources ${game.resourceNodes ? OTZI.resources.count(game.resourceNodes).active : 0}`,

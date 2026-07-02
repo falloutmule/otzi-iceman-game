@@ -10,5 +10,8 @@ OTZI.dialogue = {
   toast(text, seconds = 1.4) {
     this.say(text);
     this.toastUntil = performance.now() + seconds * 1000;
+  },
+  hasActiveToast() {
+    return performance.now() <= this.toastUntil;
   }
 };
