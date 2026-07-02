@@ -172,8 +172,8 @@ OTZI.dom = {
         </div>
         <div class="start-panel" id="startPanel">
           <h1>The Legend of &Ouml;tzi the Iceman</h1>
-          <p>Canvas 2D survival adventure engine shell.</p>
-          <button id="startBtn" type="button">Start / Audio Unlock</button>
+          <p>Explore the Alps, gather supplies, and find Flint Scar.</p>
+          <button id="startBtn" type="button">Start Game</button>
         </div>
         <div id="welcomePanel" class="menu-panel welcome-panel" hidden role="dialog" aria-modal="false" aria-label="Welcome objective">
           <div class="panel-title">Village Camp</div>
@@ -187,7 +187,7 @@ OTZI.dom = {
         <div class="objective-tag">OBJECTIVE</div>
         <div class="objective-copy">
           <strong id="objectiveTitle">Find Flint Scar</strong>
-          <span id="objectiveText">From the village, travel east to Flint Scar.</span>
+          <span id="objectiveText">Travel east from the village.</span>
         </div>
       </section>
       <section id="popupBar" class="popup-bar" aria-label="Map and inventory buttons">
@@ -210,7 +210,7 @@ OTZI.dom = {
         <div id="staminaChip" class="stat-chip">STAM 100</div>
         <div id="hungerChip" class="stat-chip">HUNGER 0</div>
         <div id="warmthChip" class="stat-chip">WARMTH 100</div>
-        <div id="statusLine" class="status-line">Milestone 1 engine shell</div>
+        <div id="statusLine" class="status-line">Travel east from the village.</div>
         <button id="debugBtn" type="button" aria-label="Toggle debug">D</button>
       </section>
       <div id="debugPanel" class="debug-panel" hidden></div>
@@ -233,8 +233,14 @@ OTZI.dom = {
         </dl>
         <button id="craftCrudeToolBtn" type="button">Craft Crude Cutting Tool</button>
         <button id="viewFactBtn" type="button">View Latest Fact</button>
+        <button id="showHelpBtn" type="button">Show Objective Help</button>
         <button id="fullscreenBtn" type="button">Fullscreen</button>
         <button id="resetSaveBtn" type="button">Reset Save</button>
+        <dl class="menu-build-meta">
+          <div><dt>Build</dt><dd id="menuBuildVersion">-</dd></div>
+          <div><dt>Save</dt><dd id="menuSaveVersion">-</dd></div>
+          <div><dt>Worldgen</dt><dd id="menuWorldgenVersion">-</dd></div>
+        </dl>
         <button id="menuCloseBtn" type="button">Close</button>
       </div>
       <div id="factPanel" class="menu-panel" hidden role="dialog" aria-modal="false" aria-label="Fact log">
@@ -294,8 +300,12 @@ OTZI.dom = {
     this.menuStamina = document.getElementById("menuStamina");
     this.craftCrudeToolBtn = document.getElementById("craftCrudeToolBtn");
     this.viewFactBtn = document.getElementById("viewFactBtn");
+    this.showHelpBtn = document.getElementById("showHelpBtn");
     this.fullscreenBtn = document.getElementById("fullscreenBtn");
     this.resetSaveBtn = document.getElementById("resetSaveBtn");
+    this.menuBuildVersion = document.getElementById("menuBuildVersion");
+    this.menuSaveVersion = document.getElementById("menuSaveVersion");
+    this.menuWorldgenVersion = document.getElementById("menuWorldgenVersion");
     this.menuCloseBtn = document.getElementById("menuCloseBtn");
     this.factPanel = document.getElementById("factPanel");
     this.factTitle = document.getElementById("factTitle");
@@ -1521,7 +1531,7 @@ OTZI.objectives = {
       return {
         id: "find_flint_scar",
         title: "Find Flint Scar",
-        text: "From the village, travel east to Flint Scar."
+        text: "Travel east from the village."
       };
     }
     if ((game.inventory.goodFlintCore || 0) >= 1 && !OTZI.village.has("toolmaker")) {
@@ -2048,6 +2058,17 @@ OTZI.renderUi = {
     const objective = OTZI.objectives.current(game);
     OTZI.dom.objectiveTitle.textContent = objective.title;
     OTZI.dom.objectiveText.textContent = objective.text;
+    OTZI.dom.minimapLegend.innerHTML = game.scene === "dungeon" ? `
+      <div><span>@</span><span>You</span></div>
+      <div><span>E</span><span>Exit</span></div>
+      <div><span>?</span><span>Unknown</span></div>
+    ` : `
+      <div><span>V</span><span>Village</span></div>
+      <div><span>C</span><span>Flint Scar</span></div>
+      <div><span>A</span><span>Animal Clearing</span></div>
+      <div><span>@</span><span>You</span></div>
+      <div><span>?</span><span>Unknown</span></div>
+    `;
     if (!OTZI.dialogue.hasActiveToast()) {
       OTZI.dialogue.message = game.transition.active ? `Traveling ${game.transition.direction}` :
         game.focusedEntity?.kind === "hare" ? "USE: catch hare" :
@@ -2089,6 +2110,9 @@ OTZI.renderUi = {
       OTZI.dom.menuToolmaker.textContent = OTZI.village.has("toolmaker") ? "Unlocked" : "Locked";
       OTZI.dom.menuLatestFact.textContent = OTZI.facts.latestDiscovered()?.title || "None";
       OTZI.dom.menuStamina.textContent = Math.round(game.player.stamina).toString();
+      OTZI.dom.menuBuildVersion.textContent = OTZI.CFG.engineVersion;
+      OTZI.dom.menuSaveVersion.textContent = String(OTZI.CFG.saveVersion);
+      OTZI.dom.menuWorldgenVersion.textContent = String(OTZI.CFG.worldgenVersion);
       OTZI.dom.resetSaveBtn.textContent = game.resetConfirm ? "Confirm Reset Save" : "Reset Save";
       OTZI.dom.viewFactBtn.hidden = !OTZI.facts.latestDiscovered();
     }
@@ -2260,8 +2284,8 @@ OTZI.save = {
         returnScreen: g.returnScreen
       } : null,
       dungeons: g.dungeons,
-      ui: {
-        welcomeSeen: !!g.welcomeSeen
+      guide: {
+        welcomeSeenVersion: g.guide?.welcomeSeenVersion || 0
       },
       village: g.village,
       facts: g.facts
@@ -2295,7 +2319,9 @@ OTZI.save = {
       ...g.dungeons,
       ...(data.dungeons || {})
     };
-    g.welcomeSeen = !!data.ui?.welcomeSeen;
+    g.guide = {
+      welcomeSeenVersion: data.guide?.welcomeSeenVersion || (data.ui?.welcomeSeen ? OTZI.CFG.saveVersion : 0)
+    };
     g.welcomeOpen = false;
     g.areaCard = null;
     g.areaCardUntil = 0;
@@ -2706,10 +2732,13 @@ OTZI.game = {
   returnScreen: null,
   factOpen: false,
   activeFactId: null,
-  welcomeSeen: false,
+  guide: {
+    welcomeSeenVersion: 0
+  },
   welcomeOpen: false,
   areaCard: null,
   areaCardUntil: 0,
+  transitionCooldown: 0,
   setSeed(seed) {
     this.seed = seed || OTZI.CFG.defaultSeed;
     this.player = OTZI.entities.makePlayer();
@@ -2732,10 +2761,13 @@ OTZI.game = {
     this.focusedEntity = null;
     this.factOpen = false;
     this.activeFactId = null;
-    this.welcomeSeen = false;
+    this.guide = {
+      welcomeSeenVersion: 0
+    };
     this.welcomeOpen = false;
     this.areaCard = null;
     this.areaCardUntil = 0;
+    this.transitionCooldown = 0;
     this.transition = {
       active: false,
       kind: "screen_slide",
@@ -2858,6 +2890,7 @@ OTZI.game = {
     else this.enterOverworldScreen(t.targetX, t.targetY, { keepScene: true, restorePlayer: true });
     this.player.x = t.toPlayer.x;
     this.player.y = t.toPlayer.y;
+    this.transitionCooldown = 0.22;
     OTZI.camera.update();
     OTZI.input.clearAll();
     this.updateFocusState();
@@ -2879,7 +2912,16 @@ OTZI.game = {
       y: this.world.currentY
     };
     this.ensureDungeon(id);
-    this.enterDungeonRoom(0, 1);
+    this.enterDungeonRoom(0, 1, { entrySide: "w" });
+    const exit = (this.entrances || []).find((item) => item.kind === "exit");
+    if (exit) {
+      this.player.x = exit.x + OTZI.CFG.tileSize * 0.9;
+      this.player.y = exit.y;
+    }
+    this.transitionCooldown = 0.25;
+    OTZI.input.clearAll();
+    OTZI.camera.update();
+    this.updateFocusState();
     OTZI.dialogue.toast("Entered Flint Scar");
   },
   enterDungeonRoom(x, y, opts = {}) {
@@ -2909,7 +2951,7 @@ OTZI.game = {
   currentObjective() {
     return OTZI.objectives.current(this);
   },
-  showAreaCard(seconds = 2) {
+  showAreaCard(seconds = 2.5) {
     const card = OTZI.objectives.screenCard(this.currentArea, this);
     this.areaCard = card;
     this.areaCardUntil = performance.now() + seconds * 1000;
@@ -2920,6 +2962,9 @@ OTZI.game = {
   isAreaCardVisible() {
     return !!this.areaCard && performance.now() <= this.areaCardUntil;
   },
+  shouldShowWelcome() {
+    return (this.guide?.welcomeSeenVersion || 0) !== OTZI.CFG.saveVersion;
+  },
   openWelcome() {
     this.welcomeOpen = true;
     OTZI.input.clearAll();
@@ -2927,7 +2972,11 @@ OTZI.game = {
   },
   dismissWelcome(markSeen = true) {
     this.welcomeOpen = false;
-    if (markSeen) this.welcomeSeen = true;
+    if (markSeen) {
+      this.guide = this.guide || {};
+      this.guide.welcomeSeenVersion = OTZI.CFG.saveVersion;
+      OTZI.save.save();
+    }
     return true;
   },
   tryUnlockToolmaker() {
@@ -2962,6 +3011,7 @@ OTZI.game = {
       this.player.x = entry.x - OTZI.CFG.tileSize * 1.4;
       this.player.y = entry.y;
     }
+    this.transitionCooldown = 0.22;
     OTZI.camera.update();
     this.updateFocusState();
     OTZI.dialogue.toast("Returned to forest");
@@ -3060,7 +3110,7 @@ OTZI.game = {
     return true;
   },
   maybeTransitionScreen() {
-    if (this.transition.active || this.scene !== "overworld" || !this.currentScreen) return false;
+    if (this.transition.active || this.transitionCooldown > 0 || this.scene !== "overworld" || !this.currentScreen) return false;
     const pad = OTZI.CFG.transitionEdgePad;
     const maxX = this.map.w * OTZI.CFG.tileSize - pad;
     const maxY = this.map.h * OTZI.CFG.tileSize - pad;
@@ -3083,7 +3133,7 @@ OTZI.game = {
     return false;
   },
   maybeTransitionDungeonRoom() {
-    if (this.transition.active || this.scene !== "dungeon" || !this.currentRoom) return false;
+    if (this.transition.active || this.transitionCooldown > 0 || this.scene !== "dungeon" || !this.currentRoom) return false;
     const pad = OTZI.CFG.transitionEdgePad;
     const maxX = this.map.w * OTZI.CFG.tileSize - pad;
     const maxY = this.map.h * OTZI.CFG.tileSize - pad;
@@ -3157,6 +3207,7 @@ OTZI.game = {
       this.updateTransition(dt);
       return;
     }
+    this.transitionCooldown = Math.max(0, this.transitionCooldown - dt);
     if (this.factOpen || this.welcomeOpen) {
       actions.moveX = 0;
       actions.moveY = 0;
@@ -3249,7 +3300,7 @@ OTZI.game = {
       await OTZI.audio.unlock();
       OTZI.dom.startPanel.hidden = true;
       OTZI.game.running = true;
-      if (!OTZI.game.welcomeSeen) OTZI.game.openWelcome();
+      if (OTZI.game.shouldShowWelcome()) OTZI.game.openWelcome();
     });
     OTZI.dom.welcomeOkBtn.addEventListener("click", () => {
       OTZI.game.dismissWelcome(true);
@@ -3268,6 +3319,11 @@ OTZI.game = {
     OTZI.dom.viewFactBtn.addEventListener("click", () => {
       const fact = OTZI.facts.latestDiscovered();
       if (fact) OTZI.game.openFact(fact.id);
+    });
+    OTZI.dom.showHelpBtn.addEventListener("click", () => {
+      OTZI.game.menuOpen = false;
+      OTZI.game.openWelcome();
+      OTZI.dialogue.toast("Objective help open");
     });
     OTZI.dom.resetSaveBtn.addEventListener("click", () => {
       if (!OTZI.game.resetConfirm) {
@@ -3293,6 +3349,6 @@ OTZI.game = {
 })();
 
   </script>
-  <!-- build: 2026-07-02T15:04:35.564Z modules:30 -->
+  <!-- build: 2026-07-02T17:02:25.535Z modules:30 -->
 </body>
 </html>

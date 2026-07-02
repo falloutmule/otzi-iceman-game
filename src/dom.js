@@ -39,8 +39,8 @@ OTZI.dom = {
         </div>
         <div class="start-panel" id="startPanel">
           <h1>The Legend of &Ouml;tzi the Iceman</h1>
-          <p>Canvas 2D survival adventure engine shell.</p>
-          <button id="startBtn" type="button">Start / Audio Unlock</button>
+          <p>Explore the Alps, gather supplies, and find Flint Scar.</p>
+          <button id="startBtn" type="button">Start Game</button>
         </div>
         <div id="welcomePanel" class="menu-panel welcome-panel" hidden role="dialog" aria-modal="false" aria-label="Welcome objective">
           <div class="panel-title">Village Camp</div>
@@ -54,7 +54,7 @@ OTZI.dom = {
         <div class="objective-tag">OBJECTIVE</div>
         <div class="objective-copy">
           <strong id="objectiveTitle">Find Flint Scar</strong>
-          <span id="objectiveText">From the village, travel east to Flint Scar.</span>
+          <span id="objectiveText">Travel east from the village.</span>
         </div>
       </section>
       <section id="popupBar" class="popup-bar" aria-label="Map and inventory buttons">
@@ -77,7 +77,7 @@ OTZI.dom = {
         <div id="staminaChip" class="stat-chip">STAM 100</div>
         <div id="hungerChip" class="stat-chip">HUNGER 0</div>
         <div id="warmthChip" class="stat-chip">WARMTH 100</div>
-        <div id="statusLine" class="status-line">Milestone 1 engine shell</div>
+        <div id="statusLine" class="status-line">Travel east from the village.</div>
         <button id="debugBtn" type="button" aria-label="Toggle debug">D</button>
       </section>
       <div id="debugPanel" class="debug-panel" hidden></div>
@@ -100,8 +100,14 @@ OTZI.dom = {
         </dl>
         <button id="craftCrudeToolBtn" type="button">Craft Crude Cutting Tool</button>
         <button id="viewFactBtn" type="button">View Latest Fact</button>
+        <button id="showHelpBtn" type="button">Show Objective Help</button>
         <button id="fullscreenBtn" type="button">Fullscreen</button>
         <button id="resetSaveBtn" type="button">Reset Save</button>
+        <dl class="menu-build-meta">
+          <div><dt>Build</dt><dd id="menuBuildVersion">-</dd></div>
+          <div><dt>Save</dt><dd id="menuSaveVersion">-</dd></div>
+          <div><dt>Worldgen</dt><dd id="menuWorldgenVersion">-</dd></div>
+        </dl>
         <button id="menuCloseBtn" type="button">Close</button>
       </div>
       <div id="factPanel" class="menu-panel" hidden role="dialog" aria-modal="false" aria-label="Fact log">
@@ -161,8 +167,12 @@ OTZI.dom = {
     this.menuStamina = document.getElementById("menuStamina");
     this.craftCrudeToolBtn = document.getElementById("craftCrudeToolBtn");
     this.viewFactBtn = document.getElementById("viewFactBtn");
+    this.showHelpBtn = document.getElementById("showHelpBtn");
     this.fullscreenBtn = document.getElementById("fullscreenBtn");
     this.resetSaveBtn = document.getElementById("resetSaveBtn");
+    this.menuBuildVersion = document.getElementById("menuBuildVersion");
+    this.menuSaveVersion = document.getElementById("menuSaveVersion");
+    this.menuWorldgenVersion = document.getElementById("menuWorldgenVersion");
     this.menuCloseBtn = document.getElementById("menuCloseBtn");
     this.factPanel = document.getElementById("factPanel");
     this.factTitle = document.getElementById("factTitle");

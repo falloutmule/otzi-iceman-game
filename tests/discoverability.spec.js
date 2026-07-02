@@ -30,17 +30,21 @@ test("discoverability guidance exposes the first playable loop", async ({ page }
 
   await page.goto(`${baseUrl}/dist/index.html`);
   await expect(page.locator("#worldCanvas")).toBeVisible();
+  await expect(page.locator("#startBtn")).toHaveText("Start Game");
+  await expect(page.locator("#startPanel")).not.toContainText("Audio Unlock");
+  await expect(page.locator("#startPanel")).not.toContainText("engine shell");
+  await page.screenshot({ path: "artifacts/screenshots/fix-start-game-label.png", fullPage: true });
   await page.getByRole("button", { name: /start/i }).tap();
   await expect(page.locator("#welcomePanel")).toBeVisible();
   await expect(page.locator("#welcomePanel")).toContainText("Travel east from the village to find Flint Scar");
-  await page.screenshot({ path: "artifacts/screenshots/discoverability-welcome-popup.png", fullPage: true });
+  await page.screenshot({ path: "artifacts/screenshots/fix-welcome-popup-visible.png", fullPage: true });
   await page.locator("#welcomeOkBtn").tap();
   await expect(page.locator("#welcomePanel")).toBeHidden();
 
   await expect(page.locator("#objectiveBar")).toBeVisible();
   await expect(page.locator("#objectiveTitle")).toContainText("Find Flint Scar");
-  await expect(page.locator("#objectiveText")).toContainText("travel east");
-  await page.screenshot({ path: "artifacts/screenshots/discoverability-objective-find-flint-scar.png", fullPage: true });
+  await expect(page.locator("#objectiveText")).toContainText("Travel east from the village");
+  await page.screenshot({ path: "artifacts/screenshots/fix-objective-bar-visible.png", fullPage: true });
 
   const startSnap = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(startSnap.world.currentScreenKind).toBe("village_home");
@@ -52,8 +56,18 @@ test("discoverability guidance exposes the first playable loop", async ({ page }
   await expect(page.locator("#minimapLegend")).toContainText("Village");
   await expect(page.locator("#minimapLegend")).toContainText("Flint Scar");
   await expect(page.locator("#minimapLegend")).toContainText("Animal Clearing");
-  await page.screenshot({ path: "artifacts/screenshots/discoverability-map-legend.png", fullPage: true });
+  await page.screenshot({ path: "artifacts/screenshots/fix-overworld-map-legend.png", fullPage: true });
   await page.locator("#mapTab").tap();
+
+  await page.locator("#menuBtn").tap();
+  await expect(page.locator("#menuPanel")).toBeVisible();
+  await expect(page.locator("#menuBuildVersion")).toHaveText("otzi-discoverability-0.4.0");
+  await expect(page.locator("#menuSaveVersion")).toHaveText("6");
+  await expect(page.locator("#menuWorldgenVersion")).toHaveText("3");
+  await page.screenshot({ path: "artifacts/screenshots/fix-menu-build-marker.png", fullPage: true });
+  await page.locator("#showHelpBtn").tap();
+  await expect(page.locator("#welcomePanel")).toBeVisible();
+  await page.locator("#welcomeOkBtn").tap();
 
   await page.evaluate(() => window.__OTZI_TEST__.teleportToFlintScarEntrance());
   const flintSnap = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
@@ -67,8 +81,26 @@ test("discoverability guidance exposes the first playable loop", async ({ page }
   await page.evaluate(() => OTZI.game.tryUse());
   const dungeonSnap = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(dungeonSnap.scene).toBe("dungeon");
+  expect(dungeonSnap.dungeon.currentX).toBe(0);
+  expect(dungeonSnap.dungeon.currentY).toBe(1);
+  expect(dungeonSnap.transition.active).toBe(false);
   expect(dungeonSnap.objective.id).toBe("find_good_flint_core");
   await expect(page.locator("#objectiveTitle")).toContainText("Find the Good Flint Core");
+  await expect(page.locator("#areaCard")).toBeVisible();
+  await expect(page.locator("#areaCardTitle")).toContainText("Flint Scar");
+  await page.screenshot({ path: "artifacts/screenshots/fix-flint-scar-entry-room.png", fullPage: true });
+
+  await page.evaluate(() => window.__OTZI_TEST__.stepFrames(8));
+  const dungeonStillSnap = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
+  expect(dungeonStillSnap.dungeon.currentX).toBe(0);
+  expect(dungeonStillSnap.dungeon.currentY).toBe(1);
+
+  await page.locator("#mapTab").tap();
+  await expect(page.locator("#minimapLegend")).toContainText("Exit");
+  await expect(page.locator("#minimapLegend")).not.toContainText("Village");
+  await page.screenshot({ path: "artifacts/screenshots/fix-dungeon-map-legend.png", fullPage: true });
+  await page.locator("#mapTab").tap();
+  await page.screenshot({ path: "artifacts/screenshots/fix-flint-scar-area-card.png", fullPage: true });
 
   const animalHint = await page.evaluate(() => window.__OTZI_TEST__.teleportToAnimalHintScreen());
   expect(animalHint.hint).toContain("Hare tracks lead");

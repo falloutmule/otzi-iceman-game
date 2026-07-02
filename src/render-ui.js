@@ -11,6 +11,17 @@ OTZI.renderUi = {
     const objective = OTZI.objectives.current(game);
     OTZI.dom.objectiveTitle.textContent = objective.title;
     OTZI.dom.objectiveText.textContent = objective.text;
+    OTZI.dom.minimapLegend.innerHTML = game.scene === "dungeon" ? `
+      <div><span>@</span><span>You</span></div>
+      <div><span>E</span><span>Exit</span></div>
+      <div><span>?</span><span>Unknown</span></div>
+    ` : `
+      <div><span>V</span><span>Village</span></div>
+      <div><span>C</span><span>Flint Scar</span></div>
+      <div><span>A</span><span>Animal Clearing</span></div>
+      <div><span>@</span><span>You</span></div>
+      <div><span>?</span><span>Unknown</span></div>
+    `;
     if (!OTZI.dialogue.hasActiveToast()) {
       OTZI.dialogue.message = game.transition.active ? `Traveling ${game.transition.direction}` :
         game.focusedEntity?.kind === "hare" ? "USE: catch hare" :
@@ -52,6 +63,9 @@ OTZI.renderUi = {
       OTZI.dom.menuToolmaker.textContent = OTZI.village.has("toolmaker") ? "Unlocked" : "Locked";
       OTZI.dom.menuLatestFact.textContent = OTZI.facts.latestDiscovered()?.title || "None";
       OTZI.dom.menuStamina.textContent = Math.round(game.player.stamina).toString();
+      OTZI.dom.menuBuildVersion.textContent = OTZI.CFG.engineVersion;
+      OTZI.dom.menuSaveVersion.textContent = String(OTZI.CFG.saveVersion);
+      OTZI.dom.menuWorldgenVersion.textContent = String(OTZI.CFG.worldgenVersion);
       OTZI.dom.resetSaveBtn.textContent = game.resetConfirm ? "Confirm Reset Save" : "Reset Save";
       OTZI.dom.viewFactBtn.hidden = !OTZI.facts.latestDiscovered();
     }

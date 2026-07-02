@@ -14,7 +14,7 @@ OTZI.objectives = {
       return {
         id: "find_flint_scar",
         title: "Find Flint Scar",
-        text: "From the village, travel east to Flint Scar."
+        text: "Travel east from the village."
       };
     }
     if ((game.inventory.goodFlintCore || 0) >= 1 && !OTZI.village.has("toolmaker")) {

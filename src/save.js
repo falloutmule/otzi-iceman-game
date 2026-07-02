@@ -28,8 +28,8 @@ OTZI.save = {
         returnScreen: g.returnScreen
       } : null,
       dungeons: g.dungeons,
-      ui: {
-        welcomeSeen: !!g.welcomeSeen
+      guide: {
+        welcomeSeenVersion: g.guide?.welcomeSeenVersion || 0
       },
       village: g.village,
       facts: g.facts
@@ -63,7 +63,9 @@ OTZI.save = {
       ...g.dungeons,
       ...(data.dungeons || {})
     };
-    g.welcomeSeen = !!data.ui?.welcomeSeen;
+    g.guide = {
+      welcomeSeenVersion: data.guide?.welcomeSeenVersion || (data.ui?.welcomeSeen ? OTZI.CFG.saveVersion : 0)
+    };
     g.welcomeOpen = false;
     g.areaCard = null;
     g.areaCardUntil = 0;

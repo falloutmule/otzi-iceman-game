@@ -43,10 +43,13 @@ OTZI.game = {
   returnScreen: null,
   factOpen: false,
   activeFactId: null,
-  welcomeSeen: false,
+  guide: {
+    welcomeSeenVersion: 0
+  },
   welcomeOpen: false,
   areaCard: null,
   areaCardUntil: 0,
+  transitionCooldown: 0,
   setSeed(seed) {
     this.seed = seed || OTZI.CFG.defaultSeed;
     this.player = OTZI.entities.makePlayer();
@@ -69,10 +72,13 @@ OTZI.game = {
     this.focusedEntity = null;
     this.factOpen = false;
     this.activeFactId = null;
-    this.welcomeSeen = false;
+    this.guide = {
+      welcomeSeenVersion: 0
+    };
     this.welcomeOpen = false;
     this.areaCard = null;
     this.areaCardUntil = 0;
+    this.transitionCooldown = 0;
     this.transition = {
       active: false,
       kind: "screen_slide",
@@ -195,6 +201,7 @@ OTZI.game = {
     else this.enterOverworldScreen(t.targetX, t.targetY, { keepScene: true, restorePlayer: true });
     this.player.x = t.toPlayer.x;
     this.player.y = t.toPlayer.y;
+    this.transitionCooldown = 0.22;
     OTZI.camera.update();
     OTZI.input.clearAll();
     this.updateFocusState();
@@ -216,7 +223,16 @@ OTZI.game = {
       y: this.world.currentY
     };
     this.ensureDungeon(id);
-    this.enterDungeonRoom(0, 1);
+    this.enterDungeonRoom(0, 1, { entrySide: "w" });
+    const exit = (this.entrances || []).find((item) => item.kind === "exit");
+    if (exit) {
+      this.player.x = exit.x + OTZI.CFG.tileSize * 0.9;
+      this.player.y = exit.y;
+    }
+    this.transitionCooldown = 0.25;
+    OTZI.input.clearAll();
+    OTZI.camera.update();
+    this.updateFocusState();
     OTZI.dialogue.toast("Entered Flint Scar");
   },
   enterDungeonRoom(x, y, opts = {}) {
@@ -246,7 +262,7 @@ OTZI.game = {
   currentObjective() {
     return OTZI.objectives.current(this);
   },
-  showAreaCard(seconds = 2) {
+  showAreaCard(seconds = 2.5) {
     const card = OTZI.objectives.screenCard(this.currentArea, this);
     this.areaCard = card;
     this.areaCardUntil = performance.now() + seconds * 1000;
@@ -257,6 +273,9 @@ OTZI.game = {
   isAreaCardVisible() {
     return !!this.areaCard && performance.now() <= this.areaCardUntil;
   },
+  shouldShowWelcome() {
+    return (this.guide?.welcomeSeenVersion || 0) !== OTZI.CFG.saveVersion;
+  },
   openWelcome() {
     this.welcomeOpen = true;
     OTZI.input.clearAll();
@@ -264,7 +283,11 @@ OTZI.game = {
   },
   dismissWelcome(markSeen = true) {
     this.welcomeOpen = false;
-    if (markSeen) this.welcomeSeen = true;
+    if (markSeen) {
+      this.guide = this.guide || {};
+      this.guide.welcomeSeenVersion = OTZI.CFG.saveVersion;
+      OTZI.save.save();
+    }
     return true;
   },
   tryUnlockToolmaker() {
@@ -299,6 +322,7 @@ OTZI.game = {
       this.player.x = entry.x - OTZI.CFG.tileSize * 1.4;
       this.player.y = entry.y;
     }
+    this.transitionCooldown = 0.22;
     OTZI.camera.update();
     this.updateFocusState();
     OTZI.dialogue.toast("Returned to forest");
@@ -397,7 +421,7 @@ OTZI.game = {
     return true;
   },
   maybeTransitionScreen() {
-    if (this.transition.active || this.scene !== "overworld" || !this.currentScreen) return false;
+    if (this.transition.active || this.transitionCooldown > 0 || this.scene !== "overworld" || !this.currentScreen) return false;
     const pad = OTZI.CFG.transitionEdgePad;
     const maxX = this.map.w * OTZI.CFG.tileSize - pad;
     const maxY = this.map.h * OTZI.CFG.tileSize - pad;
@@ -420,7 +444,7 @@ OTZI.game = {
     return false;
   },
   maybeTransitionDungeonRoom() {
-    if (this.transition.active || this.scene !== "dungeon" || !this.currentRoom) return false;
+    if (this.transition.active || this.transitionCooldown > 0 || this.scene !== "dungeon" || !this.currentRoom) return false;
     const pad = OTZI.CFG.transitionEdgePad;
     const maxX = this.map.w * OTZI.CFG.tileSize - pad;
     const maxY = this.map.h * OTZI.CFG.tileSize - pad;
@@ -494,6 +518,7 @@ OTZI.game = {
       this.updateTransition(dt);
       return;
     }
+    this.transitionCooldown = Math.max(0, this.transitionCooldown - dt);
     if (this.factOpen || this.welcomeOpen) {
       actions.moveX = 0;
       actions.moveY = 0;
@@ -586,7 +611,7 @@ OTZI.game = {
       await OTZI.audio.unlock();
       OTZI.dom.startPanel.hidden = true;
       OTZI.game.running = true;
-      if (!OTZI.game.welcomeSeen) OTZI.game.openWelcome();
+      if (OTZI.game.shouldShowWelcome()) OTZI.game.openWelcome();
     });
     OTZI.dom.welcomeOkBtn.addEventListener("click", () => {
       OTZI.game.dismissWelcome(true);
@@ -605,6 +630,11 @@ OTZI.game = {
     OTZI.dom.viewFactBtn.addEventListener("click", () => {
       const fact = OTZI.facts.latestDiscovered();
       if (fact) OTZI.game.openFact(fact.id);
+    });
+    OTZI.dom.showHelpBtn.addEventListener("click", () => {
+      OTZI.game.menuOpen = false;
+      OTZI.game.openWelcome();
+      OTZI.dialogue.toast("Objective help open");
     });
     OTZI.dom.resetSaveBtn.addEventListener("click", () => {
       if (!OTZI.game.resetConfirm) {
