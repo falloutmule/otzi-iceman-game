@@ -72,7 +72,7 @@ Untested:
 ## Current exact state
 
 - Branch: `fix/no-invisible-gather-targets`
-- Commit hash: `cbdb99e`
+- Implementation commit hash: `83424c0`
 - Focused resource state exists.
 - USE/GATHER only collects the current focused resource.
 - No focused resource means no gather.
