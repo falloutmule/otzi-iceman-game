@@ -69,6 +69,15 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
   expect(afterFailedUse.resourceNodes.depleted).toBe(initial.resourceNodes.depleted);
   await page.screenshot({ path: "artifacts/screenshots/gather-fail-no-resource.png", fullPage: true });
 
+  await page.locator("#menuBtn").tap();
+  await expect(page.locator("#menuPanel")).toBeVisible();
+  await page.locator("#craftCrudeToolBtn").tap();
+  await expect(page.locator("#statusLine")).toContainText("Missing resources");
+  let failedCraft = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
+  expect(failedCraft.inventory.crudeTool || 0).toBe(0);
+  await page.locator("#menuCloseBtn").tap();
+  await expect(page.locator("#menuPanel")).toBeHidden();
+
   let previous = afterFailedUse;
   for (const resource of ["flint", "stick", "stone", "bark", "grass", "food"]) {
     await page.evaluate((kind) => window.__OTZI_TEST__.teleportToNearestResource(kind), resource);
@@ -115,6 +124,21 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
   await expect(page.locator("#menuBark")).toHaveText("1");
   await expect(page.locator("#menuGrass")).toHaveText("1");
   await expect(page.locator("#menuFood")).toHaveText("1");
+  await expect(page.locator("#menuCrudeTool")).toHaveText("0");
+  await page.locator("#craftCrudeToolBtn").tap();
+  await expect(page.locator("#statusLine")).toContainText("Crafted Crude Cutting Tool");
+  await expect(page.locator("#menuFlint")).toHaveText("0");
+  await expect(page.locator("#menuStick")).toHaveText("0");
+  await expect(page.locator("#menuGrass")).toHaveText("0");
+  await expect(page.locator("#menuCrudeTool")).toHaveText("1");
+  const afterCraft = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
+  expect(afterCraft.inventory.flint).toBe(0);
+  expect(afterCraft.inventory.stick).toBe(0);
+  expect(afterCraft.inventory.grass).toBe(0);
+  expect(afterCraft.inventory.stone).toBe(1);
+  expect(afterCraft.inventory.bark).toBe(1);
+  expect(afterCraft.inventory.food).toBe(1);
+  expect(afterCraft.inventory.crudeTool).toBe(1);
   const afterMenuOpen = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(afterMenuOpen.menuOpen).toBe(true);
   expect(afterMenuOpen.input.sprintHeld).toBe(false);

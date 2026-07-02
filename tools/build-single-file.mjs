@@ -70,6 +70,7 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 .menu-panel dt { color:var(--muted); }
 .menu-panel dd { margin:0; font-weight:800; }
 .menu-panel button { width:100%; background:#513d1e; border-color:#a88345; }
+.menu-panel button + button { margin-top:8px; }
 .controls { grid-area:controls; position:relative; min-height:180px; height:min(29dvh,232px); padding:12px 10px max(12px,env(safe-area-inset-bottom)); border-top:1px solid rgba(243,234,215,.16); background:linear-gradient(180deg,#111812,#070a08); pointer-events:none; }
 .stick-zone { position:absolute; left:16px; top:26px; width:132px; height:132px; pointer-events:auto; touch-action:none; }
 .stick-label { position:absolute; left:0; top:-20px; color:var(--muted); font-size:11px; font-weight:800; }

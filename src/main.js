@@ -120,6 +120,9 @@ OTZI.game = {
       OTZI.input.clearAll();
       OTZI.dialogue.toast("Craft/Menu closed");
     });
+    OTZI.dom.craftCrudeToolBtn.addEventListener("click", () => {
+      OTZI.crafting.craft("crude_cutting_tool");
+    });
 
     OTZI.game.running = true;
     requestAnimationFrame(frame);

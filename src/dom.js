@@ -49,8 +49,10 @@ OTZI.dom = {
           <div><dt>Bark</dt><dd id="menuBark">0</dd></div>
           <div><dt>Grass</dt><dd id="menuGrass">0</dd></div>
           <div><dt>Food</dt><dd id="menuFood">0</dd></div>
+          <div><dt>Crude cutting tools</dt><dd id="menuCrudeTool">0</dd></div>
           <div><dt>Stamina</dt><dd id="menuStamina">100</dd></div>
         </dl>
+        <button id="craftCrudeToolBtn" type="button">Craft Crude Cutting Tool</button>
         <button id="menuCloseBtn" type="button">Close</button>
       </div>
     `;
@@ -73,7 +75,9 @@ OTZI.dom = {
     this.menuBark = document.getElementById("menuBark");
     this.menuGrass = document.getElementById("menuGrass");
     this.menuFood = document.getElementById("menuFood");
+    this.menuCrudeTool = document.getElementById("menuCrudeTool");
     this.menuStamina = document.getElementById("menuStamina");
+    this.craftCrudeToolBtn = document.getElementById("craftCrudeToolBtn");
     this.menuCloseBtn = document.getElementById("menuCloseBtn");
     this.statusLine = document.getElementById("statusLine");
     this.moveZone = document.getElementById("moveZone");

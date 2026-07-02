@@ -38,6 +38,7 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 .menu-panel dt { color:var(--muted); }
 .menu-panel dd { margin:0; font-weight:800; }
 .menu-panel button { width:100%; background:#513d1e; border-color:#a88345; }
+.menu-panel button + button { margin-top:8px; }
 .controls { grid-area:controls; position:relative; min-height:180px; height:min(29dvh,232px); padding:12px 10px max(12px,env(safe-area-inset-bottom)); border-top:1px solid rgba(243,234,215,.16); background:linear-gradient(180deg,#111812,#070a08); pointer-events:none; }
 .stick-zone { position:absolute; left:16px; top:26px; width:132px; height:132px; pointer-events:auto; touch-action:none; }
 .stick-label { position:absolute; left:0; top:-20px; color:var(--muted); font-size:11px; font-weight:800; }
@@ -139,8 +140,10 @@ OTZI.dom = {
           <div><dt>Bark</dt><dd id="menuBark">0</dd></div>
           <div><dt>Grass</dt><dd id="menuGrass">0</dd></div>
           <div><dt>Food</dt><dd id="menuFood">0</dd></div>
+          <div><dt>Crude cutting tools</dt><dd id="menuCrudeTool">0</dd></div>
           <div><dt>Stamina</dt><dd id="menuStamina">100</dd></div>
         </dl>
+        <button id="craftCrudeToolBtn" type="button">Craft Crude Cutting Tool</button>
         <button id="menuCloseBtn" type="button">Close</button>
       </div>
     `;
@@ -163,7 +166,9 @@ OTZI.dom = {
     this.menuBark = document.getElementById("menuBark");
     this.menuGrass = document.getElementById("menuGrass");
     this.menuFood = document.getElementById("menuFood");
+    this.menuCrudeTool = document.getElementById("menuCrudeTool");
     this.menuStamina = document.getElementById("menuStamina");
+    this.craftCrudeToolBtn = document.getElementById("craftCrudeToolBtn");
     this.menuCloseBtn = document.getElementById("menuCloseBtn");
     this.statusLine = document.getElementById("statusLine");
     this.moveZone = document.getElementById("moveZone");
@@ -793,10 +798,10 @@ OTZI.dialogue = {
 var OTZI = window.OTZI || (window.OTZI = {});
 OTZI.inventory = {
   create() {
-    return { flint: 0, stick: 0, stone: 0, bark: 0, grass: 0, food: 0 };
+    return { flint: 0, stick: 0, stone: 0, bark: 0, grass: 0, food: 0, crudeTool: 0 };
   },
   add(item, n) {
-    OTZI.game.inventory[item] = (OTZI.game.inventory[item] || 0) + n;
+    OTZI.game.inventory[item] = Math.max(0, (OTZI.game.inventory[item] || 0) + n);
   }
 };
 
@@ -805,9 +810,40 @@ OTZI.inventory = {
 /* FUTURE MODULE: CRAFTING */
 var OTZI = window.OTZI || (window.OTZI = {});
 OTZI.crafting = {
-  recipes: [],
-  canCraft() {
-    return false;
+  recipes: [
+    {
+      id: "crude_cutting_tool",
+      name: "Crude Cutting Tool",
+      inputs: { stick: 1, flint: 1, grass: 1 },
+      output: { item: "crudeTool", count: 1 }
+    }
+  ],
+  getRecipe(id) {
+    return this.recipes.find((recipe) => recipe.id === id) || null;
+  },
+  canCraft(id, inventory = OTZI.game.inventory) {
+    const recipe = this.getRecipe(id);
+    if (!recipe) return false;
+    return Object.entries(recipe.inputs).every(([item, count]) => (inventory[item] || 0) >= count);
+  },
+  craft(id) {
+    const recipe = this.getRecipe(id);
+    if (!recipe) {
+      OTZI.dialogue.toast("Unknown recipe");
+      return false;
+    }
+    if (!this.canCraft(id)) {
+      OTZI.dialogue.toast("Missing resources");
+      OTZI.audio.blip(220, 0.035);
+      return false;
+    }
+    for (const [item, count] of Object.entries(recipe.inputs)) {
+      OTZI.inventory.add(item, -count);
+    }
+    OTZI.inventory.add(recipe.output.item, recipe.output.count);
+    OTZI.dialogue.toast(`Crafted ${recipe.name}`);
+    OTZI.audio.blip(720, 0.045);
+    return true;
   }
 };
 
@@ -969,6 +1005,7 @@ OTZI.renderUi = {
       OTZI.dom.menuBark.textContent = String(game.inventory.bark || 0);
       OTZI.dom.menuGrass.textContent = String(game.inventory.grass || 0);
       OTZI.dom.menuFood.textContent = String(game.inventory.food || 0);
+      OTZI.dom.menuCrudeTool.textContent = String(game.inventory.crudeTool || 0);
       OTZI.dom.menuStamina.textContent = Math.round(game.player.stamina).toString();
     }
     if (!game.debug) {
@@ -1333,6 +1370,9 @@ OTZI.game = {
       OTZI.input.clearAll();
       OTZI.dialogue.toast("Craft/Menu closed");
     });
+    OTZI.dom.craftCrudeToolBtn.addEventListener("click", () => {
+      OTZI.crafting.craft("crude_cutting_tool");
+    });
 
     OTZI.game.running = true;
     requestAnimationFrame(frame);
@@ -1346,6 +1386,6 @@ OTZI.game = {
 })();
 
   </script>
-  <!-- build: 2026-07-02T00:27:40.199Z modules:27 -->
+  <!-- build: 2026-07-02T00:30:23.406Z modules:27 -->
 </body>
 </html>
