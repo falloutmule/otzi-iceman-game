@@ -64,6 +64,7 @@ OTZI.dom = {
     this.staminaChip = document.getElementById("staminaChip");
     this.hudStrip = document.getElementById("hudStrip");
     this.gameShell = document.getElementById("gameShell");
+    this.gameShell.prepend(this.canvas);
     this.minimapPanel = document.getElementById("minimapPanel");
     this.minimapCanvas = document.getElementById("minimapCanvas");
     this.minimapCtx = this.minimapCanvas.getContext("2d", { alpha: false });

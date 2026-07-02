@@ -39,19 +39,19 @@ const modules = [
 const css = `
 :root { color-scheme: dark; --ink:#f3ead7; --muted:#c1b69f; --line:#384338; --accent:#e7bd6c; --green:#8fc0a9; }
 * { box-sizing: border-box; }
-html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#080b0a; color:var(--ink); font:14px/1.4 system-ui,-apple-system,Segoe UI,sans-serif; }
+html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#050706; color:var(--ink); font:14px/1.4 system-ui,-apple-system,Segoe UI,sans-serif; }
 body { overscroll-behavior:none; }
-#app { position:fixed; inset:0; width:100vw; height:100dvh; padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); display:grid; grid-template-rows:minmax(0,1fr) auto auto; grid-template-areas:"game" "hud" "controls"; touch-action:none; user-select:none; -webkit-user-select:none; background:#080b0a; }
-#worldCanvas { grid-area:game; display:block; width:100%; height:100%; min-height:0; image-rendering:pixelated; background:#102016; }
+#app { position:fixed; top:0; bottom:0; left:50%; transform:translateX(-50%); width:min(100vw, calc(100dvh * .48), 420px); height:100dvh; padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); display:grid; grid-template-rows:minmax(0,1fr) auto auto; grid-template-areas:"game" "hud" "controls"; touch-action:none; user-select:none; -webkit-user-select:none; background:#080b0a; box-shadow:0 0 0 1px rgba(243,234,215,.08), 0 0 42px rgba(0,0,0,.55); }
+#worldCanvas { position:absolute; inset:0; display:block; width:100%; height:100%; min-height:0; image-rendering:pixelated; background:#102016; }
 #uiRoot { display:contents; pointer-events:none; }
 button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-radius:8px; background:#1d251f; color:var(--ink); font-weight:800; min-width:44px; min-height:44px; }
-.game-shell { grid-area:game; position:relative; min-height:0; overflow:hidden; pointer-events:none; }
+.game-shell { grid-area:game; position:relative; width:100%; min-width:0; max-width:100%; min-height:0; overflow:hidden; pointer-events:none; }
 .start-panel { position:absolute; inset:0; display:grid; place-content:center; gap:12px; padding:24px; text-align:center; background:linear-gradient(180deg,rgba(8,11,10,.84),rgba(8,11,10,.54)); pointer-events:auto; z-index:5; }
 .start-panel[hidden] { display:none; }
 .start-panel h1 { margin:0; font-size:clamp(28px,8vw,52px); letter-spacing:0; }
 .start-panel p { margin:0; color:var(--muted); }
 #startBtn { padding:12px 18px; background:#513d1e; border-color:#a88345; }
-.hud-strip { grid-area:hud; min-height:54px; display:grid; grid-template-columns:auto auto minmax(0,1fr) 52px 48px; align-items:center; gap:8px; padding:8px 10px; border-top:1px solid rgba(243,234,215,.18); border-bottom:1px solid rgba(0,0,0,.45); background:linear-gradient(180deg,#111812,#0b110d); pointer-events:auto; }
+.hud-strip { grid-area:hud; width:100%; min-width:0; max-width:100%; min-height:54px; display:grid; grid-template-columns:auto auto minmax(0,1fr) 52px 48px; align-items:center; gap:8px; padding:8px 10px; border-top:1px solid rgba(243,234,215,.18); border-bottom:1px solid rgba(0,0,0,.45); background:linear-gradient(180deg,#111812,#0b110d); pointer-events:auto; }
 .stat-chip { padding:5px 8px; border:1px solid rgba(143,192,169,.4); border-radius:8px; background:rgba(9,18,14,.72); color:#c7f0dc; font:800 12px ui-monospace,Consolas,monospace; white-space:nowrap; }
 #inventoryChip { white-space:normal; line-height:1.12; max-width:260px; }
 .status-line { min-width:0; color:#ffe3a5; font-weight:800; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -71,7 +71,7 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 .menu-panel dd { margin:0; font-weight:800; }
 .menu-panel button { width:100%; background:#513d1e; border-color:#a88345; }
 .menu-panel button + button { margin-top:8px; }
-.controls { grid-area:controls; position:relative; min-height:180px; height:min(29dvh,232px); padding:12px 10px max(12px,env(safe-area-inset-bottom)); border-top:1px solid rgba(243,234,215,.16); background:linear-gradient(180deg,#111812,#070a08); pointer-events:none; }
+.controls { grid-area:controls; position:relative; width:100%; min-width:0; max-width:100%; min-height:180px; height:min(29dvh,232px); padding:12px 10px max(12px,env(safe-area-inset-bottom)); border-top:1px solid rgba(243,234,215,.16); background:linear-gradient(180deg,#111812,#070a08); pointer-events:none; }
 .stick-zone { position:absolute; left:16px; top:26px; width:132px; height:132px; pointer-events:auto; touch-action:none; }
 .stick-label { position:absolute; left:0; top:-20px; color:var(--muted); font-size:11px; font-weight:800; }
 .stick-base { position:absolute; inset:10px; border:2px solid rgba(243,234,215,.25); border-radius:50%; background:rgba(11,16,13,.56); }
@@ -80,6 +80,19 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 .action-cluster button { height:58px; font-size:12px; }
 #useBtn { grid-column:span 2; background:#513d1e; border-color:#a88345; }
 @media (min-width: 720px) { .controls { min-height:188px; } .stick-zone { left:calc(50% - 250px); } .action-cluster { right:calc(50% - 250px); } }
+@media (orientation: landscape) {
+  #app { width:min(100vw, calc(100dvh * .46), 360px); }
+  #inventoryChip, #staminaChip { max-height:38px; overflow:hidden; font-size:8px; line-height:1.05; padding:4px 5px; }
+  #inventoryChip { max-width:82px; }
+  .hud-strip { min-height:46px; max-height:50px; grid-template-columns:minmax(0,1fr) minmax(0,1fr) 0 48px 44px; gap:5px; padding:4px 7px; overflow:hidden; }
+  .status-line { display:none; }
+  .controls { min-height:118px; height:118px; padding:8px 8px; }
+  .stick-zone { left:10px; top:20px; width:88px; height:88px; }
+  .stick-label { top:-16px; font-size:10px; }
+  .stick-knob { width:34px; height:34px; margin:-17px 0 0 -17px; }
+  .action-cluster { right:8px; top:16px; grid-template-columns:68px 68px; gap:6px; }
+  .action-cluster button { height:46px; font-size:10px; }
+}
 `;
 
 const js = modules.map((file) => {

@@ -49,8 +49,12 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
   await expect(page.locator("#controls #menuBtn")).toBeVisible();
   const gameBox = await page.locator("#gameShell").boundingBox();
   const controlsBox = await page.locator("#controls").boundingBox();
+  const appBox = await page.locator("#app").boundingBox();
   expect(gameBox).toBeTruthy();
   expect(controlsBox).toBeTruthy();
+  expect(appBox).toBeTruthy();
+  expect(appBox.height).toBeGreaterThan(appBox.width);
+  expect(gameBox.height).toBeGreaterThan(gameBox.width);
   expect(controlsBox.y).toBeGreaterThan(gameBox.y + gameBox.height - 2);
   await page.screenshot({ path: "artifacts/screenshots/no-aim-map-in-hud.png", fullPage: true });
   await page.screenshot({ path: "artifacts/screenshots/clear-game-viewport-no-controls.png", fullPage: true });
@@ -216,4 +220,21 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
   expect(consoleErrors).toEqual([]);
   expect(pageErrors).toEqual([]);
   expect(externalRequests).toEqual([]);
+});
+
+test("layout remains portrait framed in a landscape browser viewport", async ({ page }) => {
+  const baseUrl = process.env.OTZI_BASE_URL || "http://127.0.0.1:8099";
+  await page.setViewportSize({ width: 915, height: 412 });
+  await page.goto(`${baseUrl}/dist/index.html`);
+  await expect(page.locator("#worldCanvas")).toBeVisible();
+  const appBox = await page.locator("#app").boundingBox();
+  const gameBox = await page.locator("#gameShell").boundingBox();
+  const controlsBox = await page.locator("#controls").boundingBox();
+  expect(appBox).toBeTruthy();
+  expect(gameBox).toBeTruthy();
+  expect(controlsBox).toBeTruthy();
+  expect(appBox.height).toBeGreaterThan(appBox.width);
+  expect(gameBox.height).toBeGreaterThan(gameBox.width);
+  expect(controlsBox.y).toBeGreaterThan(gameBox.y + gameBox.height - 2);
+  await page.screenshot({ path: "artifacts/screenshots/portrait-frame-landscape-viewport.png", fullPage: true });
 });
