@@ -22,14 +22,14 @@ OTZI.worldgen = {
 
     this.carveExitPaths(map, exits);
     this.placeObstacles(map, rng, kind);
-    if (kind === "village_crossroads") this.placeVillageCenter(map, exits);
-    if (kind === "flint_scar") this.placeFlintScarGround(map);
+    if (kind === "village_home") this.placeVillageCenter(map, exits);
+    if (kind === "flint_scar_entrance") this.placeFlintScarGround(map);
     this.placeOverworldResources(map, rng, kind, x, y, world.homeX, world.homeY);
 
     const area = {
       id: `overworld_${x}_${y}`,
       kind,
-      biome: kind === "village_crossroads" ? "village" : kind === "flint_scar" ? "scar" : "forest",
+      biome: kind === "village_home" ? "village" : kind === "flint_scar_entrance" ? "scar" : kind === "high_pass_locked_placeholder" ? "snow" : "forest",
       gridX: x,
       gridY: y,
       exits,
@@ -41,7 +41,7 @@ OTZI.worldgen = {
       hazards: [],
       entrances: []
     };
-    if (kind === "flint_scar") {
+    if (kind === "flint_scar_entrance") {
       area.entrances.push({
         id: `${area.id}_flint_scar_entry`,
         kind: "entrance",
@@ -65,37 +65,38 @@ OTZI.worldgen = {
     const rng = OTZI.rng.make(`${seed}:dungeon:${id}:${x},${y}:v${cfg.worldgenVersion}`);
     const cx = Math.floor(map.w / 2);
     const cy = Math.floor(map.h / 2);
+    const roomKind = this.dungeonRoomKind(id, x, y);
     for (let ty = 0; ty < map.h; ty++) {
       for (let tx = 0; tx < map.w; tx++) {
-        map.setGround(tx, ty, OTZI.TILE.DARK_GRASS);
+        map.setGround(tx, ty, roomKind === "flint_chamber" ? OTZI.TILE.STONE : OTZI.TILE.DARK_GRASS);
       }
     }
-    for (let tx = 2; tx < map.w - 2; tx++) map.setGround(tx, cy, OTZI.TILE.PATH);
-    for (let ty = 2; ty < map.h - 2; ty++) map.setGround(cx, ty, OTZI.TILE.PATH);
-    for (let i = 0; i < 40; i++) {
+    if (roomKind !== "side_room") {
+      for (let tx = 2; tx < map.w - 2; tx++) map.setGround(tx, cy, OTZI.TILE.PATH);
+      for (let ty = 2; ty < map.h - 2; ty++) map.setGround(cx, ty, OTZI.TILE.PATH);
+    }
+    for (let i = 0; i < (roomKind === "narrow_passage" ? 22 : 34); i++) {
       const tx = rng.int(2, map.w - 3);
       const ty = rng.int(2, map.h - 3);
       if (Math.abs(tx - cx) < 3 && Math.abs(ty - cy) < 3) continue;
       map.setGround(tx, ty, OTZI.TILE.STONE);
       map.addFlags(tx, ty, OTZI.FLAG.BLOCKED);
     }
-    if (x === 0 && y === 1) {
-      for (const tx of [cx - 3, cx + 2]) {
-        map.setGround(tx, cy - 2, OTZI.TILE.ROCK);
-        map.addFlags(tx, cy - 2, OTZI.FLAG.HARVEST | OTZI.FLAG.BLOCKED);
-      }
-    }
+    const exits = this.dungeonRoomExits(id, x, y);
+    this.carveExitPaths(map, exits);
+    this.placeDungeonResources(map, roomKind);
     const area = {
       id: `dungeon_${id}_${x}_${y}`,
-      kind: "dungeon_room",
+      kind: roomKind,
       biome: "cave",
       gridX: x,
       gridY: y,
-      exits: { n: false, s: false, e: false, w: false },
+      exits,
       discovered: false,
       completed: false,
       map,
       resources: [],
+      entities: [],
       animals: [],
       hazards: [],
       entrances: []
@@ -113,14 +114,54 @@ OTZI.worldgen = {
         radius: cfg.interactRadius
       });
     }
+    if (roomKind === "flint_chamber") {
+      area.entities.push(OTZI.entities.makeGoodFlintCore(area.id, (map.w - 4) * cfg.tileSize, (cy - 2) * cfg.tileSize));
+    }
+    if (roomKind === "loose_stone_hazard") {
+      area.hazards.push({
+        id: `${area.id}_loose_stones`,
+        kind: "loose_stone",
+        x: (cx + 0.5) * cfg.tileSize,
+        y: (cy + 0.5) * cfg.tileSize,
+        radius: cfg.tileSize * 0.9
+      });
+    }
     area.resources = OTZI.resources.createFromMap(area.id, map);
-    area.entities = [];
     return area;
   },
+  dungeonRoomKind(id, x, y) {
+    if (id !== "flint_scar") return "dungeon_room";
+    if (x === 0 && y === 1) return "entrance_room";
+    if (x === 1 && y === 1) return "narrow_passage";
+    if (x === 1 && y === 0) return "loose_stone_hazard";
+    if (x === 2 && y === 1) return "flint_chamber";
+    return "side_room";
+  },
+  dungeonRoomExits(id, x, y) {
+    if (id !== "flint_scar") return { n: false, s: false, e: false, w: false };
+    const exits = {
+      "0,1": { n: false, s: false, e: true, w: false },
+      "1,1": { n: true, s: false, e: true, w: true },
+      "1,0": { n: false, s: true, e: true, w: false },
+      "2,1": { n: true, s: false, e: false, w: true },
+      "2,0": { n: false, s: true, e: false, w: true }
+    };
+    return exits[`${x},${y}`] || { n: false, s: false, e: false, w: false };
+  },
   overworldKind(world, x, y) {
-    if (x === world.homeX && y === world.homeY) return "village_crossroads";
-    if (x === world.flintScarX && y === world.flintScarY) return "flint_scar";
-    return (x + y) % 3 === 0 ? "trail_forest" : "forest";
+    const rng = OTZI.rng.make(`${world.seed}:screen-kind:${x},${y}`);
+    if (x === world.homeX && y === world.homeY) return "village_home";
+    if (x === world.flintScarX && y === world.flintScarY) return "flint_scar_entrance";
+    if (y === 0 && x >= world.gridW - 2) return "high_pass_locked_placeholder";
+    if (x === 0 && y % 2 === 0) return "river_edge_placeholder";
+    if ((x + y) % 7 === 0) return "rival_warning_placeholder";
+    const roll = rng.next();
+    if (roll < 0.2) return "easy_gather";
+    if (roll < 0.36) return "forest_trail";
+    if (roll < 0.52) return "dense_forest";
+    if (roll < 0.66) return "animal_clearing";
+    if (roll < 0.82) return "quiet_empty";
+    return "forest_trail";
   },
   carveExitPaths(map, exits) {
     const cx = Math.floor(map.w / 2);
@@ -153,7 +194,14 @@ OTZI.worldgen = {
   placeObstacles(map, rng, kind) {
     const cx = Math.floor(map.w / 2);
     const cy = Math.floor(map.h / 2);
-    const count = kind === "village_crossroads" ? 18 : 32;
+    const count = kind === "village_home" ? 12 :
+      kind === "easy_gather" ? 18 :
+      kind === "forest_trail" ? 22 :
+      kind === "dense_forest" ? 40 :
+      kind === "animal_clearing" ? 16 :
+      kind === "quiet_empty" ? 8 :
+      kind === "river_edge_placeholder" ? 20 :
+      kind === "flint_scar_entrance" ? 24 : 18;
     for (let i = 0; i < count; i++) {
       const tx = rng.int(1, map.w - 2);
       const ty = rng.int(1, map.h - 2);
@@ -164,14 +212,21 @@ OTZI.worldgen = {
     }
   },
   placeOverworldResources(map, rng, kind, gridX, gridY, homeX, homeY) {
-    if (kind === "village_crossroads") return;
+    if (kind === "village_home" || kind === "quiet_empty") return;
     const cx = Math.floor(map.w / 2);
     const cy = Math.floor(map.h / 2);
-    const baseTiles = [OTZI.TILE.DEADWOOD, OTZI.TILE.STONE, OTZI.TILE.GRASS_CLUMP];
-    if ((gridX + gridY) % 2 === 0 || kind === "flint_scar") baseTiles.push(OTZI.TILE.ROCK);
-    if (gridX % 2 === 0) baseTiles.push(OTZI.TILE.BIRCH);
-    if (gridY % 2 === 1) baseTiles.push(OTZI.TILE.BERRY);
-    const count = kind === "flint_scar" ? 16 : 10;
+    const baseTiles = kind === "easy_gather" ? [OTZI.TILE.DEADWOOD, OTZI.TILE.STONE, OTZI.TILE.GRASS_CLUMP, OTZI.TILE.BERRY] :
+      kind === "animal_clearing" ? [OTZI.TILE.DEADWOOD, OTZI.TILE.GRASS_CLUMP, OTZI.TILE.BERRY] :
+      [OTZI.TILE.DEADWOOD, OTZI.TILE.STONE, OTZI.TILE.GRASS_CLUMP];
+    if ((gridX + gridY) % 2 === 0 || kind === "flint_scar_entrance") baseTiles.push(OTZI.TILE.ROCK);
+    if (gridX % 2 === 0 && kind !== "river_edge_placeholder") baseTiles.push(OTZI.TILE.BIRCH);
+    if (gridY % 2 === 1 || kind === "animal_clearing") baseTiles.push(OTZI.TILE.BERRY);
+    const count = kind === "flint_scar_entrance" ? 10 :
+      kind === "easy_gather" ? 14 :
+      kind === "animal_clearing" ? 6 :
+      kind === "dense_forest" ? 8 :
+      kind === "forest_trail" ? 5 :
+      kind === "river_edge_placeholder" ? 4 : 3;
     for (let i = 0; i < count; i++) {
       for (let attempt = 0; attempt < 30; attempt++) {
         const tx = rng.int(1, map.w - 2);
@@ -186,6 +241,20 @@ OTZI.worldgen = {
         if (tile !== OTZI.TILE.GRASS_CLUMP && tile !== OTZI.TILE.BERRY) map.addFlags(tx, ty, OTZI.FLAG.BLOCKED);
         break;
       }
+    }
+  },
+  placeDungeonResources(map, roomKind) {
+    const cx = Math.floor(map.w / 2);
+    const cy = Math.floor(map.h / 2);
+    const drops = roomKind === "entrance_room" ? [[cx - 3, cy - 2, OTZI.TILE.ROCK]] :
+      roomKind === "narrow_passage" ? [[cx + 2, cy - 3, OTZI.TILE.STONE]] :
+      roomKind === "flint_chamber" ? [[cx + 3, cy - 2, OTZI.TILE.ROCK], [cx - 3, cy + 2, OTZI.TILE.STONE]] :
+      roomKind === "side_room" ? [[cx - 2, cy - 2, OTZI.TILE.ROCK]] :
+      [];
+    for (const [tx, ty, tile] of drops) {
+      map.setGround(tx, ty, tile);
+      map.addFlags(tx, ty, OTZI.FLAG.HARVEST);
+      map.addFlags(tx, ty, OTZI.FLAG.BLOCKED);
     }
   }
 };

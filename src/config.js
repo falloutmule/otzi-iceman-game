@@ -2,10 +2,10 @@
 var OTZI = window.OTZI || (window.OTZI = {});
 
 OTZI.CFG = {
-  engineVersion: "otzi-screen-grid-0.2.0",
-  saveVersion: 4,
-  worldgenVersion: 2,
-  saveKey: "otzi_screen_grid_save_v3",
+  engineVersion: "otzi-content-loop-0.3.0",
+  saveVersion: 5,
+  worldgenVersion: 3,
+  saveKey: "otzi_content_loop_save_v5",
   defaultSeed: "otzi-m1",
   tileSize: 24,
   screenTileW: 24,
@@ -20,6 +20,7 @@ OTZI.CFG = {
   sprintSpeed: 166,
   gatherRadius: 24,
   interactRadius: 26,
+  catchRadius: 22,
   resourceNodeRadius: 10,
   transitionEdgePad: 18,
   screenTransitionDuration: 0.18,

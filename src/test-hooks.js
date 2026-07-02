@@ -38,6 +38,7 @@ OTZI.installTestHooks = function installTestHooks() {
           currentX: g.world.currentX,
           currentY: g.world.currentY,
           currentScreenId: g.currentScreen ? g.currentScreen.id : null,
+          currentScreenKind: g.currentScreen ? g.currentScreen.kind : null,
           discoveredCount: Object.keys(g.world.discovered).length,
           gridW: g.world.gridW,
           gridH: g.world.gridH
@@ -48,8 +49,10 @@ OTZI.installTestHooks = function installTestHooks() {
           currentX: g.currentDungeon ? g.currentDungeon.currentX : null,
           currentY: g.currentDungeon ? g.currentDungeon.currentY : null,
           currentRoomId: g.currentRoom ? g.currentRoom.id : null,
+          currentRoomKind: g.currentRoom ? g.currentRoom.kind : null,
           discoveredCount: g.currentDungeon ? Object.keys(g.currentDungeon.discovered).length : 0
         },
+        dungeons: JSON.parse(JSON.stringify(g.dungeons || {})),
         transition: {
           active: g.transition.active,
           direction: g.transition.direction,
@@ -85,6 +88,12 @@ OTZI.installTestHooks = function installTestHooks() {
           tileX: g.focusedEntrance.tileX,
           tileY: g.focusedEntrance.tileY
         } : null,
+        focusedEntity: g.focusedEntity ? {
+          id: g.focusedEntity.id,
+          kind: g.focusedEntity.kind,
+          state: g.focusedEntity.state || null,
+          dist: g.focusedEntity.dist
+        } : null,
         resourceNodes: OTZI.resources.count(g.resourceNodes),
         viewport: {
           cssW: OTZI.viewport.cssW,
@@ -117,6 +126,15 @@ OTZI.installTestHooks = function installTestHooks() {
     enterOverworldScreen(x, y) {
       OTZI.game.enterOverworldScreen(x, y);
       return this.snapshot();
+    },
+    teleportToScreenKind(kind) {
+      const screen = OTZI.worldGrid.findScreenByKind(OTZI.game.world, OTZI.game.seed, kind);
+      if (!screen) return null;
+      OTZI.game.enterOverworldScreen(screen.gridX, screen.gridY);
+      return this.snapshot();
+    },
+    screenKindCounts() {
+      return OTZI.worldGrid.countScreenKinds(OTZI.game.world, OTZI.game.seed);
     },
     placeAndStepEdge(direction, frames = 2) {
       const ts = OTZI.CFG.tileSize;
@@ -176,6 +194,49 @@ OTZI.installTestHooks = function installTestHooks() {
       OTZI.game.updateFocusState();
       return { ...entry };
     },
+    teleportToAnimalClearing() {
+      const screen = OTZI.worldGrid.findScreenByKind(OTZI.game.world, OTZI.game.seed, "animal_clearing");
+      if (!screen) return null;
+      OTZI.game.enterOverworldScreen(screen.gridX, screen.gridY);
+      OTZI.game.updateFocusState();
+      return this.snapshot();
+    },
+    triggerHareFlee() {
+      if (OTZI.game.currentScreen?.kind !== "animal_clearing") this.teleportToAnimalClearing();
+      const hare = (OTZI.game.entities || []).find((entity) => entity.kind === "hare" && !entity.caught && !entity.escaped);
+      if (!hare) return null;
+      OTZI.game.player.x = hare.x - 10;
+      OTZI.game.player.y = hare.y;
+      OTZI.game.lastSprinting = true;
+      this.stepFrames(2);
+      OTZI.game.lastSprinting = false;
+      return this.snapshot();
+    },
+    teleportNearHare() {
+      if (OTZI.game.currentScreen?.kind !== "animal_clearing") this.teleportToAnimalClearing();
+      const hare = (OTZI.game.entities || []).find((entity) => entity.kind === "hare" && !entity.caught && !entity.escaped);
+      if (!hare) return null;
+      OTZI.game.player.x = hare.x - OTZI.CFG.tileSize * 0.9;
+      OTZI.game.player.y = hare.y;
+      OTZI.camera.update();
+      OTZI.game.updateFocusState();
+      return { ...hare };
+    },
+    teleportNearCore() {
+      OTZI.game.ensureDungeon("flint_scar");
+      OTZI.game.enterDungeonRoom(2, 1);
+      const core = (OTZI.game.entities || []).find((entity) => entity.kind === "good_flint_core" && !entity.collected);
+      if (!core) return null;
+      OTZI.game.player.x = core.x - OTZI.CFG.tileSize * 0.7;
+      OTZI.game.player.y = core.y;
+      OTZI.camera.update();
+      OTZI.game.updateFocusState();
+      return { ...core };
+    },
+    returnToVillage() {
+      OTZI.game.enterOverworldScreen(OTZI.game.world.homeX, OTZI.game.world.homeY);
+      return this.snapshot();
+    },
     placePlayerAtEdge(direction) {
       OTZI.game.placePlayerForEntry(direction, { x: OTZI.game.player.x, y: OTZI.game.player.y });
       OTZI.game.updateFocusState();
@@ -228,6 +289,7 @@ OTZI.installTestHooks = function installTestHooks() {
     exportSave() { return OTZI.save.exportString(); },
     importSave(str) { OTZI.save.importString(str); },
     saveNow() { return OTZI.save.save(); },
+    resetSave() { return OTZI.save.clear(); },
     toggleDebug() { OTZI.debug.toggle(); }
   };
 };

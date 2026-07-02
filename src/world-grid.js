@@ -58,7 +58,8 @@ OTZI.worldGrid = {
       gridX: area.gridX,
       gridY: area.gridY,
       completed: !!area.completed,
-      depleted: OTZI.resources.depletedDeltas(area.resources)
+      depleted: OTZI.resources.depletedDeltas(area.resources),
+      entities: OTZI.entities.serialize(area.entities || [])
     }));
   },
   applyAreaState(grid, seed, state) {
@@ -67,7 +68,27 @@ OTZI.worldGrid = {
       this.getDungeonRoom(grid, seed, state.gridX, state.gridY);
     area.completed = !!state.completed;
     OTZI.resources.applyDepletedDeltas(area.resources, area.map, state.depleted || []);
+    OTZI.entities.applyState(area.entities || [], state.entities || []);
     return area;
+  },
+  findScreenByKind(world, seed, kind) {
+    for (let y = 0; y < world.gridH; y++) {
+      for (let x = 0; x < world.gridW; x++) {
+        const screen = this.getOverworldScreen(world, seed, x, y);
+        if (screen.kind === kind) return screen;
+      }
+    }
+    return null;
+  },
+  countScreenKinds(world, seed) {
+    const out = {};
+    for (let y = 0; y < world.gridH; y++) {
+      for (let x = 0; x < world.gridW; x++) {
+        const kind = this.getOverworldScreen(world, seed, x, y).kind;
+        out[kind] = (out[kind] || 0) + 1;
+      }
+    }
+    return out;
   },
   findScreenWithResource(world, seed, resource) {
     for (let y = 0; y < world.gridH; y++) {

@@ -10,6 +10,8 @@ OTZI.renderUi = {
     OTZI.dom.warmthChip.textContent = `WARMTH ${Math.round(game.player.warmth)}`;
     if (!OTZI.dialogue.hasActiveToast()) {
       OTZI.dialogue.message = game.transition.active ? `Traveling ${game.transition.direction}` :
+        game.focusedEntity?.kind === "hare" ? "USE: catch hare" :
+        game.focusedEntity?.kind === "good_flint_core" ? "USE: take good flint core" :
         game.focusedEntrance ? `USE: enter ${game.focusedEntrance.label}` :
         game.focusedResource ? `USE: gather ${game.focusedResource.resource}` : "No resource nearby";
       OTZI.dom.statusLine.textContent = OTZI.dialogue.message;
@@ -25,6 +27,7 @@ OTZI.renderUi = {
       OTZI.dom.invGrass.textContent = String(game.inventory.grass || 0);
       OTZI.dom.invFood.textContent = String(game.inventory.food || 0);
       OTZI.dom.invCrudeTool.textContent = String(game.inventory.crudeTool || 0);
+      OTZI.dom.invGoodFlintCore.textContent = String(game.inventory.goodFlintCore || 0);
     }
     OTZI.dom.menuPanel.hidden = !game.menuOpen;
     if (game.menuOpen) {
@@ -36,8 +39,19 @@ OTZI.renderUi = {
       OTZI.dom.menuGrass.textContent = String(game.inventory.grass || 0);
       OTZI.dom.menuFood.textContent = String(game.inventory.food || 0);
       OTZI.dom.menuCrudeTool.textContent = String(game.inventory.crudeTool || 0);
+      OTZI.dom.menuGoodFlintCore.textContent = String(game.inventory.goodFlintCore || 0);
+      OTZI.dom.menuToolmaker.textContent = OTZI.village.has("toolmaker") ? "Unlocked" : "Locked";
+      OTZI.dom.menuLatestFact.textContent = OTZI.facts.latestDiscovered()?.title || "None";
       OTZI.dom.menuStamina.textContent = Math.round(game.player.stamina).toString();
       OTZI.dom.resetSaveBtn.textContent = game.resetConfirm ? "Confirm Reset Save" : "Reset Save";
+      OTZI.dom.viewFactBtn.hidden = !OTZI.facts.latestDiscovered();
+    }
+    OTZI.dom.factPanel.hidden = !game.factOpen;
+    if (game.factOpen) {
+      const fact = OTZI.facts.get(game.activeFactId);
+      OTZI.dom.factTitle.textContent = fact?.title || "-";
+      OTZI.dom.factMeta.textContent = fact ? `${fact.status.toUpperCase()} | ${fact.category}` : "-";
+      OTZI.dom.factText.textContent = fact?.shortText || "-";
     }
     if (!game.debug) {
       OTZI.dom.debugPanel.hidden = true;
@@ -52,9 +66,11 @@ OTZI.renderUi = {
     OTZI.dom.debugPanel.textContent = [
       `seed ${game.seed}`,
       areaDebug,
+      `kind ${game.currentArea?.kind || "none"}`,
       `transition ${game.transition.active ? `${game.transition.direction} ${game.transition.elapsed.toFixed(2)}/${game.transition.duration.toFixed(2)}` : "none"}`,
       `tile ${tileX},${tileY}`,
       `entry ${game.focusedEntrance ? `${game.focusedEntrance.label} ${game.focusedEntrance.id}` : "none"}`,
+      `entity ${game.focusedEntity ? `${game.focusedEntity.kind} ${game.focusedEntity.id}` : "none"}`,
       `focus ${game.focusedResource ? `${game.focusedResource.resource} ${game.focusedResource.id} tile ${game.focusedResource.tileX},${game.focusedResource.tileY} dist ${game.focusedResource.dist.toFixed(1)}` : "none"}`,
       `fps ${game.fps.toFixed(1)}`,
       `entities ${game.entities.length}`,
@@ -118,15 +134,20 @@ OTZI.renderUi = {
           continue;
         }
         const screen = OTZI.worldGrid.getOverworldScreen(world, game.seed, x, y);
-        ctx.fillStyle = screen.kind === "village_crossroads" ? "#9a784b" :
-          screen.kind === "flint_scar" ? "#c9d0d4" : "#315b36";
+        ctx.fillStyle = screen.kind === "village_home" ? "#9a784b" :
+          screen.kind === "flint_scar_entrance" ? "#c9d0d4" :
+          screen.kind === "animal_clearing" ? "#4f6b32" :
+          screen.kind === "dense_forest" ? "#29422b" :
+          screen.kind === "river_edge_placeholder" ? "#365f6e" :
+          screen.kind === "high_pass_locked_placeholder" ? "#cad3da" : "#315b36";
         ctx.fillRect(x * cellW + 1, y * cellH + 1, cellW - 2, cellH - 2);
         ctx.strokeStyle = "rgba(243,234,215,.14)";
         ctx.strokeRect(x * cellW + 1, y * cellH + 1, cellW - 2, cellH - 2);
         ctx.fillStyle = "#f6ead0";
-        if (screen.kind === "village_crossroads") ctx.fillText("V", x * cellW + cellW / 2, y * cellH + cellH / 2);
-        else if (screen.kind === "flint_scar") ctx.fillText("C", x * cellW + cellW / 2, y * cellH + cellH / 2);
-        else if (screen.kind === "trail_forest") ctx.fillText(".", x * cellW + cellW / 2, y * cellH + cellH / 2);
+        if (screen.kind === "village_home") ctx.fillText("V", x * cellW + cellW / 2, y * cellH + cellH / 2);
+        else if (screen.kind === "flint_scar_entrance") ctx.fillText("C", x * cellW + cellW / 2, y * cellH + cellH / 2);
+        else if (screen.kind === "animal_clearing") ctx.fillText("A", x * cellW + cellW / 2, y * cellH + cellH / 2);
+        else if (screen.kind === "quiet_empty") ctx.fillText(".", x * cellW + cellW / 2, y * cellH + cellH / 2);
       }
     }
     const markerX = game.transition.active && game.transition.targetX != null ? game.transition.targetX : world.currentX;

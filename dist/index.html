@@ -89,10 +89,10 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 var OTZI = window.OTZI || (window.OTZI = {});
 
 OTZI.CFG = {
-  engineVersion: "otzi-screen-grid-0.2.0",
-  saveVersion: 4,
-  worldgenVersion: 2,
-  saveKey: "otzi_screen_grid_save_v3",
+  engineVersion: "otzi-content-loop-0.3.0",
+  saveVersion: 5,
+  worldgenVersion: 3,
+  saveKey: "otzi_content_loop_save_v5",
   defaultSeed: "otzi-m1",
   tileSize: 24,
   screenTileW: 24,
@@ -107,6 +107,7 @@ OTZI.CFG = {
   sprintSpeed: 166,
   gatherRadius: 24,
   interactRadius: 26,
+  catchRadius: 22,
   resourceNodeRadius: 10,
   transitionEdgePad: 18,
   screenTransitionDuration: 0.18,
@@ -140,6 +141,7 @@ OTZI.dom = {
             <div><dt>Grass</dt><dd id="invGrass">0</dd></div>
             <div><dt>Food</dt><dd id="invFood">0</dd></div>
             <div><dt>Crude tools</dt><dd id="invCrudeTool">0</dd></div>
+            <div><dt>Good flint core</dt><dd id="invGoodFlintCore">0</dd></div>
           </dl>
         </div>
         <div class="start-panel" id="startPanel">
@@ -184,12 +186,23 @@ OTZI.dom = {
           <div><dt>Grass</dt><dd id="menuGrass">0</dd></div>
           <div><dt>Food</dt><dd id="menuFood">0</dd></div>
           <div><dt>Crude cutting tools</dt><dd id="menuCrudeTool">0</dd></div>
+          <div><dt>Good flint core</dt><dd id="menuGoodFlintCore">0</dd></div>
+          <div><dt>Toolmaker</dt><dd id="menuToolmaker">Locked</dd></div>
+          <div><dt>Latest fact</dt><dd id="menuLatestFact">None</dd></div>
           <div><dt>Stamina</dt><dd id="menuStamina">100</dd></div>
         </dl>
         <button id="craftCrudeToolBtn" type="button">Craft Crude Cutting Tool</button>
+        <button id="viewFactBtn" type="button">View Latest Fact</button>
         <button id="fullscreenBtn" type="button">Fullscreen</button>
         <button id="resetSaveBtn" type="button">Reset Save</button>
         <button id="menuCloseBtn" type="button">Close</button>
+      </div>
+      <div id="factPanel" class="menu-panel" hidden role="dialog" aria-modal="false" aria-label="Fact log">
+        <div class="panel-title">OTZI FACT</div>
+        <h2 id="factTitle">-</h2>
+        <p id="factMeta">-</p>
+        <p id="factText">-</p>
+        <button id="factCloseBtn" type="button">Close Fact</button>
       </div>
     `;
     this.startPanel = document.getElementById("startPanel");
@@ -216,6 +229,7 @@ OTZI.dom = {
     this.invGrass = document.getElementById("invGrass");
     this.invFood = document.getElementById("invFood");
     this.invCrudeTool = document.getElementById("invCrudeTool");
+    this.invGoodFlintCore = document.getElementById("invGoodFlintCore");
     this.menuPanel = document.getElementById("menuPanel");
     this.menuSeed = document.getElementById("menuSeed");
     this.menuFlint = document.getElementById("menuFlint");
@@ -225,11 +239,20 @@ OTZI.dom = {
     this.menuGrass = document.getElementById("menuGrass");
     this.menuFood = document.getElementById("menuFood");
     this.menuCrudeTool = document.getElementById("menuCrudeTool");
+    this.menuGoodFlintCore = document.getElementById("menuGoodFlintCore");
+    this.menuToolmaker = document.getElementById("menuToolmaker");
+    this.menuLatestFact = document.getElementById("menuLatestFact");
     this.menuStamina = document.getElementById("menuStamina");
     this.craftCrudeToolBtn = document.getElementById("craftCrudeToolBtn");
+    this.viewFactBtn = document.getElementById("viewFactBtn");
     this.fullscreenBtn = document.getElementById("fullscreenBtn");
     this.resetSaveBtn = document.getElementById("resetSaveBtn");
     this.menuCloseBtn = document.getElementById("menuCloseBtn");
+    this.factPanel = document.getElementById("factPanel");
+    this.factTitle = document.getElementById("factTitle");
+    this.factMeta = document.getElementById("factMeta");
+    this.factText = document.getElementById("factText");
+    this.factCloseBtn = document.getElementById("factCloseBtn");
     this.statusLine = document.getElementById("statusLine");
     this.moveZone = document.getElementById("moveZone");
     this.stickKnob = document.getElementById("stickKnob");
@@ -615,7 +638,8 @@ OTZI.worldGrid = {
       gridX: area.gridX,
       gridY: area.gridY,
       completed: !!area.completed,
-      depleted: OTZI.resources.depletedDeltas(area.resources)
+      depleted: OTZI.resources.depletedDeltas(area.resources),
+      entities: OTZI.entities.serialize(area.entities || [])
     }));
   },
   applyAreaState(grid, seed, state) {
@@ -624,7 +648,27 @@ OTZI.worldGrid = {
       this.getDungeonRoom(grid, seed, state.gridX, state.gridY);
     area.completed = !!state.completed;
     OTZI.resources.applyDepletedDeltas(area.resources, area.map, state.depleted || []);
+    OTZI.entities.applyState(area.entities || [], state.entities || []);
     return area;
+  },
+  findScreenByKind(world, seed, kind) {
+    for (let y = 0; y < world.gridH; y++) {
+      for (let x = 0; x < world.gridW; x++) {
+        const screen = this.getOverworldScreen(world, seed, x, y);
+        if (screen.kind === kind) return screen;
+      }
+    }
+    return null;
+  },
+  countScreenKinds(world, seed) {
+    const out = {};
+    for (let y = 0; y < world.gridH; y++) {
+      for (let x = 0; x < world.gridW; x++) {
+        const kind = this.getOverworldScreen(world, seed, x, y).kind;
+        out[kind] = (out[kind] || 0) + 1;
+      }
+    }
+    return out;
   },
   findScreenWithResource(world, seed, resource) {
     for (let y = 0; y < world.gridH; y++) {
@@ -663,14 +707,14 @@ OTZI.worldgen = {
 
     this.carveExitPaths(map, exits);
     this.placeObstacles(map, rng, kind);
-    if (kind === "village_crossroads") this.placeVillageCenter(map, exits);
-    if (kind === "flint_scar") this.placeFlintScarGround(map);
+    if (kind === "village_home") this.placeVillageCenter(map, exits);
+    if (kind === "flint_scar_entrance") this.placeFlintScarGround(map);
     this.placeOverworldResources(map, rng, kind, x, y, world.homeX, world.homeY);
 
     const area = {
       id: `overworld_${x}_${y}`,
       kind,
-      biome: kind === "village_crossroads" ? "village" : kind === "flint_scar" ? "scar" : "forest",
+      biome: kind === "village_home" ? "village" : kind === "flint_scar_entrance" ? "scar" : kind === "high_pass_locked_placeholder" ? "snow" : "forest",
       gridX: x,
       gridY: y,
       exits,
@@ -682,7 +726,7 @@ OTZI.worldgen = {
       hazards: [],
       entrances: []
     };
-    if (kind === "flint_scar") {
+    if (kind === "flint_scar_entrance") {
       area.entrances.push({
         id: `${area.id}_flint_scar_entry`,
         kind: "entrance",
@@ -706,37 +750,38 @@ OTZI.worldgen = {
     const rng = OTZI.rng.make(`${seed}:dungeon:${id}:${x},${y}:v${cfg.worldgenVersion}`);
     const cx = Math.floor(map.w / 2);
     const cy = Math.floor(map.h / 2);
+    const roomKind = this.dungeonRoomKind(id, x, y);
     for (let ty = 0; ty < map.h; ty++) {
       for (let tx = 0; tx < map.w; tx++) {
-        map.setGround(tx, ty, OTZI.TILE.DARK_GRASS);
+        map.setGround(tx, ty, roomKind === "flint_chamber" ? OTZI.TILE.STONE : OTZI.TILE.DARK_GRASS);
       }
     }
-    for (let tx = 2; tx < map.w - 2; tx++) map.setGround(tx, cy, OTZI.TILE.PATH);
-    for (let ty = 2; ty < map.h - 2; ty++) map.setGround(cx, ty, OTZI.TILE.PATH);
-    for (let i = 0; i < 40; i++) {
+    if (roomKind !== "side_room") {
+      for (let tx = 2; tx < map.w - 2; tx++) map.setGround(tx, cy, OTZI.TILE.PATH);
+      for (let ty = 2; ty < map.h - 2; ty++) map.setGround(cx, ty, OTZI.TILE.PATH);
+    }
+    for (let i = 0; i < (roomKind === "narrow_passage" ? 22 : 34); i++) {
       const tx = rng.int(2, map.w - 3);
       const ty = rng.int(2, map.h - 3);
       if (Math.abs(tx - cx) < 3 && Math.abs(ty - cy) < 3) continue;
       map.setGround(tx, ty, OTZI.TILE.STONE);
       map.addFlags(tx, ty, OTZI.FLAG.BLOCKED);
     }
-    if (x === 0 && y === 1) {
-      for (const tx of [cx - 3, cx + 2]) {
-        map.setGround(tx, cy - 2, OTZI.TILE.ROCK);
-        map.addFlags(tx, cy - 2, OTZI.FLAG.HARVEST | OTZI.FLAG.BLOCKED);
-      }
-    }
+    const exits = this.dungeonRoomExits(id, x, y);
+    this.carveExitPaths(map, exits);
+    this.placeDungeonResources(map, roomKind);
     const area = {
       id: `dungeon_${id}_${x}_${y}`,
-      kind: "dungeon_room",
+      kind: roomKind,
       biome: "cave",
       gridX: x,
       gridY: y,
-      exits: { n: false, s: false, e: false, w: false },
+      exits,
       discovered: false,
       completed: false,
       map,
       resources: [],
+      entities: [],
       animals: [],
       hazards: [],
       entrances: []
@@ -754,14 +799,54 @@ OTZI.worldgen = {
         radius: cfg.interactRadius
       });
     }
+    if (roomKind === "flint_chamber") {
+      area.entities.push(OTZI.entities.makeGoodFlintCore(area.id, (map.w - 4) * cfg.tileSize, (cy - 2) * cfg.tileSize));
+    }
+    if (roomKind === "loose_stone_hazard") {
+      area.hazards.push({
+        id: `${area.id}_loose_stones`,
+        kind: "loose_stone",
+        x: (cx + 0.5) * cfg.tileSize,
+        y: (cy + 0.5) * cfg.tileSize,
+        radius: cfg.tileSize * 0.9
+      });
+    }
     area.resources = OTZI.resources.createFromMap(area.id, map);
-    area.entities = [];
     return area;
   },
+  dungeonRoomKind(id, x, y) {
+    if (id !== "flint_scar") return "dungeon_room";
+    if (x === 0 && y === 1) return "entrance_room";
+    if (x === 1 && y === 1) return "narrow_passage";
+    if (x === 1 && y === 0) return "loose_stone_hazard";
+    if (x === 2 && y === 1) return "flint_chamber";
+    return "side_room";
+  },
+  dungeonRoomExits(id, x, y) {
+    if (id !== "flint_scar") return { n: false, s: false, e: false, w: false };
+    const exits = {
+      "0,1": { n: false, s: false, e: true, w: false },
+      "1,1": { n: true, s: false, e: true, w: true },
+      "1,0": { n: false, s: true, e: true, w: false },
+      "2,1": { n: true, s: false, e: false, w: true },
+      "2,0": { n: false, s: true, e: false, w: true }
+    };
+    return exits[`${x},${y}`] || { n: false, s: false, e: false, w: false };
+  },
   overworldKind(world, x, y) {
-    if (x === world.homeX && y === world.homeY) return "village_crossroads";
-    if (x === world.flintScarX && y === world.flintScarY) return "flint_scar";
-    return (x + y) % 3 === 0 ? "trail_forest" : "forest";
+    const rng = OTZI.rng.make(`${world.seed}:screen-kind:${x},${y}`);
+    if (x === world.homeX && y === world.homeY) return "village_home";
+    if (x === world.flintScarX && y === world.flintScarY) return "flint_scar_entrance";
+    if (y === 0 && x >= world.gridW - 2) return "high_pass_locked_placeholder";
+    if (x === 0 && y % 2 === 0) return "river_edge_placeholder";
+    if ((x + y) % 7 === 0) return "rival_warning_placeholder";
+    const roll = rng.next();
+    if (roll < 0.2) return "easy_gather";
+    if (roll < 0.36) return "forest_trail";
+    if (roll < 0.52) return "dense_forest";
+    if (roll < 0.66) return "animal_clearing";
+    if (roll < 0.82) return "quiet_empty";
+    return "forest_trail";
   },
   carveExitPaths(map, exits) {
     const cx = Math.floor(map.w / 2);
@@ -794,7 +879,14 @@ OTZI.worldgen = {
   placeObstacles(map, rng, kind) {
     const cx = Math.floor(map.w / 2);
     const cy = Math.floor(map.h / 2);
-    const count = kind === "village_crossroads" ? 18 : 32;
+    const count = kind === "village_home" ? 12 :
+      kind === "easy_gather" ? 18 :
+      kind === "forest_trail" ? 22 :
+      kind === "dense_forest" ? 40 :
+      kind === "animal_clearing" ? 16 :
+      kind === "quiet_empty" ? 8 :
+      kind === "river_edge_placeholder" ? 20 :
+      kind === "flint_scar_entrance" ? 24 : 18;
     for (let i = 0; i < count; i++) {
       const tx = rng.int(1, map.w - 2);
       const ty = rng.int(1, map.h - 2);
@@ -805,14 +897,21 @@ OTZI.worldgen = {
     }
   },
   placeOverworldResources(map, rng, kind, gridX, gridY, homeX, homeY) {
-    if (kind === "village_crossroads") return;
+    if (kind === "village_home" || kind === "quiet_empty") return;
     const cx = Math.floor(map.w / 2);
     const cy = Math.floor(map.h / 2);
-    const baseTiles = [OTZI.TILE.DEADWOOD, OTZI.TILE.STONE, OTZI.TILE.GRASS_CLUMP];
-    if ((gridX + gridY) % 2 === 0 || kind === "flint_scar") baseTiles.push(OTZI.TILE.ROCK);
-    if (gridX % 2 === 0) baseTiles.push(OTZI.TILE.BIRCH);
-    if (gridY % 2 === 1) baseTiles.push(OTZI.TILE.BERRY);
-    const count = kind === "flint_scar" ? 16 : 10;
+    const baseTiles = kind === "easy_gather" ? [OTZI.TILE.DEADWOOD, OTZI.TILE.STONE, OTZI.TILE.GRASS_CLUMP, OTZI.TILE.BERRY] :
+      kind === "animal_clearing" ? [OTZI.TILE.DEADWOOD, OTZI.TILE.GRASS_CLUMP, OTZI.TILE.BERRY] :
+      [OTZI.TILE.DEADWOOD, OTZI.TILE.STONE, OTZI.TILE.GRASS_CLUMP];
+    if ((gridX + gridY) % 2 === 0 || kind === "flint_scar_entrance") baseTiles.push(OTZI.TILE.ROCK);
+    if (gridX % 2 === 0 && kind !== "river_edge_placeholder") baseTiles.push(OTZI.TILE.BIRCH);
+    if (gridY % 2 === 1 || kind === "animal_clearing") baseTiles.push(OTZI.TILE.BERRY);
+    const count = kind === "flint_scar_entrance" ? 10 :
+      kind === "easy_gather" ? 14 :
+      kind === "animal_clearing" ? 6 :
+      kind === "dense_forest" ? 8 :
+      kind === "forest_trail" ? 5 :
+      kind === "river_edge_placeholder" ? 4 : 3;
     for (let i = 0; i < count; i++) {
       for (let attempt = 0; attempt < 30; attempt++) {
         const tx = rng.int(1, map.w - 2);
@@ -827,6 +926,20 @@ OTZI.worldgen = {
         if (tile !== OTZI.TILE.GRASS_CLUMP && tile !== OTZI.TILE.BERRY) map.addFlags(tx, ty, OTZI.FLAG.BLOCKED);
         break;
       }
+    }
+  },
+  placeDungeonResources(map, roomKind) {
+    const cx = Math.floor(map.w / 2);
+    const cy = Math.floor(map.h / 2);
+    const drops = roomKind === "entrance_room" ? [[cx - 3, cy - 2, OTZI.TILE.ROCK]] :
+      roomKind === "narrow_passage" ? [[cx + 2, cy - 3, OTZI.TILE.STONE]] :
+      roomKind === "flint_chamber" ? [[cx + 3, cy - 2, OTZI.TILE.ROCK], [cx - 3, cy + 2, OTZI.TILE.STONE]] :
+      roomKind === "side_room" ? [[cx - 2, cy - 2, OTZI.TILE.ROCK]] :
+      [];
+    for (const [tx, ty, tile] of drops) {
+      map.setGround(tx, ty, tile);
+      map.addFlags(tx, ty, OTZI.FLAG.HARVEST);
+      map.addFlags(tx, ty, OTZI.FLAG.BLOCKED);
     }
   }
 };
@@ -852,40 +965,121 @@ OTZI.entities = {
       wetness: 0
     };
   },
+  makeHare(areaId, x, y) {
+    return {
+      id: `${areaId}-hare`,
+      kind: "hare",
+      x,
+      y,
+      radius: 7,
+      state: "idle",
+      fleeTimer: 0,
+      caught: false,
+      escaped: false,
+      phase: 0,
+      noticeCooldown: 0
+    };
+  },
+  makeGoodFlintCore(areaId, x, y) {
+    return {
+      id: `${areaId}-good-flint-core`,
+      kind: "good_flint_core",
+      x,
+      y,
+      radius: 8,
+      collected: false
+    };
+  },
+  serialize(list) {
+    return list.map((entity) => ({
+      id: entity.id,
+      kind: entity.kind,
+      x: entity.x,
+      y: entity.y,
+      state: entity.state || null,
+      fleeTimer: entity.fleeTimer || 0,
+      caught: !!entity.caught,
+      escaped: !!entity.escaped,
+      collected: !!entity.collected
+    }));
+  },
+  applyState(list, states = []) {
+    const byId = new Map(states.map((state) => [state.id, state]));
+    for (const entity of list) {
+      const state = byId.get(entity.id);
+      if (!state) continue;
+      entity.x = state.x;
+      entity.y = state.y;
+      if ("state" in entity) entity.state = state.state || entity.state;
+      if ("fleeTimer" in entity) entity.fleeTimer = state.fleeTimer || 0;
+      if ("caught" in entity) entity.caught = !!state.caught;
+      if ("escaped" in entity) entity.escaped = !!state.escaped;
+      if ("collected" in entity) entity.collected = !!state.collected;
+    }
+  },
   spawnScreen(seed, areaId, map, kind) {
     const rng = OTZI.rng.make(`${seed}:entities:${areaId}`);
     const out = [];
-    const count = kind === "village_crossroads" || kind === "flint_scar" || areaId.indexOf("dungeon") === 0 ? 0 : 2;
-    for (let i = 0; i < count; i++) {
-      let x = 0;
-      let y = 0;
-      for (let attempt = 0; attempt < 24; attempt++) {
-        x = rng.range(3, map.w - 3) * OTZI.CFG.tileSize;
-        y = rng.range(3, map.h - 3) * OTZI.CFG.tileSize;
-        if (!(map.getFlags(Math.floor(x / OTZI.CFG.tileSize), Math.floor(y / OTZI.CFG.tileSize)) & OTZI.FLAG.BLOCKED)) break;
+    if (kind === "animal_clearing") {
+      for (let attempt = 0; attempt < 30; attempt++) {
+        const tx = rng.int(4, map.w - 5);
+        const ty = rng.int(4, map.h - 5);
+        if (map.getFlags(tx, ty) & OTZI.FLAG.BLOCKED) continue;
+        if (map.getGround(tx, ty) === OTZI.TILE.PATH) continue;
+        out.push(this.makeHare(areaId, (tx + 0.5) * OTZI.CFG.tileSize, (ty + 0.5) * OTZI.CFG.tileSize));
+        break;
       }
-      out.push({
-        id: `${areaId}-deer-${i}`,
-        kind: "deer",
-        x,
-        y,
-        radius: 7,
-        phase: rng.range(0, Math.PI * 2)
-      });
     }
     return out;
   },
   update(dt) {
     const game = OTZI.game;
     for (const e of game.entities) {
-      if (e.kind !== "deer") continue;
-      e.phase += dt;
-      const dx = Math.cos(e.phase * 0.7) * 8 * dt;
-      const dy = Math.sin(e.phase * 0.9) * 8 * dt;
-      const moved = OTZI.collision.moveCircle(e, dx, dy);
-      e.x = moved.x;
-      e.y = moved.y;
+      if (e.kind === "hare") {
+        this.updateHare(e, dt);
+      }
     }
+  },
+  updateHare(e, dt) {
+    if (e.caught || e.escaped) return;
+    const player = OTZI.game.player;
+    const dist = Math.hypot(e.x - player.x, e.y - player.y);
+    e.noticeCooldown = Math.max(0, (e.noticeCooldown || 0) - dt);
+    e.phase += dt;
+    if (e.state === "fleeing") {
+      e.fleeTimer += dt;
+      const awayX = e.x - player.x;
+      const awayY = e.y - player.y;
+      const len = Math.max(1, Math.hypot(awayX, awayY));
+      OTZI.collision.moveCircle(e, (awayX / len) * 54 * dt, (awayY / len) * 54 * dt);
+      if (e.fleeTimer > 2.6) e.escaped = true;
+      return;
+    }
+    if (dist < 18 || (OTZI.game.lastSprinting && dist < 70)) {
+      e.state = "fleeing";
+      e.fleeTimer = 0;
+      if (e.noticeCooldown <= 0) {
+        OTZI.dialogue.toast("Hare startled");
+        e.noticeCooldown = 1.1;
+      }
+      return;
+    }
+    e.state = dist < 86 ? "alert" : "idle";
+    const wobble = e.state === "alert" ? 9 : 5;
+    OTZI.collision.moveCircle(e, Math.cos(e.phase * 0.9) * wobble * dt, Math.sin(e.phase * 1.1) * wobble * dt);
+  },
+  nearestInteractable(list, player) {
+    let best = null;
+    for (const entity of list) {
+      if (entity.kind === "hare" && (entity.caught || entity.escaped || entity.state === "fleeing")) continue;
+      if (entity.kind === "good_flint_core" && entity.collected) continue;
+      if (entity.kind !== "hare" && entity.kind !== "good_flint_core") continue;
+      const radius = entity.kind === "hare" ? OTZI.CFG.catchRadius : OTZI.CFG.interactRadius;
+      const dist = Math.hypot(entity.x - player.x, entity.y - player.y);
+      if (dist > radius) continue;
+      if (!best || dist < best.dist) best = { ...entity, dist };
+    }
+    return best;
   }
 };
 
@@ -1154,7 +1348,7 @@ OTZI.dialogue = {
 var OTZI = window.OTZI || (window.OTZI = {});
 OTZI.inventory = {
   create() {
-    return { flint: 0, stick: 0, stone: 0, bark: 0, grass: 0, food: 0, crudeTool: 0 };
+    return { flint: 0, stick: 0, stone: 0, bark: 0, grass: 0, food: 0, crudeTool: 0, goodFlintCore: 0 };
   },
   add(item, n) {
     OTZI.game.inventory[item] = Math.max(0, (OTZI.game.inventory[item] || 0) + n);
@@ -1209,7 +1403,18 @@ OTZI.crafting = {
 var OTZI = window.OTZI || (window.OTZI = {});
 OTZI.village = {
   create() {
-    return { unlocked: ["camp"], passive: {} };
+    return {
+      unlocked: ["camp"],
+      passive: {},
+      visitedHome: false,
+      toolmakerReady: false
+    };
+  },
+  has(id, village = OTZI.game.village) {
+    return village.unlocked.includes(id);
+  },
+  unlock(id) {
+    if (!this.has(id)) OTZI.game.village.unlocked.push(id);
   }
 };
 
@@ -1222,11 +1427,30 @@ OTZI.facts = {
     return {
       discovered: [],
       records: [
-        { id: "copper_axe", label: "verified", text: "Otzi carried a copper axe." },
-        { id: "ember_container", label: "plausible", text: "Birch-bark containers can support an ember-carrying game mechanic." },
-        { id: "last_fire", label: "fictional", text: "The village remembers Otzi through a final ember myth." }
+        {
+          id: "retoucheur_tool",
+          title: "The Retoucheur",
+          status: "verified",
+          category: "equipment",
+          shortText: "A retoucheur was part of Otzi's toolkit and was used to work or refresh stone-tool edges.",
+          unlock: { building: "toolmaker" }
+        }
       ]
     };
+  },
+  get(id, facts = OTZI.game.facts) {
+    return facts.records.find((record) => record.id === id) || null;
+  },
+  isDiscovered(id, facts = OTZI.game.facts) {
+    return facts.discovered.includes(id);
+  },
+  discover(id) {
+    if (!this.isDiscovered(id)) OTZI.game.facts.discovered.push(id);
+    return this.get(id);
+  },
+  latestDiscovered(facts = OTZI.game.facts) {
+    const id = facts.discovered[facts.discovered.length - 1];
+    return id ? this.get(id, facts) : null;
   }
 };
 
@@ -1368,10 +1592,65 @@ OTZI.renderWorld = {
       }
     }
     for (const entrance of area.entrances || []) this.drawEntranceNode(ctx, entrance, state.entranceId === entrance.id, cam, state.offsetX, state.offsetY);
+    this.drawAreaLandmarks(ctx, area, cam, state.offsetX, state.offsetY);
     for (const node of area.resources) this.drawResourceNode(ctx, node, state.focusId === node.id, cam, state.offsetX, state.offsetY);
-    for (const e of area.entities || []) this.drawEntity(ctx, e, pal.deer, cam, state.offsetX, state.offsetY);
+    for (const hazard of area.hazards || []) this.drawHazard(ctx, hazard, cam, state.offsetX, state.offsetY);
+    for (const e of area.entities || []) this.drawEntity(ctx, e, pal.deer, cam, state.offsetX, state.offsetY, OTZI.game.focusedEntityId === e.id);
     this.drawEntity(ctx, state.player, pal.player, cam, state.offsetX, state.offsetY);
     if (state.debug) OTZI.debug.draw(ctx, startX, startY, endX, endY);
+  },
+  drawAreaLandmarks(ctx, area, camera, offsetX = 0, offsetY = 0) {
+    const ts = OTZI.CFG.tileSize;
+    if (area.kind === "village_home") {
+      const x = area.map.w * ts * 0.5;
+      const y = area.map.h * ts * 0.5;
+      const p = this.project(camera, x, y, offsetX, offsetY);
+      ctx.save();
+      ctx.fillStyle = "#6c3d18";
+      ctx.fillRect(p.x - 18, p.y + 8, 36, 8);
+      ctx.fillStyle = "#e6a052";
+      ctx.beginPath();
+      ctx.arc(p.x, p.y + 2, 11, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#2d190d";
+      ctx.fillRect(p.x - 4, p.y - 6, 8, 18);
+      ctx.restore();
+      if (OTZI.village.has("toolmaker")) {
+        const tp = this.project(camera, x + ts * 3.2, y - ts * 1.4, offsetX, offsetY);
+        ctx.save();
+        ctx.fillStyle = "#8e6c3d";
+        ctx.fillRect(tp.x - 14, tp.y - 8, 28, 16);
+        ctx.strokeStyle = "#f1ead0";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(tp.x - 14, tp.y - 8, 28, 16);
+        ctx.fillStyle = "#f0c666";
+        ctx.fillRect(tp.x - 4, tp.y - 18, 8, 10);
+        ctx.restore();
+      }
+    }
+    if (area.kind === "flint_scar_entrance") {
+      const x = (area.map.w - 4.5) * ts;
+      const y = Math.floor(area.map.h / 2) * ts + ts * 0.5;
+      const p = this.project(camera, x, y, offsetX, offsetY);
+      ctx.save();
+      ctx.fillStyle = "#474a4e";
+      ctx.beginPath();
+      ctx.moveTo(p.x - 20, p.y + 18);
+      ctx.lineTo(p.x - 14, p.y - 8);
+      ctx.lineTo(p.x + 16, p.y - 14);
+      ctx.lineTo(p.x + 22, p.y + 18);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#0c0f10";
+      ctx.beginPath();
+      ctx.moveTo(p.x - 10, p.y + 14);
+      ctx.lineTo(p.x - 8, p.y - 2);
+      ctx.quadraticCurveTo(p.x, p.y - 18, p.x + 10, p.y - 2);
+      ctx.lineTo(p.x + 12, p.y + 14);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
   },
   resourceColor(resource) {
     return {
@@ -1501,14 +1780,74 @@ OTZI.renderWorld = {
     ctx.fillStyle = "#ffe8a8";
     ctx.fillText(label, x, y - 21);
   },
-  drawEntity(ctx, e, color, camera, offsetX = 0, offsetY = 0) {
+  drawEntity(ctx, e, color, camera, offsetX = 0, offsetY = 0, highlighted = false) {
     const p = this.project(camera, e.x, e.y, offsetX, offsetY);
+    if (e.kind === "hare") {
+      if (e.caught || e.escaped) return;
+      ctx.save();
+      ctx.fillStyle = "rgba(0,0,0,.28)";
+      ctx.fillRect(p.x - 10, p.y + 8, 20, 4);
+      ctx.fillStyle = e.state === "alert" ? "#dfd3b7" : "#c9b58d";
+      ctx.beginPath();
+      ctx.ellipse(p.x, p.y, 11, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#c9b58d";
+      ctx.beginPath();
+      ctx.arc(p.x + 8, p.y - 4, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillRect(p.x + 9, p.y - 15, 2, 9);
+      ctx.fillRect(p.x + 5, p.y - 15, 2, 9);
+      ctx.fillStyle = "#473b30";
+      ctx.fillRect(p.x - 4, p.y + 5, 2, 6);
+      ctx.fillRect(p.x + 2, p.y + 5, 2, 6);
+      if (e.state === "alert") {
+        ctx.fillStyle = "#ffe08a";
+        ctx.fillRect(p.x - 2, p.y - 22, 4, 8);
+      }
+      if (highlighted) this.drawResourceFocus(ctx, "HARE", Math.floor(p.x), Math.floor(p.y - 2));
+      ctx.restore();
+      return;
+    }
+    if (e.kind === "good_flint_core") {
+      if (e.collected) return;
+      ctx.save();
+      ctx.fillStyle = "rgba(0,0,0,.3)";
+      ctx.fillRect(p.x - 11, p.y + 10, 22, 4);
+      ctx.strokeStyle = "#14181a";
+      ctx.fillStyle = "#dfe9f2";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y - 13);
+      ctx.lineTo(p.x + 11, p.y - 3);
+      ctx.lineTo(p.x + 5, p.y + 12);
+      ctx.lineTo(p.x - 7, p.y + 11);
+      ctx.lineTo(p.x - 12, p.y - 4);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.fill();
+      if (highlighted) this.drawResourceFocus(ctx, "CORE", Math.floor(p.x), Math.floor(p.y));
+      ctx.restore();
+      return;
+    }
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.arc(p.x, p.y, e.radius, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = "rgba(0,0,0,.25)";
     ctx.fillRect(p.x - e.radius, p.y + e.radius + 2, e.radius * 2, 3);
+  },
+  drawHazard(ctx, hazard, camera, offsetX = 0, offsetY = 0) {
+    const p = this.project(camera, hazard.x, hazard.y, offsetX, offsetY);
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,188,92,.55)";
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, hazard.radius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "rgba(120,100,70,.35)";
+    ctx.fillRect(p.x - 10, p.y - 10, 20, 20);
+    ctx.restore();
   },
   project(camera, x, y, offsetX, offsetY) {
     return {
@@ -1532,6 +1871,8 @@ OTZI.renderUi = {
     OTZI.dom.warmthChip.textContent = `WARMTH ${Math.round(game.player.warmth)}`;
     if (!OTZI.dialogue.hasActiveToast()) {
       OTZI.dialogue.message = game.transition.active ? `Traveling ${game.transition.direction}` :
+        game.focusedEntity?.kind === "hare" ? "USE: catch hare" :
+        game.focusedEntity?.kind === "good_flint_core" ? "USE: take good flint core" :
         game.focusedEntrance ? `USE: enter ${game.focusedEntrance.label}` :
         game.focusedResource ? `USE: gather ${game.focusedResource.resource}` : "No resource nearby";
       OTZI.dom.statusLine.textContent = OTZI.dialogue.message;
@@ -1547,6 +1888,7 @@ OTZI.renderUi = {
       OTZI.dom.invGrass.textContent = String(game.inventory.grass || 0);
       OTZI.dom.invFood.textContent = String(game.inventory.food || 0);
       OTZI.dom.invCrudeTool.textContent = String(game.inventory.crudeTool || 0);
+      OTZI.dom.invGoodFlintCore.textContent = String(game.inventory.goodFlintCore || 0);
     }
     OTZI.dom.menuPanel.hidden = !game.menuOpen;
     if (game.menuOpen) {
@@ -1558,8 +1900,19 @@ OTZI.renderUi = {
       OTZI.dom.menuGrass.textContent = String(game.inventory.grass || 0);
       OTZI.dom.menuFood.textContent = String(game.inventory.food || 0);
       OTZI.dom.menuCrudeTool.textContent = String(game.inventory.crudeTool || 0);
+      OTZI.dom.menuGoodFlintCore.textContent = String(game.inventory.goodFlintCore || 0);
+      OTZI.dom.menuToolmaker.textContent = OTZI.village.has("toolmaker") ? "Unlocked" : "Locked";
+      OTZI.dom.menuLatestFact.textContent = OTZI.facts.latestDiscovered()?.title || "None";
       OTZI.dom.menuStamina.textContent = Math.round(game.player.stamina).toString();
       OTZI.dom.resetSaveBtn.textContent = game.resetConfirm ? "Confirm Reset Save" : "Reset Save";
+      OTZI.dom.viewFactBtn.hidden = !OTZI.facts.latestDiscovered();
+    }
+    OTZI.dom.factPanel.hidden = !game.factOpen;
+    if (game.factOpen) {
+      const fact = OTZI.facts.get(game.activeFactId);
+      OTZI.dom.factTitle.textContent = fact?.title || "-";
+      OTZI.dom.factMeta.textContent = fact ? `${fact.status.toUpperCase()} | ${fact.category}` : "-";
+      OTZI.dom.factText.textContent = fact?.shortText || "-";
     }
     if (!game.debug) {
       OTZI.dom.debugPanel.hidden = true;
@@ -1574,9 +1927,11 @@ OTZI.renderUi = {
     OTZI.dom.debugPanel.textContent = [
       `seed ${game.seed}`,
       areaDebug,
+      `kind ${game.currentArea?.kind || "none"}`,
       `transition ${game.transition.active ? `${game.transition.direction} ${game.transition.elapsed.toFixed(2)}/${game.transition.duration.toFixed(2)}` : "none"}`,
       `tile ${tileX},${tileY}`,
       `entry ${game.focusedEntrance ? `${game.focusedEntrance.label} ${game.focusedEntrance.id}` : "none"}`,
+      `entity ${game.focusedEntity ? `${game.focusedEntity.kind} ${game.focusedEntity.id}` : "none"}`,
       `focus ${game.focusedResource ? `${game.focusedResource.resource} ${game.focusedResource.id} tile ${game.focusedResource.tileX},${game.focusedResource.tileY} dist ${game.focusedResource.dist.toFixed(1)}` : "none"}`,
       `fps ${game.fps.toFixed(1)}`,
       `entities ${game.entities.length}`,
@@ -1640,15 +1995,20 @@ OTZI.renderUi = {
           continue;
         }
         const screen = OTZI.worldGrid.getOverworldScreen(world, game.seed, x, y);
-        ctx.fillStyle = screen.kind === "village_crossroads" ? "#9a784b" :
-          screen.kind === "flint_scar" ? "#c9d0d4" : "#315b36";
+        ctx.fillStyle = screen.kind === "village_home" ? "#9a784b" :
+          screen.kind === "flint_scar_entrance" ? "#c9d0d4" :
+          screen.kind === "animal_clearing" ? "#4f6b32" :
+          screen.kind === "dense_forest" ? "#29422b" :
+          screen.kind === "river_edge_placeholder" ? "#365f6e" :
+          screen.kind === "high_pass_locked_placeholder" ? "#cad3da" : "#315b36";
         ctx.fillRect(x * cellW + 1, y * cellH + 1, cellW - 2, cellH - 2);
         ctx.strokeStyle = "rgba(243,234,215,.14)";
         ctx.strokeRect(x * cellW + 1, y * cellH + 1, cellW - 2, cellH - 2);
         ctx.fillStyle = "#f6ead0";
-        if (screen.kind === "village_crossroads") ctx.fillText("V", x * cellW + cellW / 2, y * cellH + cellH / 2);
-        else if (screen.kind === "flint_scar") ctx.fillText("C", x * cellW + cellW / 2, y * cellH + cellH / 2);
-        else if (screen.kind === "trail_forest") ctx.fillText(".", x * cellW + cellW / 2, y * cellH + cellH / 2);
+        if (screen.kind === "village_home") ctx.fillText("V", x * cellW + cellW / 2, y * cellH + cellH / 2);
+        else if (screen.kind === "flint_scar_entrance") ctx.fillText("C", x * cellW + cellW / 2, y * cellH + cellH / 2);
+        else if (screen.kind === "animal_clearing") ctx.fillText("A", x * cellW + cellW / 2, y * cellH + cellH / 2);
+        else if (screen.kind === "quiet_empty") ctx.fillText(".", x * cellW + cellW / 2, y * cellH + cellH / 2);
       }
     }
     const markerX = game.transition.active && game.transition.targetX != null ? game.transition.targetX : world.currentX;
@@ -1714,6 +2074,7 @@ OTZI.save = {
         rooms: OTZI.worldGrid.collectAreaStates(g.currentDungeon.rooms),
         returnScreen: g.returnScreen
       } : null,
+      dungeons: g.dungeons,
       village: g.village,
       facts: g.facts
     };
@@ -1742,6 +2103,10 @@ OTZI.save = {
     OTZI.survival.apply(OTZI.game.player, data.meters);
     g.inventory = { ...g.inventory, ...(data.inventory || {}) };
     g.minimap = !!data.minimap;
+    g.dungeons = {
+      ...g.dungeons,
+      ...(data.dungeons || {})
+    };
     g.village = { ...g.village, ...(data.village || {}) };
     g.facts = { ...g.facts, ...(data.facts || {}) };
     g.updateFocusState();
@@ -1827,6 +2192,7 @@ OTZI.installTestHooks = function installTestHooks() {
           currentX: g.world.currentX,
           currentY: g.world.currentY,
           currentScreenId: g.currentScreen ? g.currentScreen.id : null,
+          currentScreenKind: g.currentScreen ? g.currentScreen.kind : null,
           discoveredCount: Object.keys(g.world.discovered).length,
           gridW: g.world.gridW,
           gridH: g.world.gridH
@@ -1837,8 +2203,10 @@ OTZI.installTestHooks = function installTestHooks() {
           currentX: g.currentDungeon ? g.currentDungeon.currentX : null,
           currentY: g.currentDungeon ? g.currentDungeon.currentY : null,
           currentRoomId: g.currentRoom ? g.currentRoom.id : null,
+          currentRoomKind: g.currentRoom ? g.currentRoom.kind : null,
           discoveredCount: g.currentDungeon ? Object.keys(g.currentDungeon.discovered).length : 0
         },
+        dungeons: JSON.parse(JSON.stringify(g.dungeons || {})),
         transition: {
           active: g.transition.active,
           direction: g.transition.direction,
@@ -1874,6 +2242,12 @@ OTZI.installTestHooks = function installTestHooks() {
           tileX: g.focusedEntrance.tileX,
           tileY: g.focusedEntrance.tileY
         } : null,
+        focusedEntity: g.focusedEntity ? {
+          id: g.focusedEntity.id,
+          kind: g.focusedEntity.kind,
+          state: g.focusedEntity.state || null,
+          dist: g.focusedEntity.dist
+        } : null,
         resourceNodes: OTZI.resources.count(g.resourceNodes),
         viewport: {
           cssW: OTZI.viewport.cssW,
@@ -1906,6 +2280,15 @@ OTZI.installTestHooks = function installTestHooks() {
     enterOverworldScreen(x, y) {
       OTZI.game.enterOverworldScreen(x, y);
       return this.snapshot();
+    },
+    teleportToScreenKind(kind) {
+      const screen = OTZI.worldGrid.findScreenByKind(OTZI.game.world, OTZI.game.seed, kind);
+      if (!screen) return null;
+      OTZI.game.enterOverworldScreen(screen.gridX, screen.gridY);
+      return this.snapshot();
+    },
+    screenKindCounts() {
+      return OTZI.worldGrid.countScreenKinds(OTZI.game.world, OTZI.game.seed);
     },
     placeAndStepEdge(direction, frames = 2) {
       const ts = OTZI.CFG.tileSize;
@@ -1965,6 +2348,49 @@ OTZI.installTestHooks = function installTestHooks() {
       OTZI.game.updateFocusState();
       return { ...entry };
     },
+    teleportToAnimalClearing() {
+      const screen = OTZI.worldGrid.findScreenByKind(OTZI.game.world, OTZI.game.seed, "animal_clearing");
+      if (!screen) return null;
+      OTZI.game.enterOverworldScreen(screen.gridX, screen.gridY);
+      OTZI.game.updateFocusState();
+      return this.snapshot();
+    },
+    triggerHareFlee() {
+      if (OTZI.game.currentScreen?.kind !== "animal_clearing") this.teleportToAnimalClearing();
+      const hare = (OTZI.game.entities || []).find((entity) => entity.kind === "hare" && !entity.caught && !entity.escaped);
+      if (!hare) return null;
+      OTZI.game.player.x = hare.x - 10;
+      OTZI.game.player.y = hare.y;
+      OTZI.game.lastSprinting = true;
+      this.stepFrames(2);
+      OTZI.game.lastSprinting = false;
+      return this.snapshot();
+    },
+    teleportNearHare() {
+      if (OTZI.game.currentScreen?.kind !== "animal_clearing") this.teleportToAnimalClearing();
+      const hare = (OTZI.game.entities || []).find((entity) => entity.kind === "hare" && !entity.caught && !entity.escaped);
+      if (!hare) return null;
+      OTZI.game.player.x = hare.x - OTZI.CFG.tileSize * 0.9;
+      OTZI.game.player.y = hare.y;
+      OTZI.camera.update();
+      OTZI.game.updateFocusState();
+      return { ...hare };
+    },
+    teleportNearCore() {
+      OTZI.game.ensureDungeon("flint_scar");
+      OTZI.game.enterDungeonRoom(2, 1);
+      const core = (OTZI.game.entities || []).find((entity) => entity.kind === "good_flint_core" && !entity.collected);
+      if (!core) return null;
+      OTZI.game.player.x = core.x - OTZI.CFG.tileSize * 0.7;
+      OTZI.game.player.y = core.y;
+      OTZI.camera.update();
+      OTZI.game.updateFocusState();
+      return { ...core };
+    },
+    returnToVillage() {
+      OTZI.game.enterOverworldScreen(OTZI.game.world.homeX, OTZI.game.world.homeY);
+      return this.snapshot();
+    },
     placePlayerAtEdge(direction) {
       OTZI.game.placePlayerForEntry(direction, { x: OTZI.game.player.x, y: OTZI.game.player.y });
       OTZI.game.updateFocusState();
@@ -2017,6 +2443,7 @@ OTZI.installTestHooks = function installTestHooks() {
     exportSave() { return OTZI.save.exportString(); },
     importSave(str) { OTZI.save.importString(str); },
     saveNow() { return OTZI.save.save(); },
+    resetSave() { return OTZI.save.clear(); },
     toggleDebug() { OTZI.debug.toggle(); }
   };
 };
@@ -2041,6 +2468,8 @@ OTZI.game = {
   focusedResource: null,
   focusedEntranceId: null,
   focusedEntrance: null,
+  focusedEntityId: null,
+  focusedEntity: null,
   transition: {
     active: false,
     kind: "screen_slide",
@@ -2056,19 +2485,25 @@ OTZI.game = {
     fromCamera: null,
     toCamera: null,
     targetX: null,
-    targetY: null
+    targetY: null,
+    scope: "overworld"
   },
   currentArea: null,
   currentScreen: null,
   currentRoom: null,
   currentDungeon: null,
   returnScreen: null,
+  factOpen: false,
+  activeFactId: null,
   setSeed(seed) {
     this.seed = seed || OTZI.CFG.defaultSeed;
     this.player = OTZI.entities.makePlayer();
     this.inventory = OTZI.inventory.create();
     this.village = OTZI.village.create();
     this.facts = OTZI.facts.create();
+    this.dungeons = {
+      flint_scar: { completed: false, coreCollected: false }
+    };
     this.world = OTZI.worldGrid.createOverworld(this.seed);
     this.currentDungeon = null;
     this.currentRoom = null;
@@ -2078,6 +2513,10 @@ OTZI.game = {
     this.focusedResource = null;
     this.focusedEntranceId = null;
     this.focusedEntrance = null;
+    this.focusedEntityId = null;
+    this.focusedEntity = null;
+    this.factOpen = false;
+    this.activeFactId = null;
     this.transition = {
       active: false,
       kind: "screen_slide",
@@ -2093,7 +2532,8 @@ OTZI.game = {
       fromCamera: null,
       toCamera: null,
       targetX: null,
-      targetY: null
+      targetY: null,
+      scope: "overworld"
     };
     this.enterOverworldScreen(this.world.homeX, this.world.homeY, { keepScene: true });
   },
@@ -2103,6 +2543,7 @@ OTZI.game = {
     this.resourceNodes = area.resources;
     this.entities = area.entities;
     this.entrances = area.entrances || [];
+    this.hazards = area.hazards || [];
   },
   clampAreaPosition(pos) {
     const ts = OTZI.CFG.tileSize;
@@ -2153,6 +2594,7 @@ OTZI.game = {
     this.setActiveArea(screen);
     if (!opts.restorePlayer) this.placePlayerForEntry(opts.entrySide || null, opts.carry);
     if (!opts.keepScene) OTZI.scenes.goto("overworld");
+    this.onAreaEntered();
     OTZI.input.clearAll();
     OTZI.camera.update();
     this.updateFocusState();
@@ -2178,7 +2620,8 @@ OTZI.game = {
       fromCamera: { x: OTZI.camera.x, y: OTZI.camera.y },
       toCamera,
       targetX: x,
-      targetY: y
+      targetY: y,
+      scope: "overworld"
     };
     OTZI.input.clearAll();
     this.focusedTargetType = null;
@@ -2186,11 +2629,14 @@ OTZI.game = {
     this.focusedResource = null;
     this.focusedEntranceId = null;
     this.focusedEntrance = null;
+    this.focusedEntityId = null;
+    this.focusedEntity = null;
   },
   finishScreenTransition() {
     const t = this.transition;
     this.transition.active = false;
-    this.enterOverworldScreen(t.targetX, t.targetY, { keepScene: true, restorePlayer: true });
+    if (t.scope === "dungeon") this.enterDungeonRoom(t.targetX, t.targetY, { keepScene: true, restorePlayer: true });
+    else this.enterOverworldScreen(t.targetX, t.targetY, { keepScene: true, restorePlayer: true });
     this.player.x = t.toPlayer.x;
     this.player.y = t.toPlayer.y;
     OTZI.camera.update();
@@ -2229,9 +2675,40 @@ OTZI.game = {
     this.setActiveArea(room);
     if (!opts.restorePlayer) this.placePlayerForEntry(opts.entrySide || "e", opts.carry);
     if (!opts.keepScene) OTZI.scenes.goto("dungeon");
+    this.onAreaEntered();
     OTZI.input.clearAll();
     OTZI.camera.update();
     this.updateFocusState();
+  },
+  onAreaEntered() {
+    if (this.scene === "overworld" && this.currentScreen?.kind === "village_home") {
+      this.village.visitedHome = true;
+      this.tryUnlockToolmaker();
+    }
+  },
+  tryUnlockToolmaker() {
+    if (!this.dungeons.flint_scar.completed) return false;
+    if (OTZI.village.has("toolmaker")) return false;
+    if ((this.inventory.goodFlintCore || 0) < 1) return false;
+    OTZI.inventory.add("goodFlintCore", -1);
+    OTZI.village.unlock("toolmaker");
+    this.village.toolmakerReady = true;
+    const fact = OTZI.facts.discover("retoucheur_tool");
+    this.openFact(fact?.id || null);
+    OTZI.dialogue.toast("Toolmaker unlocked");
+    return true;
+  },
+  openFact(id) {
+    if (!id) return false;
+    this.activeFactId = id;
+    this.factOpen = true;
+    const fact = OTZI.facts.get(id);
+    if (fact) OTZI.dialogue.toast(`Fact unlocked: ${fact.title}`);
+    OTZI.input.clearAll();
+    return true;
+  },
+  closeFact() {
+    this.factOpen = false;
   },
   exitDungeon() {
     const ret = this.returnScreen || { x: this.world.flintScarX, y: this.world.flintScarY };
@@ -2257,17 +2734,26 @@ OTZI.game = {
     }
     return best;
   },
+  findNearestEntity() {
+    return OTZI.entities.nearestInteractable(this.entities || [], this.player);
+  },
   updateFocusState() {
+    const entity = this.findNearestEntity();
     const entrance = this.findNearestEntrance();
-    const resource = entrance ? null : OTZI.resources.findNearestVisibleTarget(this.resourceNodes, this.player, this.map);
+    const resource = entity || entrance ? null : OTZI.resources.findNearestVisibleTarget(this.resourceNodes, this.player, this.map);
+    this.focusedEntityId = entity ? entity.id : null;
+    this.focusedEntity = entity || null;
     this.focusedEntranceId = entrance ? entrance.id : null;
     this.focusedEntrance = entrance || null;
     this.focusedResourceId = resource ? resource.id : null;
     this.focusedResource = resource || null;
-    this.focusedTargetType = entrance ? "entrance" : resource ? "resource" : null;
+    this.focusedTargetType = entity ? "entity" : entrance ? "entrance" : resource ? "resource" : null;
   },
   tryUse() {
     if (this.transition.active) return false;
+    if (this.focusedEntity) {
+      return this.tryEntityUse();
+    }
     if (this.focusedEntrance) {
       if (this.focusedEntrance.targetScene === "dungeon") {
         this.enterDungeon(this.focusedEntrance.dungeonId);
@@ -2279,6 +2765,34 @@ OTZI.game = {
       }
     }
     return this.tryGather();
+  },
+  tryEntityUse() {
+    const entity = (this.entities || []).find((item) => item.id === this.focusedEntityId);
+    if (!entity) return false;
+    if (entity.kind === "hare") {
+      if (entity.state === "fleeing" || entity.escaped) {
+        OTZI.dialogue.toast("Too startled to catch");
+        return false;
+      }
+      entity.caught = true;
+      OTZI.inventory.add("food", 1);
+      OTZI.dialogue.toast("Caught hare +1 food");
+      OTZI.audio.blip(600, 0.05);
+      this.updateFocusState();
+      return true;
+    }
+    if (entity.kind === "good_flint_core" && !entity.collected) {
+      entity.collected = true;
+      OTZI.inventory.add("goodFlintCore", 1);
+      this.dungeons.flint_scar.completed = true;
+      this.dungeons.flint_scar.coreCollected = true;
+      if (this.currentRoom) this.currentRoom.completed = true;
+      OTZI.dialogue.toast("Collected good flint core");
+      OTZI.audio.blip(780, 0.05);
+      this.updateFocusState();
+      return true;
+    }
+    return false;
   },
   tryGather() {
     if (this.transition.active) return false;
@@ -2324,11 +2838,85 @@ OTZI.game = {
     }
     return false;
   },
+  maybeTransitionDungeonRoom() {
+    if (this.transition.active || this.scene !== "dungeon" || !this.currentRoom) return false;
+    const pad = OTZI.CFG.transitionEdgePad;
+    const maxX = this.map.w * OTZI.CFG.tileSize - pad;
+    const maxY = this.map.h * OTZI.CFG.tileSize - pad;
+    if (this.player.x <= pad && this.currentRoom.exits.w) {
+      this.beginDungeonRoomTransition("west", this.currentDungeon.currentX - 1, this.currentDungeon.currentY, "e", { y: this.player.y });
+      return true;
+    }
+    if (this.player.x >= maxX && this.currentRoom.exits.e) {
+      this.beginDungeonRoomTransition("east", this.currentDungeon.currentX + 1, this.currentDungeon.currentY, "w", { y: this.player.y });
+      return true;
+    }
+    if (this.player.y <= pad && this.currentRoom.exits.n) {
+      this.beginDungeonRoomTransition("north", this.currentDungeon.currentX, this.currentDungeon.currentY - 1, "s", { x: this.player.x });
+      return true;
+    }
+    if (this.player.y >= maxY && this.currentRoom.exits.s) {
+      this.beginDungeonRoomTransition("south", this.currentDungeon.currentX, this.currentDungeon.currentY + 1, "n", { x: this.player.x });
+      return true;
+    }
+    return false;
+  },
+  beginDungeonRoomTransition(direction, x, y, entrySide, carry) {
+    const toArea = OTZI.worldGrid.getDungeonRoom(this.currentDungeon, this.seed, x, y);
+    OTZI.worldGrid.markDiscovered(this.currentDungeon, x, y);
+    toArea.discovered = true;
+    const toPlayer = this.computeEntryPosition(toArea.map, entrySide, carry);
+    const toCamera = OTZI.camera.targetFor(toArea.map, toPlayer);
+    this.transition = {
+      active: true,
+      kind: "screen_slide",
+      direction,
+      fromScreenId: this.currentRoom.id,
+      toScreenId: toArea.id,
+      elapsed: 0,
+      duration: OTZI.CFG.screenTransitionDuration,
+      fromArea: this.currentRoom,
+      toArea,
+      fromPlayer: { x: this.player.x, y: this.player.y, radius: this.player.radius },
+      toPlayer: { x: toPlayer.x, y: toPlayer.y, radius: this.player.radius },
+      fromCamera: { x: OTZI.camera.x, y: OTZI.camera.y },
+      toCamera,
+      targetX: x,
+      targetY: y,
+      scope: "dungeon"
+    };
+    OTZI.input.clearAll();
+    this.focusedTargetType = null;
+    this.focusedResourceId = null;
+    this.focusedResource = null;
+    this.focusedEntranceId = null;
+    this.focusedEntrance = null;
+    this.focusedEntityId = null;
+    this.focusedEntity = null;
+  },
+  applyHazards(dt) {
+    if (!this.hazards || this.scene !== "dungeon") return;
+    this.player.hazardCooldown = Math.max(0, (this.player.hazardCooldown || 0) - dt);
+    for (const hazard of this.hazards) {
+      const dist = Math.hypot(hazard.x - this.player.x, hazard.y - this.player.y);
+      if (dist > hazard.radius) continue;
+      if ((this.player.hazardCooldown || 0) > 0) continue;
+      OTZI.survival.spendStamina(this.player, 6);
+      this.player.hazardCooldown = 0.8;
+      OTZI.dialogue.toast("Loose stones drain stamina");
+      break;
+    }
+  },
   update(dt, actions) {
     if (this.transition.active) {
       OTZI.input.clearAll();
       this.updateTransition(dt);
       return;
+    }
+    if (this.factOpen) {
+      actions.moveX = 0;
+      actions.moveY = 0;
+      actions.sprint = false;
     }
     if (actions.debugPressed) OTZI.debug.toggle();
     if (actions.mapPressed) {
@@ -2360,11 +2948,14 @@ OTZI.game = {
       actions.sprint = false;
     }
     const sprinting = actions.sprint && this.player.stamina > 0;
+    this.lastSprinting = sprinting;
     const speed = sprinting ? OTZI.CFG.sprintSpeed : OTZI.CFG.playerSpeed;
     OTZI.collision.moveCircle(this.player, actions.moveX * speed * dt, actions.moveY * speed * dt);
     OTZI.survival.update(this.player, dt, sprinting);
     OTZI.entities.update(dt);
-    this.maybeTransitionScreen();
+    this.applyHazards(dt);
+    if (this.scene === "dungeon") this.maybeTransitionDungeonRoom();
+    else this.maybeTransitionScreen();
     OTZI.camera.update();
     this.updateFocusState();
   }
@@ -2422,6 +3013,13 @@ OTZI.game = {
     OTZI.dom.craftCrudeToolBtn.addEventListener("click", () => {
       OTZI.crafting.craft("crude_cutting_tool");
     });
+    OTZI.dom.factCloseBtn.addEventListener("click", () => {
+      OTZI.game.closeFact();
+    });
+    OTZI.dom.viewFactBtn.addEventListener("click", () => {
+      const fact = OTZI.facts.latestDiscovered();
+      if (fact) OTZI.game.openFact(fact.id);
+    });
     OTZI.dom.resetSaveBtn.addEventListener("click", () => {
       if (!OTZI.game.resetConfirm) {
         OTZI.game.resetConfirm = true;
@@ -2446,6 +3044,6 @@ OTZI.game = {
 })();
 
   </script>
-  <!-- build: 2026-07-02T10:30:50.277Z modules:29 -->
+  <!-- build: 2026-07-02T11:27:02.659Z modules:29 -->
 </body>
 </html>

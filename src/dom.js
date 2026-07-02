@@ -23,6 +23,7 @@ OTZI.dom = {
             <div><dt>Grass</dt><dd id="invGrass">0</dd></div>
             <div><dt>Food</dt><dd id="invFood">0</dd></div>
             <div><dt>Crude tools</dt><dd id="invCrudeTool">0</dd></div>
+            <div><dt>Good flint core</dt><dd id="invGoodFlintCore">0</dd></div>
           </dl>
         </div>
         <div class="start-panel" id="startPanel">
@@ -67,12 +68,23 @@ OTZI.dom = {
           <div><dt>Grass</dt><dd id="menuGrass">0</dd></div>
           <div><dt>Food</dt><dd id="menuFood">0</dd></div>
           <div><dt>Crude cutting tools</dt><dd id="menuCrudeTool">0</dd></div>
+          <div><dt>Good flint core</dt><dd id="menuGoodFlintCore">0</dd></div>
+          <div><dt>Toolmaker</dt><dd id="menuToolmaker">Locked</dd></div>
+          <div><dt>Latest fact</dt><dd id="menuLatestFact">None</dd></div>
           <div><dt>Stamina</dt><dd id="menuStamina">100</dd></div>
         </dl>
         <button id="craftCrudeToolBtn" type="button">Craft Crude Cutting Tool</button>
+        <button id="viewFactBtn" type="button">View Latest Fact</button>
         <button id="fullscreenBtn" type="button">Fullscreen</button>
         <button id="resetSaveBtn" type="button">Reset Save</button>
         <button id="menuCloseBtn" type="button">Close</button>
+      </div>
+      <div id="factPanel" class="menu-panel" hidden role="dialog" aria-modal="false" aria-label="Fact log">
+        <div class="panel-title">OTZI FACT</div>
+        <h2 id="factTitle">-</h2>
+        <p id="factMeta">-</p>
+        <p id="factText">-</p>
+        <button id="factCloseBtn" type="button">Close Fact</button>
       </div>
     `;
     this.startPanel = document.getElementById("startPanel");
@@ -99,6 +111,7 @@ OTZI.dom = {
     this.invGrass = document.getElementById("invGrass");
     this.invFood = document.getElementById("invFood");
     this.invCrudeTool = document.getElementById("invCrudeTool");
+    this.invGoodFlintCore = document.getElementById("invGoodFlintCore");
     this.menuPanel = document.getElementById("menuPanel");
     this.menuSeed = document.getElementById("menuSeed");
     this.menuFlint = document.getElementById("menuFlint");
@@ -108,11 +121,20 @@ OTZI.dom = {
     this.menuGrass = document.getElementById("menuGrass");
     this.menuFood = document.getElementById("menuFood");
     this.menuCrudeTool = document.getElementById("menuCrudeTool");
+    this.menuGoodFlintCore = document.getElementById("menuGoodFlintCore");
+    this.menuToolmaker = document.getElementById("menuToolmaker");
+    this.menuLatestFact = document.getElementById("menuLatestFact");
     this.menuStamina = document.getElementById("menuStamina");
     this.craftCrudeToolBtn = document.getElementById("craftCrudeToolBtn");
+    this.viewFactBtn = document.getElementById("viewFactBtn");
     this.fullscreenBtn = document.getElementById("fullscreenBtn");
     this.resetSaveBtn = document.getElementById("resetSaveBtn");
     this.menuCloseBtn = document.getElementById("menuCloseBtn");
+    this.factPanel = document.getElementById("factPanel");
+    this.factTitle = document.getElementById("factTitle");
+    this.factMeta = document.getElementById("factMeta");
+    this.factText = document.getElementById("factText");
+    this.factCloseBtn = document.getElementById("factCloseBtn");
     this.statusLine = document.getElementById("statusLine");
     this.moveZone = document.getElementById("moveZone");
     this.stickKnob = document.getElementById("stickKnob");

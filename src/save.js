@@ -27,6 +27,7 @@ OTZI.save = {
         rooms: OTZI.worldGrid.collectAreaStates(g.currentDungeon.rooms),
         returnScreen: g.returnScreen
       } : null,
+      dungeons: g.dungeons,
       village: g.village,
       facts: g.facts
     };
@@ -55,6 +56,10 @@ OTZI.save = {
     OTZI.survival.apply(OTZI.game.player, data.meters);
     g.inventory = { ...g.inventory, ...(data.inventory || {}) };
     g.minimap = !!data.minimap;
+    g.dungeons = {
+      ...g.dungeons,
+      ...(data.dungeons || {})
+    };
     g.village = { ...g.village, ...(data.village || {}) };
     g.facts = { ...g.facts, ...(data.facts || {}) };
     g.updateFocusState();
