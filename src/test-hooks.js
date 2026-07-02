@@ -29,6 +29,7 @@ OTZI.installTestHooks = function installTestHooks() {
         particleCount: 0,
         debug: g.debug,
         minimap: g.minimap,
+        inventoryOpen: g.inventoryOpen,
         menuOpen: g.menuOpen,
         status: OTZI.dialogue.message,
         nearestResource: (() => {

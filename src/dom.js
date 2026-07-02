@@ -13,20 +13,28 @@ OTZI.dom = {
           <div class="panel-title">TRAIL MAP</div>
           <canvas id="minimapCanvas" width="104" height="104" aria-hidden="true"></canvas>
         </div>
+        <div id="inventoryPanel" class="inventory-panel" hidden aria-label="Pack inventory">
+          <div class="panel-title">PACK</div>
+          <dl>
+            <div><dt>Flint</dt><dd id="invFlint">0</dd></div>
+            <div><dt>Sticks</dt><dd id="invStick">0</dd></div>
+            <div><dt>Stones</dt><dd id="invStone">0</dd></div>
+            <div><dt>Bark</dt><dd id="invBark">0</dd></div>
+            <div><dt>Grass</dt><dd id="invGrass">0</dd></div>
+            <div><dt>Food</dt><dd id="invFood">0</dd></div>
+            <div><dt>Crude tools</dt><dd id="invCrudeTool">0</dd></div>
+          </dl>
+        </div>
         <div class="start-panel" id="startPanel">
           <h1>The Legend of &Ouml;tzi the Iceman</h1>
           <p>Canvas 2D survival adventure engine shell.</p>
           <button id="startBtn" type="button">Start / Audio Unlock</button>
         </div>
       </section>
-      <section id="hudStrip" class="hud-strip" aria-label="Stats and status">
-        <div id="inventoryChip" class="stat-chip">FLINT: 0</div>
-        <div id="staminaChip" class="stat-chip">STAM: 100</div>
-        <div id="statusLine" class="status-line">Milestone 1 engine shell</div>
+      <section id="popupBar" class="popup-bar" aria-label="Map and inventory buttons">
         <button id="mapTab" type="button" aria-label="Trail map">MAP</button>
-        <button id="debugBtn" type="button" aria-label="Toggle debug">D</button>
+        <button id="inventoryBtn" type="button" aria-label="Open inventory">PACK</button>
       </section>
-      <div id="debugPanel" class="debug-panel" hidden></div>
       <section class="controls" id="controls" aria-label="Touch controls">
         <div class="stick-zone" id="moveZone" aria-label="MOVE joystick">
           <div class="stick-label">MOVE</div>
@@ -38,6 +46,15 @@ OTZI.dom = {
           <button id="menuBtn" type="button">CRAFT<br>MENU</button>
         </div>
       </section>
+      <section id="statsStrip" class="stats-strip" aria-label="Stats and status">
+        <div id="healthChip" class="stat-chip">HP 100</div>
+        <div id="staminaChip" class="stat-chip">STAM 100</div>
+        <div id="hungerChip" class="stat-chip">HUNGER 0</div>
+        <div id="warmthChip" class="stat-chip">WARMTH 100</div>
+        <div id="statusLine" class="status-line">Milestone 1 engine shell</div>
+        <button id="debugBtn" type="button" aria-label="Toggle debug">D</button>
+      </section>
+      <div id="debugPanel" class="debug-panel" hidden></div>
       <div id="menuPanel" class="menu-panel" hidden role="dialog" aria-modal="false" aria-label="Craft and menu placeholder">
         <div class="panel-title">CRAFT / MENU</div>
         <p>Craft/Menu placeholder &mdash; control path works.</p>
@@ -60,14 +77,25 @@ OTZI.dom = {
     this.startBtn = document.getElementById("startBtn");
     this.debugBtn = document.getElementById("debugBtn");
     this.debugPanel = document.getElementById("debugPanel");
-    this.inventoryChip = document.getElementById("inventoryChip");
+    this.popupBar = document.getElementById("popupBar");
+    this.statsStrip = document.getElementById("statsStrip");
+    this.healthChip = document.getElementById("healthChip");
     this.staminaChip = document.getElementById("staminaChip");
-    this.hudStrip = document.getElementById("hudStrip");
+    this.hungerChip = document.getElementById("hungerChip");
+    this.warmthChip = document.getElementById("warmthChip");
     this.gameShell = document.getElementById("gameShell");
     this.gameShell.prepend(this.canvas);
     this.minimapPanel = document.getElementById("minimapPanel");
     this.minimapCanvas = document.getElementById("minimapCanvas");
     this.minimapCtx = this.minimapCanvas.getContext("2d", { alpha: false });
+    this.inventoryPanel = document.getElementById("inventoryPanel");
+    this.invFlint = document.getElementById("invFlint");
+    this.invStick = document.getElementById("invStick");
+    this.invStone = document.getElementById("invStone");
+    this.invBark = document.getElementById("invBark");
+    this.invGrass = document.getElementById("invGrass");
+    this.invFood = document.getElementById("invFood");
+    this.invCrudeTool = document.getElementById("invCrudeTool");
     this.menuPanel = document.getElementById("menuPanel");
     this.menuSeed = document.getElementById("menuSeed");
     this.menuFlint = document.getElementById("menuFlint");
@@ -87,5 +115,6 @@ OTZI.dom = {
     this.sprintBtn = document.getElementById("sprintBtn");
     this.menuBtn = document.getElementById("menuBtn");
     this.mapTab = document.getElementById("mapTab");
+    this.inventoryBtn = document.getElementById("inventoryBtn");
   }
 };

@@ -4,26 +4,26 @@ var OTZI = window.OTZI || (window.OTZI = {});
 OTZI.renderUi = {
   sync() {
     const game = OTZI.game;
-    OTZI.dom.inventoryChip.textContent = [
-      `FLINT ${game.inventory.flint || 0}`,
-      `STICK ${game.inventory.stick || 0}`,
-      `STONE ${game.inventory.stone || 0}`,
-      `BARK ${game.inventory.bark || 0}`,
-      `GRASS ${game.inventory.grass || 0}`,
-      `FOOD ${game.inventory.food || 0}`
-    ].join("  ");
-    OTZI.dom.staminaChip.textContent = [
-      `HP ${Math.round(game.player.health)}`,
-      `STAM ${Math.round(game.player.stamina)}`,
-      `HUNGER ${Math.round(game.player.hunger)}`,
-      `WARMTH ${Math.round(game.player.warmth)}`
-    ].join(" | ");
+    OTZI.dom.healthChip.textContent = `HP ${Math.round(game.player.health)}`;
+    OTZI.dom.staminaChip.textContent = `STAM ${Math.round(game.player.stamina)}`;
+    OTZI.dom.hungerChip.textContent = `HUNGER ${Math.round(game.player.hunger)}`;
+    OTZI.dom.warmthChip.textContent = `WARMTH ${Math.round(game.player.warmth)}`;
     if (performance.now() > OTZI.dialogue.toastUntil && OTZI.dialogue.message !== "Milestone 1 engine shell") {
       OTZI.dialogue.message = "Milestone 1 engine shell";
       OTZI.dom.statusLine.textContent = OTZI.dialogue.message;
     }
     OTZI.dom.minimapPanel.hidden = !game.minimap;
     if (game.minimap) this.drawMinimap();
+    OTZI.dom.inventoryPanel.hidden = !game.inventoryOpen;
+    if (game.inventoryOpen) {
+      OTZI.dom.invFlint.textContent = String(game.inventory.flint || 0);
+      OTZI.dom.invStick.textContent = String(game.inventory.stick || 0);
+      OTZI.dom.invStone.textContent = String(game.inventory.stone || 0);
+      OTZI.dom.invBark.textContent = String(game.inventory.bark || 0);
+      OTZI.dom.invGrass.textContent = String(game.inventory.grass || 0);
+      OTZI.dom.invFood.textContent = String(game.inventory.food || 0);
+      OTZI.dom.invCrudeTool.textContent = String(game.inventory.crudeTool || 0);
+    }
     OTZI.dom.menuPanel.hidden = !game.menuOpen;
     if (game.menuOpen) {
       OTZI.dom.menuSeed.textContent = game.seed;

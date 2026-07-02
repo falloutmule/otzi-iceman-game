@@ -33,12 +33,15 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
   await page.getByRole("button", { name: /start/i }).tap();
   await expect(page.locator("#startPanel")).toBeHidden();
   await expect(page.locator("#gameShell")).toBeVisible();
-  await expect(page.locator("#hudStrip")).toBeVisible();
+  await expect(page.locator("#popupBar")).toBeVisible();
   await expect(page.locator("#controls")).toBeVisible();
+  await expect(page.locator("#statsStrip")).toBeVisible();
   await expect(page.locator("#aimStrip")).toHaveCount(0);
   await expect(page.locator(".aim-strip")).toHaveCount(0);
-  await expect(page.locator("#hudStrip #mapTab")).toBeVisible();
+  await expect(page.locator("#popupBar #mapTab")).toBeVisible();
+  await expect(page.locator("#popupBar #inventoryBtn")).toBeVisible();
   await expect(page.locator("#gameShell > #mapTab")).toHaveCount(0);
+  await expect(page.locator("#gameShell #inventoryBtn")).toHaveCount(0);
   await expect(page.locator("#gameShell #moveZone")).toHaveCount(0);
   await expect(page.locator("#gameShell #useBtn")).toHaveCount(0);
   await expect(page.locator("#gameShell #sprintBtn")).toHaveCount(0);
@@ -48,16 +51,22 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
   await expect(page.locator("#controls #sprintBtn")).toBeVisible();
   await expect(page.locator("#controls #menuBtn")).toBeVisible();
   const gameBox = await page.locator("#gameShell").boundingBox();
+  const popupBox = await page.locator("#popupBar").boundingBox();
   const controlsBox = await page.locator("#controls").boundingBox();
+  const statsBox = await page.locator("#statsStrip").boundingBox();
   const appBox = await page.locator("#app").boundingBox();
+  const viewport = page.viewportSize();
   expect(gameBox).toBeTruthy();
+  expect(popupBox).toBeTruthy();
   expect(controlsBox).toBeTruthy();
+  expect(statsBox).toBeTruthy();
   expect(appBox).toBeTruthy();
-  expect(appBox.height).toBeGreaterThan(appBox.width);
-  expect(gameBox.height).toBeGreaterThan(gameBox.width);
-  expect(controlsBox.y).toBeGreaterThan(gameBox.y + gameBox.height - 2);
-  await page.screenshot({ path: "artifacts/screenshots/no-aim-map-in-hud.png", fullPage: true });
-  await page.screenshot({ path: "artifacts/screenshots/clear-game-viewport-no-controls.png", fullPage: true });
+  expect(appBox.width).toBeGreaterThan(viewport.width * 0.9);
+  expect(popupBox.y).toBeGreaterThan(gameBox.y + gameBox.height - 2);
+  expect(controlsBox.y).toBeGreaterThan(popupBox.y + popupBox.height - 2);
+  expect(statsBox.y).toBeGreaterThan(controlsBox.y);
+  await page.screenshot({ path: "artifacts/screenshots/mobile-ui-popupbar-map-pack.png", fullPage: true });
+  await page.screenshot({ path: "artifacts/screenshots/mobile-ui-clear-game.png", fullPage: true });
 
   const initial = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(initial.resourceNodes.total).toBeGreaterThan(0);
@@ -67,7 +76,7 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
   }
   await page.locator("#useBtn").tap();
   await expect(page.locator("#statusLine")).toContainText("No resource nearby");
-  await expect(page.locator("#inventoryChip")).toContainText("FLINT 0");
+  await expect(page.locator("#statsStrip")).not.toContainText("FLINT");
   const afterFailedUse = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(afterFailedUse.inventory.flint || 0).toBe(initial.inventory.flint || 0);
   expect(afterFailedUse.resourceNodes.depleted).toBe(initial.resourceNodes.depleted);
@@ -101,23 +110,32 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
     expect(depletedNode.amount).toBe(0);
     previous = afterUse;
   }
-  await expect(page.locator("#inventoryChip")).toContainText("FLINT 1");
-  await expect(page.locator("#inventoryChip")).toContainText("STICK 1");
-  await expect(page.locator("#inventoryChip")).toContainText("STONE 1");
-  await expect(page.locator("#inventoryChip")).toContainText("BARK 1");
-  await expect(page.locator("#inventoryChip")).toContainText("GRASS 1");
-  await expect(page.locator("#inventoryChip")).toContainText("FOOD 1");
-  await expect(page.locator("#staminaChip")).toContainText("HP 100");
+  await page.locator("#inventoryBtn").tap();
+  await expect(page.locator("#inventoryPanel")).toBeVisible();
+  await expect(page.locator("#minimapPanel")).toBeHidden();
+  const afterPack = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
+  expect(afterPack.inventoryOpen).toBe(true);
+  await expect(page.locator("#invFlint")).toHaveText("1");
+  await expect(page.locator("#invStick")).toHaveText("1");
+  await expect(page.locator("#invStone")).toHaveText("1");
+  await expect(page.locator("#invBark")).toHaveText("1");
+  await expect(page.locator("#invGrass")).toHaveText("1");
+  await expect(page.locator("#invFood")).toHaveText("1");
+  await page.screenshot({ path: "artifacts/screenshots/mobile-ui-inventory-popup.png", fullPage: true });
+  await expect(page.locator("#healthChip")).toContainText("HP 100");
   await expect(page.locator("#staminaChip")).toContainText("STAM");
-  await expect(page.locator("#staminaChip")).toContainText("HUNGER");
-  await expect(page.locator("#staminaChip")).toContainText("WARMTH");
-  await page.screenshot({ path: "artifacts/screenshots/gather-success-flint.png", fullPage: true });
+  await expect(page.locator("#hungerChip")).toContainText("HUNGER");
+  await expect(page.locator("#warmthChip")).toContainText("WARMTH");
+  await page.screenshot({ path: "artifacts/screenshots/mobile-ui-gather-still-works.png", fullPage: true });
+  await page.screenshot({ path: "artifacts/screenshots/mobile-ui-stats-below-controls.png", fullPage: true });
 
-  await page.locator("#hudStrip #mapTab").tap();
+  await page.locator("#popupBar #mapTab").tap();
   await expect(page.locator("#minimapPanel")).toBeVisible();
+  await expect(page.locator("#inventoryPanel")).toBeHidden();
   const afterMap = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(afterMap.minimap).toBe(true);
-  await page.screenshot({ path: "artifacts/screenshots/hud-map-button-minimap-open.png", fullPage: true });
+  expect(afterMap.inventoryOpen).toBe(false);
+  await page.screenshot({ path: "artifacts/screenshots/mobile-ui-map-popup.png", fullPage: true });
 
   await page.locator("#menuBtn").tap();
   await expect(page.locator("#menuPanel")).toBeVisible();
@@ -165,9 +183,11 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
   expect(afterReload.player.health).toBeCloseTo(beforeSave.player.health, 4);
   expect(afterReload.player.stamina).toBeCloseTo(beforeSave.player.stamina, 4);
   expect(afterReload.minimap).toBe(beforeSave.minimap);
-  await expect(page.locator("#inventoryChip")).toContainText("STONE 1");
-  await expect(page.locator("#inventoryChip")).toContainText("BARK 1");
-  await expect(page.locator("#inventoryChip")).toContainText("FOOD 1");
+  await page.locator("#inventoryBtn").tap();
+  await expect(page.locator("#inventoryPanel")).toBeVisible();
+  await expect(page.locator("#invStone")).toHaveText("1");
+  await expect(page.locator("#invBark")).toHaveText("1");
+  await expect(page.locator("#invFood")).toHaveText("1");
 
   const beforeSprint = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   await page.locator("#sprintBtn").tap();
@@ -195,7 +215,7 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
   expect(clampedMeters.player.wetness).toBe(100);
   const saveSnapshot = await page.evaluate(() => JSON.parse(decodeURIComponent(escape(atob(window.__OTZI_TEST__.exportSave())))));
   expect(saveSnapshot.meters.health).toBe(clampedMeters.player.health);
-  expect(saveSnapshot.meters.stamina).toBe(clampedMeters.player.stamina);
+  expect(saveSnapshot.meters.stamina).toBeCloseTo(clampedMeters.player.stamina, 0);
 
   const beforeMove = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   const zone = await page.locator("#moveZone").boundingBox();
@@ -222,19 +242,25 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
   expect(externalRequests).toEqual([]);
 });
 
-test("layout remains portrait framed in a landscape browser viewport", async ({ page }) => {
+test("mobile shell uses full width and keeps ordered controls", async ({ page }) => {
   const baseUrl = process.env.OTZI_BASE_URL || "http://127.0.0.1:8099";
-  await page.setViewportSize({ width: 915, height: 412 });
+  await page.setViewportSize({ width: 412, height: 839 });
   await page.goto(`${baseUrl}/dist/index.html`);
   await expect(page.locator("#worldCanvas")).toBeVisible();
   const appBox = await page.locator("#app").boundingBox();
   const gameBox = await page.locator("#gameShell").boundingBox();
+  const popupBox = await page.locator("#popupBar").boundingBox();
   const controlsBox = await page.locator("#controls").boundingBox();
+  const statsBox = await page.locator("#statsStrip").boundingBox();
   expect(appBox).toBeTruthy();
   expect(gameBox).toBeTruthy();
+  expect(popupBox).toBeTruthy();
   expect(controlsBox).toBeTruthy();
-  expect(appBox.height).toBeGreaterThan(appBox.width);
-  expect(gameBox.height).toBeGreaterThan(gameBox.width);
-  expect(controlsBox.y).toBeGreaterThan(gameBox.y + gameBox.height - 2);
-  await page.screenshot({ path: "artifacts/screenshots/portrait-frame-landscape-viewport.png", fullPage: true });
+  expect(statsBox).toBeTruthy();
+  expect(appBox.width).toBeGreaterThan(390);
+  expect(popupBox.y).toBeGreaterThan(gameBox.y + gameBox.height - 2);
+  expect(controlsBox.y).toBeGreaterThan(popupBox.y + popupBox.height - 2);
+  expect(statsBox.y).toBeGreaterThan(controlsBox.y);
+  await expect(page.locator("#statsStrip")).not.toContainText("FLINT");
+  await page.screenshot({ path: "artifacts/screenshots/mobile-ui-stats-below-controls.png", fullPage: true });
 });

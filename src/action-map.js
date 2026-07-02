@@ -24,7 +24,8 @@ OTZI.actionMap = {
       usePressed: pressed.use,
       menuPressed: pressed.menu,
       debugPressed: pressed.debug,
-      mapPressed: pressed.map
+      mapPressed: pressed.map,
+      inventoryPressed: pressed.inventory
     };
   }
 };

@@ -8,6 +8,7 @@ OTZI.game = {
   fps: 0,
   debug: false,
   minimap: false,
+  inventoryOpen: false,
   menuOpen: false,
   setSeed(seed) {
     this.seed = seed || OTZI.CFG.defaultSeed;
@@ -24,12 +25,19 @@ OTZI.game = {
     if (actions.debugPressed) OTZI.debug.toggle();
     if (actions.mapPressed) {
       this.minimap = !this.minimap;
+      if (this.minimap) this.inventoryOpen = false;
       OTZI.dialogue.toast(this.minimap ? "Trail map open" : "Trail map closed");
+    }
+    if (actions.inventoryPressed) {
+      this.inventoryOpen = !this.inventoryOpen;
+      if (this.inventoryOpen) this.minimap = false;
+      OTZI.dialogue.toast(this.inventoryOpen ? "Pack open" : "Pack closed");
     }
     if (actions.menuPressed) {
       this.menuOpen = !this.menuOpen;
       OTZI.input.clearAll();
       if (this.menuOpen) this.minimap = false;
+      if (this.menuOpen) this.inventoryOpen = false;
       OTZI.dialogue.toast(this.menuOpen ? "Craft/Menu opened" : "Craft/Menu closed");
     }
     if (actions.usePressed) {
