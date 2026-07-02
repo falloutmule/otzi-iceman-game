@@ -31,6 +31,9 @@ test("otzi milestone 1 smoke", async ({ page }) => {
   await page.goto(`${baseUrl}/dist/index.html`);
   await expect(page.locator("#worldCanvas")).toBeVisible();
   await page.getByRole("button", { name: /start/i }).click();
+  if (await page.locator("#welcomePanel").isVisible()) {
+    await page.locator("#welcomeOkBtn").click();
+  }
 
   const before = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   await page.keyboard.down("ArrowRight");

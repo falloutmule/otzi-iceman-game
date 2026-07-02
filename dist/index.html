@@ -9,7 +9,7 @@
 * { box-sizing: border-box; }
 html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#050706; color:var(--ink); font:14px/1.4 system-ui,-apple-system,Segoe UI,sans-serif; }
 body { overscroll-behavior:none; }
-#app { position:fixed; inset:0; width:100vw; height:100dvh; max-width:none; transform:none; padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left); display:grid; grid-template-rows:minmax(0,1fr) auto auto auto; grid-template-areas:"game" "popupbar" "controls" "stats"; touch-action:none; user-select:none; -webkit-user-select:none; background:#080b0a; }
+#app { position:fixed; inset:0; width:100vw; height:100dvh; max-width:none; transform:none; padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left); display:grid; grid-template-rows:minmax(0,1fr) auto auto auto auto; grid-template-areas:"game" "objective" "popupbar" "controls" "stats"; touch-action:none; user-select:none; -webkit-user-select:none; background:#080b0a; }
 #worldCanvas { position:absolute; inset:0; display:block; width:100%; height:100%; min-height:0; image-rendering:pixelated; background:#102016; }
 #uiRoot { display:contents; pointer-events:none; }
 button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-radius:8px; background:#1d251f; color:var(--ink); font-weight:800; min-width:44px; min-height:44px; }
@@ -19,6 +19,11 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 .start-panel h1 { margin:0; font-size:clamp(28px,8vw,52px); letter-spacing:0; }
 .start-panel p { margin:0; color:var(--muted); }
 #startBtn { padding:12px 18px; background:#513d1e; border-color:#a88345; }
+.objective-bar { grid-area:objective; width:100%; min-width:0; display:grid; grid-template-columns:auto minmax(0,1fr); gap:8px; padding:7px 10px; border-top:1px solid rgba(243,234,215,.12); border-bottom:1px solid rgba(0,0,0,.42); background:linear-gradient(180deg,#0e140f,#0a0f0c); pointer-events:none; }
+.objective-tag { align-self:start; padding:4px 6px; border:1px solid rgba(231,189,108,.34); border-radius:8px; color:#f0c666; background:rgba(30,21,12,.45); font:900 10px ui-monospace,Consolas,monospace; white-space:nowrap; }
+.objective-copy { min-width:0; display:grid; gap:1px; }
+.objective-copy strong { color:#f4ebd8; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.objective-copy span { color:#d5c9b4; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .popup-bar { grid-area:popupbar; width:100%; min-width:0; display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:8px 10px; border-top:1px solid rgba(243,234,215,.16); border-bottom:1px solid rgba(0,0,0,.48); background:linear-gradient(180deg,#101711,#0b110d); pointer-events:auto; }
 .popup-bar button { height:44px; background:#142820; border-color:rgba(143,192,169,.5); }
 .stats-strip { grid-area:stats; width:100%; min-width:0; min-height:42px; display:grid; grid-template-columns:auto auto auto auto minmax(0,1fr) 44px; align-items:center; gap:6px; padding:6px 8px max(6px,env(safe-area-inset-bottom)); border-top:1px solid rgba(243,234,215,.14); background:#070a08; pointer-events:auto; }
@@ -26,9 +31,14 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 .status-line { min-width:0; color:#ffe3a5; font-weight:800; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 #debugBtn { width:46px; }
 .debug-panel { grid-area:stats; align-self:start; justify-self:stretch; margin:3px 56px 0 8px; padding:5px 8px; border:1px solid rgba(231,189,108,.35); border-radius:8px; background:rgba(0,0,0,.78); color:#ffe6a8; font:10px ui-monospace,Consolas,monospace; pointer-events:none; z-index:6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.area-card { position:absolute; left:8px; top:8px; width:min(220px,calc(100vw - 24px)); padding:8px 10px; border:1px solid rgba(231,189,108,.46); border-radius:8px; background:rgba(0,0,0,.68); box-shadow:0 10px 30px rgba(0,0,0,.25); z-index:4; }
+.area-card[hidden] { display:none; }
+.area-card p { margin:0; color:#f0e3c3; font-size:11px; }
 .minimap-panel { position:absolute; right:8px; top:56px; width:136px; padding:8px; border:1px solid rgba(143,192,169,.45); border-radius:8px; background:rgba(5,12,9,.86); box-shadow:0 10px 30px rgba(0,0,0,.32); pointer-events:none; z-index:3; }
 .minimap-panel[hidden] { display:none; }
 .minimap-panel canvas { display:block; width:120px; height:120px; border:1px solid rgba(243,234,215,.16); image-rendering:pixelated; }
+.map-legend { margin-top:6px; display:grid; gap:3px; color:#d9d1bd; font:700 10px ui-monospace,Consolas,monospace; }
+.map-legend div { display:grid; grid-template-columns:16px minmax(0,1fr); gap:6px; }
 .inventory-panel { position:absolute; left:8px; top:56px; width:min(180px,calc(100vw - 18px)); padding:8px; border:1px solid rgba(143,192,169,.45); border-radius:8px; background:rgba(5,12,9,.86); box-shadow:0 10px 30px rgba(0,0,0,.32); pointer-events:none; z-index:3; }
 .inventory-panel[hidden] { display:none; }
 .inventory-panel dl { margin:0; display:grid; gap:4px; }
@@ -38,6 +48,7 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 .panel-title { margin:0 0 5px; color:#e7bd6c; font-size:11px; font-weight:900; letter-spacing:.06em; }
 .menu-panel { position:fixed; left:50%; top:45%; transform:translate(-50%,-50%); width:min(340px,calc(100vw - 28px)); padding:14px; border:1px solid rgba(231,189,108,.5); border-radius:8px; background:rgba(12,15,13,.94); box-shadow:0 20px 70px rgba(0,0,0,.55); pointer-events:auto; z-index:10; }
 .menu-panel[hidden] { display:none; }
+.welcome-panel { top:40%; }
 .menu-panel p { margin:4px 0 12px; color:var(--ink); }
 .menu-panel dl { margin:0 0 12px; display:grid; gap:6px; }
 .menu-panel dl div { display:flex; justify-content:space-between; gap:16px; border-bottom:1px solid rgba(243,234,215,.1); padding-bottom:4px; }
@@ -55,6 +66,10 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 #useBtn { grid-column:span 2; background:#513d1e; border-color:#a88345; }
 @media (min-width: 900px) and (pointer: fine) { #app { left:50%; right:auto; transform:translateX(-50%); width:min(100vw,520px); box-shadow:0 0 0 1px rgba(243,234,215,.08), 0 0 42px rgba(0,0,0,.55); } .controls { min-height:188px; } .stick-zone { left:calc(50% - 250px); } .action-cluster { right:calc(50% - 250px); } }
 @media (orientation: landscape) {
+  .objective-bar { padding:4px 8px; gap:6px; }
+  .objective-tag { font-size:9px; padding:3px 4px; }
+  .objective-copy strong { font-size:10px; }
+  .objective-copy span { font-size:9px; }
   .stats-strip { min-height:38px; grid-template-columns:auto auto auto auto minmax(0,1fr) 40px; gap:4px; padding:4px 6px max(4px,env(safe-area-inset-bottom)); overflow:hidden; }
   .stat-chip { font-size:9px; padding:3px 4px; }
   .status-line { display:none; }
@@ -89,8 +104,8 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 var OTZI = window.OTZI || (window.OTZI = {});
 
 OTZI.CFG = {
-  engineVersion: "otzi-content-loop-0.3.0",
-  saveVersion: 5,
+  engineVersion: "otzi-discoverability-0.4.0",
+  saveVersion: 6,
   worldgenVersion: 3,
   saveKey: "otzi_content_loop_save_v5",
   defaultSeed: "otzi-m1",
@@ -127,9 +142,20 @@ OTZI.dom = {
     this.ctx = this.canvas.getContext("2d", { alpha: false });
     this.uiRoot.innerHTML = `
       <section id="gameShell" class="game-shell" aria-label="Game viewport">
+        <div id="areaCard" class="area-card" hidden aria-live="polite">
+          <div class="panel-title" id="areaCardTitle">Village Camp</div>
+          <p id="areaCardText">Flint Scar lies one screen east.</p>
+        </div>
         <div id="minimapPanel" class="minimap-panel" hidden aria-label="Trail map preview">
           <div class="panel-title" id="minimapTitle">TRAIL MAP</div>
           <canvas id="minimapCanvas" width="120" height="120" aria-hidden="true"></canvas>
+          <div id="minimapLegend" class="map-legend" aria-label="Map legend">
+            <div><span>V</span><span>Village</span></div>
+            <div><span>C</span><span>Flint Scar</span></div>
+            <div><span>A</span><span>Animal Clearing</span></div>
+            <div><span>@</span><span>You</span></div>
+            <div><span>?</span><span>Unknown</span></div>
+          </div>
         </div>
         <div id="inventoryPanel" class="inventory-panel" hidden aria-label="Pack inventory">
           <div class="panel-title">PACK</div>
@@ -148,6 +174,20 @@ OTZI.dom = {
           <h1>The Legend of &Ouml;tzi the Iceman</h1>
           <p>Canvas 2D survival adventure engine shell.</p>
           <button id="startBtn" type="button">Start / Audio Unlock</button>
+        </div>
+        <div id="welcomePanel" class="menu-panel welcome-panel" hidden role="dialog" aria-modal="false" aria-label="Welcome objective">
+          <div class="panel-title">Village Camp</div>
+          <p>&Ouml;tzi needs better stone tools.</p>
+          <p>Travel east from the village to find Flint Scar.</p>
+          <p>Gather food and supplies as you explore.</p>
+          <button id="welcomeOkBtn" type="button">OK</button>
+        </div>
+      </section>
+      <section id="objectiveBar" class="objective-bar" aria-label="Current objective">
+        <div class="objective-tag">OBJECTIVE</div>
+        <div class="objective-copy">
+          <strong id="objectiveTitle">Find Flint Scar</strong>
+          <span id="objectiveText">From the village, travel east to Flint Scar.</span>
         </div>
       </section>
       <section id="popupBar" class="popup-bar" aria-label="Map and inventory buttons">
@@ -207,8 +247,13 @@ OTZI.dom = {
     `;
     this.startPanel = document.getElementById("startPanel");
     this.startBtn = document.getElementById("startBtn");
+    this.welcomePanel = document.getElementById("welcomePanel");
+    this.welcomeOkBtn = document.getElementById("welcomeOkBtn");
     this.debugBtn = document.getElementById("debugBtn");
     this.debugPanel = document.getElementById("debugPanel");
+    this.objectiveBar = document.getElementById("objectiveBar");
+    this.objectiveTitle = document.getElementById("objectiveTitle");
+    this.objectiveText = document.getElementById("objectiveText");
     this.popupBar = document.getElementById("popupBar");
     this.statsStrip = document.getElementById("statsStrip");
     this.healthChip = document.getElementById("healthChip");
@@ -219,8 +264,12 @@ OTZI.dom = {
     this.gameShell.prepend(this.canvas);
     this.minimapPanel = document.getElementById("minimapPanel");
     this.minimapTitle = document.getElementById("minimapTitle");
+    this.minimapLegend = document.getElementById("minimapLegend");
     this.minimapCanvas = document.getElementById("minimapCanvas");
     this.minimapCtx = this.minimapCanvas.getContext("2d", { alpha: false });
+    this.areaCard = document.getElementById("areaCard");
+    this.areaCardTitle = document.getElementById("areaCardTitle");
+    this.areaCardText = document.getElementById("areaCardText");
     this.inventoryPanel = document.getElementById("inventoryPanel");
     this.invFlint = document.getElementById("invFlint");
     this.invStick = document.getElementById("invStick");
@@ -1455,6 +1504,121 @@ OTZI.facts = {
 };
 
 
+/* MODULE: objectives.js */
+/* FUTURE MODULE: OBJECTIVES */
+var OTZI = window.OTZI || (window.OTZI = {});
+
+OTZI.objectives = {
+  current(game = OTZI.game) {
+    if (!game.dungeons.flint_scar.completed && (game.inventory.goodFlintCore || 0) < 1) {
+      if (game.scene === "dungeon") {
+        return {
+          id: "find_good_flint_core",
+          title: "Find the Good Flint Core",
+          text: "Explore Flint Scar and look for the marked good flint core."
+        };
+      }
+      return {
+        id: "find_flint_scar",
+        title: "Find Flint Scar",
+        text: "From the village, travel east to Flint Scar."
+      };
+    }
+    if ((game.inventory.goodFlintCore || 0) >= 1 && !OTZI.village.has("toolmaker")) {
+      return {
+        id: "return_to_village",
+        title: "Return to Village",
+        text: "Bring the good flint core back to the village."
+      };
+    }
+    return {
+      id: "explore",
+      title: "Explore",
+      text: "Gather supplies, fill in the map, and look for animal clearings."
+    };
+  },
+  screenCard(area, game = OTZI.game) {
+    if (!area) return { title: "", text: "" };
+    if (game.scene === "dungeon") {
+      return area.kind === "flint_chamber" ? {
+        title: "Flint Chamber",
+        text: "The good flint core should be here."
+      } : area.kind === "narrow_passage" ? {
+        title: "Narrow Passage",
+        text: "Press deeper into Flint Scar."
+      } : area.kind === "loose_stone_hazard" ? {
+        title: "Loose Stones",
+        text: "Watch your footing. This patch drains stamina."
+      } : area.kind === "entrance_room" ? {
+        title: "Flint Scar",
+        text: "Explore east and look for the marked core."
+      } : {
+        title: "Flint Scar Side Room",
+        text: "Search the cave and keep moving."
+      };
+    }
+    const animalHint = this.adjacentAnimalHint(game.world, area.gridX, area.gridY, game.seed);
+    const cards = {
+      village_home: {
+        title: "Village Camp",
+        text: "Home base. Flint Scar lies one screen east."
+      },
+      easy_gather: {
+        title: "Easy Gathering",
+        text: animalHint || "Gather food and materials before heading farther out."
+      },
+      forest_trail: {
+        title: "Forest Trail",
+        text: animalHint || "Keep moving. The trail connects the nearby screens."
+      },
+      dense_forest: {
+        title: "Dense Forest",
+        text: animalHint || "Thick trees slow visibility. Watch for resources and tracks."
+      },
+      animal_clearing: {
+        title: "Animal Clearing",
+        text: "Small game lives here. Approach slowly and use to catch."
+      },
+      flint_scar_entrance: {
+        title: "Flint Scar Entrance",
+        text: "The cave mouth is here. Use near the scar to enter."
+      },
+      river_edge_placeholder: {
+        title: "River Edge",
+        text: "A cold edge of the world. Crossings are not ready yet."
+      },
+      rival_warning_placeholder: {
+        title: "Rival Signs",
+        text: "Strange signs mark this ground. That threat comes later."
+      },
+      high_pass_locked_placeholder: {
+        title: "High Pass Locked",
+        text: "Snow closes the high pass for now."
+      },
+      quiet_empty: {
+        title: "Quiet Forest",
+        text: animalHint || "A calm travel screen with little to gather."
+      }
+    };
+    return cards[area.kind] || { title: "Forest", text: animalHint || "Explore and gather supplies." };
+  },
+  adjacentAnimalHint(world, x, y, seed) {
+    const neighbors = [
+      { dir: "north", x, y: y - 1 },
+      { dir: "south", x, y: y + 1 },
+      { dir: "west", x: x - 1, y },
+      { dir: "east", x: x + 1, y }
+    ];
+    for (const next of neighbors) {
+      if (next.x < 0 || next.y < 0 || next.x >= world.gridW || next.y >= world.gridH) continue;
+      const screen = OTZI.worldGrid.getOverworldScreen(world, seed, next.x, next.y);
+      if (screen.kind === "animal_clearing") return `Hare tracks lead ${next.dir}.`;
+    }
+    return "";
+  }
+};
+
+
 /* MODULE: render-world.js */
 /* SECTION 09B: RENDER WORLD */
 var OTZI = window.OTZI || (window.OTZI = {});
@@ -1684,18 +1848,30 @@ OTZI.renderWorld = {
     const y = Math.floor(p.y);
     ctx.save();
     ctx.fillStyle = "rgba(0,0,0,.4)";
-    ctx.fillRect(x - 11, y + 11, 22, 4);
-    ctx.fillStyle = "#2a2318";
-    ctx.strokeStyle = "#d8ccb0";
-    ctx.lineWidth = 2;
+    const isFlintScar = entrance.dungeonId === "flint_scar";
+    const width = isFlintScar ? 34 : 22;
+    const height = isFlintScar ? 18 : 12;
+    ctx.fillRect(x - width / 2, y + 14, width, 5);
+    ctx.fillStyle = isFlintScar ? "#3a3c41" : "#2a2318";
+    ctx.strokeStyle = isFlintScar ? "#efe0ae" : "#d8ccb0";
+    ctx.lineWidth = isFlintScar ? 3 : 2;
     ctx.beginPath();
-    ctx.moveTo(x - 10, y + 10);
-    ctx.lineTo(x - 10, y - 2);
-    ctx.quadraticCurveTo(x, y - 15, x + 10, y - 2);
-    ctx.lineTo(x + 10, y + 10);
+    ctx.moveTo(x - width / 2, y + 12);
+    ctx.lineTo(x - width / 2 + 2, y - 4);
+    ctx.quadraticCurveTo(x, y - (isFlintScar ? 24 : 15), x + width / 2 - 2, y - 4);
+    ctx.lineTo(x + width / 2, y + 12);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
+    if (isFlintScar) {
+      ctx.fillStyle = "rgba(0,0,0,.72)";
+      ctx.fillRect(x - 28, y - 42, 56, 14);
+      ctx.fillStyle = "#f2ddb2";
+      ctx.font = "800 10px ui-monospace,Consolas,monospace";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
+      ctx.fillText("FLINT SCAR", x, y - 31);
+    }
     if (highlighted) this.drawResourceFocus(ctx, entrance.label.toUpperCase(), x, y);
     ctx.restore();
   },
@@ -1869,6 +2045,9 @@ OTZI.renderUi = {
     OTZI.dom.staminaChip.textContent = `STAM ${Math.round(game.player.stamina)}`;
     OTZI.dom.hungerChip.textContent = `HUNGER ${Math.round(game.player.hunger)}`;
     OTZI.dom.warmthChip.textContent = `WARMTH ${Math.round(game.player.warmth)}`;
+    const objective = OTZI.objectives.current(game);
+    OTZI.dom.objectiveTitle.textContent = objective.title;
+    OTZI.dom.objectiveText.textContent = objective.text;
     if (!OTZI.dialogue.hasActiveToast()) {
       OTZI.dialogue.message = game.transition.active ? `Traveling ${game.transition.direction}` :
         game.focusedEntity?.kind === "hare" ? "USE: catch hare" :
@@ -1876,6 +2055,12 @@ OTZI.renderUi = {
         game.focusedEntrance ? `USE: enter ${game.focusedEntrance.label}` :
         game.focusedResource ? `USE: gather ${game.focusedResource.resource}` : "No resource nearby";
       OTZI.dom.statusLine.textContent = OTZI.dialogue.message;
+    }
+    OTZI.dom.welcomePanel.hidden = !game.welcomeOpen;
+    OTZI.dom.areaCard.hidden = !game.isAreaCardVisible();
+    if (game.isAreaCardVisible() && game.areaCard) {
+      OTZI.dom.areaCardTitle.textContent = game.areaCard.title;
+      OTZI.dom.areaCardText.textContent = game.areaCard.text;
     }
     OTZI.dom.minimapPanel.hidden = !game.minimap;
     if (game.minimap) this.drawMinimap();
@@ -2075,12 +2260,15 @@ OTZI.save = {
         returnScreen: g.returnScreen
       } : null,
       dungeons: g.dungeons,
+      ui: {
+        welcomeSeen: !!g.welcomeSeen
+      },
       village: g.village,
       facts: g.facts
     };
   },
   apply(data) {
-    if (!data || data.version !== OTZI.CFG.saveVersion) throw new Error("Unsupported save version");
+    if (!data || (data.version !== 5 && data.version !== OTZI.CFG.saveVersion)) throw new Error("Unsupported save version");
     const g = OTZI.game;
     g.setSeed(data.seed || OTZI.CFG.defaultSeed);
     if (data.overworld?.discovered) {
@@ -2107,6 +2295,10 @@ OTZI.save = {
       ...g.dungeons,
       ...(data.dungeons || {})
     };
+    g.welcomeSeen = !!data.ui?.welcomeSeen;
+    g.welcomeOpen = false;
+    g.areaCard = null;
+    g.areaCardUntil = 0;
     g.village = { ...g.village, ...(data.village || {}) };
     g.facts = { ...g.facts, ...(data.facts || {}) };
     g.updateFocusState();
@@ -2138,7 +2330,9 @@ OTZI.save = {
     OTZI.game.inventoryOpen = false;
     OTZI.game.menuOpen = false;
     OTZI.game.resetConfirm = false;
+    OTZI.game.welcomeOpen = false;
     OTZI.input?.clearAll?.();
+    if (OTZI.game.running) OTZI.game.openWelcome();
     OTZI.dialogue.toast("Save reset");
     return true;
   },
@@ -2186,7 +2380,10 @@ OTZI.installTestHooks = function installTestHooks() {
         minimap: g.minimap,
         inventoryOpen: g.inventoryOpen,
         menuOpen: g.menuOpen,
+        welcomeOpen: g.welcomeOpen,
         status: OTZI.dialogue.message,
+        objective: OTZI.objectives.current(g),
+        areaCard: g.areaCard,
         world: {
           id: g.world.id,
           currentX: g.world.currentX,
@@ -2444,6 +2641,20 @@ OTZI.installTestHooks = function installTestHooks() {
     importSave(str) { OTZI.save.importString(str); },
     saveNow() { return OTZI.save.save(); },
     resetSave() { return OTZI.save.clear(); },
+    dismissWelcome() { return OTZI.game.dismissWelcome(true); },
+    readObjective() { return OTZI.objectives.current(OTZI.game); },
+    teleportToAnimalHintScreen() {
+      const world = OTZI.game.world;
+      for (let y = 0; y < world.gridH; y++) {
+        for (let x = 0; x < world.gridW; x++) {
+          const hint = OTZI.objectives.adjacentAnimalHint(world, x, y, OTZI.game.seed);
+          if (!hint) continue;
+          OTZI.game.enterOverworldScreen(x, y);
+          return { snapshot: this.snapshot(), hint };
+        }
+      }
+      return null;
+    },
     toggleDebug() { OTZI.debug.toggle(); }
   };
 };
@@ -2495,6 +2706,10 @@ OTZI.game = {
   returnScreen: null,
   factOpen: false,
   activeFactId: null,
+  welcomeSeen: false,
+  welcomeOpen: false,
+  areaCard: null,
+  areaCardUntil: 0,
   setSeed(seed) {
     this.seed = seed || OTZI.CFG.defaultSeed;
     this.player = OTZI.entities.makePlayer();
@@ -2517,6 +2732,10 @@ OTZI.game = {
     this.focusedEntity = null;
     this.factOpen = false;
     this.activeFactId = null;
+    this.welcomeSeen = false;
+    this.welcomeOpen = false;
+    this.areaCard = null;
+    this.areaCardUntil = 0;
     this.transition = {
       active: false,
       kind: "screen_slide",
@@ -2681,10 +2900,35 @@ OTZI.game = {
     this.updateFocusState();
   },
   onAreaEntered() {
+    this.showAreaCard();
     if (this.scene === "overworld" && this.currentScreen?.kind === "village_home") {
       this.village.visitedHome = true;
       this.tryUnlockToolmaker();
     }
+  },
+  currentObjective() {
+    return OTZI.objectives.current(this);
+  },
+  showAreaCard(seconds = 2) {
+    const card = OTZI.objectives.screenCard(this.currentArea, this);
+    this.areaCard = card;
+    this.areaCardUntil = performance.now() + seconds * 1000;
+  },
+  dismissAreaCard() {
+    this.areaCardUntil = 0;
+  },
+  isAreaCardVisible() {
+    return !!this.areaCard && performance.now() <= this.areaCardUntil;
+  },
+  openWelcome() {
+    this.welcomeOpen = true;
+    OTZI.input.clearAll();
+    return true;
+  },
+  dismissWelcome(markSeen = true) {
+    this.welcomeOpen = false;
+    if (markSeen) this.welcomeSeen = true;
+    return true;
   },
   tryUnlockToolmaker() {
     if (!this.dungeons.flint_scar.completed) return false;
@@ -2913,7 +3157,7 @@ OTZI.game = {
       this.updateTransition(dt);
       return;
     }
-    if (this.factOpen) {
+    if (this.factOpen || this.welcomeOpen) {
       actions.moveX = 0;
       actions.moveY = 0;
       actions.sprint = false;
@@ -2942,7 +3186,7 @@ OTZI.game = {
       OTZI.dialogue.toast("Dodge/Sprint burst");
       OTZI.audio.blip(330, 0.035);
     }
-    if (this.menuOpen) {
+    if (this.menuOpen || this.welcomeOpen) {
       actions.moveX = 0;
       actions.moveY = 0;
       actions.sprint = false;
@@ -2958,6 +3202,7 @@ OTZI.game = {
     else this.maybeTransitionScreen();
     OTZI.camera.update();
     this.updateFocusState();
+    if (!this.isAreaCardVisible()) this.areaCard = null;
   }
 };
 
@@ -3004,6 +3249,10 @@ OTZI.game = {
       await OTZI.audio.unlock();
       OTZI.dom.startPanel.hidden = true;
       OTZI.game.running = true;
+      if (!OTZI.game.welcomeSeen) OTZI.game.openWelcome();
+    });
+    OTZI.dom.welcomeOkBtn.addEventListener("click", () => {
+      OTZI.game.dismissWelcome(true);
     });
     OTZI.dom.menuCloseBtn.addEventListener("click", () => {
       OTZI.game.menuOpen = false;
@@ -3044,6 +3293,6 @@ OTZI.game = {
 })();
 
   </script>
-  <!-- build: 2026-07-02T11:27:02.659Z modules:29 -->
+  <!-- build: 2026-07-02T15:04:35.564Z modules:30 -->
 </body>
 </html>

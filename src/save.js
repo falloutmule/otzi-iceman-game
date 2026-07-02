@@ -28,12 +28,15 @@ OTZI.save = {
         returnScreen: g.returnScreen
       } : null,
       dungeons: g.dungeons,
+      ui: {
+        welcomeSeen: !!g.welcomeSeen
+      },
       village: g.village,
       facts: g.facts
     };
   },
   apply(data) {
-    if (!data || data.version !== OTZI.CFG.saveVersion) throw new Error("Unsupported save version");
+    if (!data || (data.version !== 5 && data.version !== OTZI.CFG.saveVersion)) throw new Error("Unsupported save version");
     const g = OTZI.game;
     g.setSeed(data.seed || OTZI.CFG.defaultSeed);
     if (data.overworld?.discovered) {
@@ -60,6 +63,10 @@ OTZI.save = {
       ...g.dungeons,
       ...(data.dungeons || {})
     };
+    g.welcomeSeen = !!data.ui?.welcomeSeen;
+    g.welcomeOpen = false;
+    g.areaCard = null;
+    g.areaCardUntil = 0;
     g.village = { ...g.village, ...(data.village || {}) };
     g.facts = { ...g.facts, ...(data.facts || {}) };
     g.updateFocusState();
@@ -91,7 +98,9 @@ OTZI.save = {
     OTZI.game.inventoryOpen = false;
     OTZI.game.menuOpen = false;
     OTZI.game.resetConfirm = false;
+    OTZI.game.welcomeOpen = false;
     OTZI.input?.clearAll?.();
+    if (OTZI.game.running) OTZI.game.openWelcome();
     OTZI.dialogue.toast("Save reset");
     return true;
   },

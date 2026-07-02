@@ -2,8 +2,8 @@
 var OTZI = window.OTZI || (window.OTZI = {});
 
 OTZI.CFG = {
-  engineVersion: "otzi-content-loop-0.3.0",
-  saveVersion: 5,
+  engineVersion: "otzi-discoverability-0.4.0",
+  saveVersion: 6,
   worldgenVersion: 3,
   saveKey: "otzi_content_loop_save_v5",
   defaultSeed: "otzi-m1",

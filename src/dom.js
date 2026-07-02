@@ -9,9 +9,20 @@ OTZI.dom = {
     this.ctx = this.canvas.getContext("2d", { alpha: false });
     this.uiRoot.innerHTML = `
       <section id="gameShell" class="game-shell" aria-label="Game viewport">
+        <div id="areaCard" class="area-card" hidden aria-live="polite">
+          <div class="panel-title" id="areaCardTitle">Village Camp</div>
+          <p id="areaCardText">Flint Scar lies one screen east.</p>
+        </div>
         <div id="minimapPanel" class="minimap-panel" hidden aria-label="Trail map preview">
           <div class="panel-title" id="minimapTitle">TRAIL MAP</div>
           <canvas id="minimapCanvas" width="120" height="120" aria-hidden="true"></canvas>
+          <div id="minimapLegend" class="map-legend" aria-label="Map legend">
+            <div><span>V</span><span>Village</span></div>
+            <div><span>C</span><span>Flint Scar</span></div>
+            <div><span>A</span><span>Animal Clearing</span></div>
+            <div><span>@</span><span>You</span></div>
+            <div><span>?</span><span>Unknown</span></div>
+          </div>
         </div>
         <div id="inventoryPanel" class="inventory-panel" hidden aria-label="Pack inventory">
           <div class="panel-title">PACK</div>
@@ -30,6 +41,20 @@ OTZI.dom = {
           <h1>The Legend of &Ouml;tzi the Iceman</h1>
           <p>Canvas 2D survival adventure engine shell.</p>
           <button id="startBtn" type="button">Start / Audio Unlock</button>
+        </div>
+        <div id="welcomePanel" class="menu-panel welcome-panel" hidden role="dialog" aria-modal="false" aria-label="Welcome objective">
+          <div class="panel-title">Village Camp</div>
+          <p>&Ouml;tzi needs better stone tools.</p>
+          <p>Travel east from the village to find Flint Scar.</p>
+          <p>Gather food and supplies as you explore.</p>
+          <button id="welcomeOkBtn" type="button">OK</button>
+        </div>
+      </section>
+      <section id="objectiveBar" class="objective-bar" aria-label="Current objective">
+        <div class="objective-tag">OBJECTIVE</div>
+        <div class="objective-copy">
+          <strong id="objectiveTitle">Find Flint Scar</strong>
+          <span id="objectiveText">From the village, travel east to Flint Scar.</span>
         </div>
       </section>
       <section id="popupBar" class="popup-bar" aria-label="Map and inventory buttons">
@@ -89,8 +114,13 @@ OTZI.dom = {
     `;
     this.startPanel = document.getElementById("startPanel");
     this.startBtn = document.getElementById("startBtn");
+    this.welcomePanel = document.getElementById("welcomePanel");
+    this.welcomeOkBtn = document.getElementById("welcomeOkBtn");
     this.debugBtn = document.getElementById("debugBtn");
     this.debugPanel = document.getElementById("debugPanel");
+    this.objectiveBar = document.getElementById("objectiveBar");
+    this.objectiveTitle = document.getElementById("objectiveTitle");
+    this.objectiveText = document.getElementById("objectiveText");
     this.popupBar = document.getElementById("popupBar");
     this.statsStrip = document.getElementById("statsStrip");
     this.healthChip = document.getElementById("healthChip");
@@ -101,8 +131,12 @@ OTZI.dom = {
     this.gameShell.prepend(this.canvas);
     this.minimapPanel = document.getElementById("minimapPanel");
     this.minimapTitle = document.getElementById("minimapTitle");
+    this.minimapLegend = document.getElementById("minimapLegend");
     this.minimapCanvas = document.getElementById("minimapCanvas");
     this.minimapCtx = this.minimapCanvas.getContext("2d", { alpha: false });
+    this.areaCard = document.getElementById("areaCard");
+    this.areaCardTitle = document.getElementById("areaCardTitle");
+    this.areaCardText = document.getElementById("areaCardText");
     this.inventoryPanel = document.getElementById("inventoryPanel");
     this.invFlint = document.getElementById("invFlint");
     this.invStick = document.getElementById("invStick");

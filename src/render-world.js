@@ -226,18 +226,30 @@ OTZI.renderWorld = {
     const y = Math.floor(p.y);
     ctx.save();
     ctx.fillStyle = "rgba(0,0,0,.4)";
-    ctx.fillRect(x - 11, y + 11, 22, 4);
-    ctx.fillStyle = "#2a2318";
-    ctx.strokeStyle = "#d8ccb0";
-    ctx.lineWidth = 2;
+    const isFlintScar = entrance.dungeonId === "flint_scar";
+    const width = isFlintScar ? 34 : 22;
+    const height = isFlintScar ? 18 : 12;
+    ctx.fillRect(x - width / 2, y + 14, width, 5);
+    ctx.fillStyle = isFlintScar ? "#3a3c41" : "#2a2318";
+    ctx.strokeStyle = isFlintScar ? "#efe0ae" : "#d8ccb0";
+    ctx.lineWidth = isFlintScar ? 3 : 2;
     ctx.beginPath();
-    ctx.moveTo(x - 10, y + 10);
-    ctx.lineTo(x - 10, y - 2);
-    ctx.quadraticCurveTo(x, y - 15, x + 10, y - 2);
-    ctx.lineTo(x + 10, y + 10);
+    ctx.moveTo(x - width / 2, y + 12);
+    ctx.lineTo(x - width / 2 + 2, y - 4);
+    ctx.quadraticCurveTo(x, y - (isFlintScar ? 24 : 15), x + width / 2 - 2, y - 4);
+    ctx.lineTo(x + width / 2, y + 12);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
+    if (isFlintScar) {
+      ctx.fillStyle = "rgba(0,0,0,.72)";
+      ctx.fillRect(x - 28, y - 42, 56, 14);
+      ctx.fillStyle = "#f2ddb2";
+      ctx.font = "800 10px ui-monospace,Consolas,monospace";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
+      ctx.fillText("FLINT SCAR", x, y - 31);
+    }
     if (highlighted) this.drawResourceFocus(ctx, entrance.label.toUpperCase(), x, y);
     ctx.restore();
   },

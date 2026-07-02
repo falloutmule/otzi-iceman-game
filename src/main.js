@@ -43,6 +43,10 @@ OTZI.game = {
   returnScreen: null,
   factOpen: false,
   activeFactId: null,
+  welcomeSeen: false,
+  welcomeOpen: false,
+  areaCard: null,
+  areaCardUntil: 0,
   setSeed(seed) {
     this.seed = seed || OTZI.CFG.defaultSeed;
     this.player = OTZI.entities.makePlayer();
@@ -65,6 +69,10 @@ OTZI.game = {
     this.focusedEntity = null;
     this.factOpen = false;
     this.activeFactId = null;
+    this.welcomeSeen = false;
+    this.welcomeOpen = false;
+    this.areaCard = null;
+    this.areaCardUntil = 0;
     this.transition = {
       active: false,
       kind: "screen_slide",
@@ -229,10 +237,35 @@ OTZI.game = {
     this.updateFocusState();
   },
   onAreaEntered() {
+    this.showAreaCard();
     if (this.scene === "overworld" && this.currentScreen?.kind === "village_home") {
       this.village.visitedHome = true;
       this.tryUnlockToolmaker();
     }
+  },
+  currentObjective() {
+    return OTZI.objectives.current(this);
+  },
+  showAreaCard(seconds = 2) {
+    const card = OTZI.objectives.screenCard(this.currentArea, this);
+    this.areaCard = card;
+    this.areaCardUntil = performance.now() + seconds * 1000;
+  },
+  dismissAreaCard() {
+    this.areaCardUntil = 0;
+  },
+  isAreaCardVisible() {
+    return !!this.areaCard && performance.now() <= this.areaCardUntil;
+  },
+  openWelcome() {
+    this.welcomeOpen = true;
+    OTZI.input.clearAll();
+    return true;
+  },
+  dismissWelcome(markSeen = true) {
+    this.welcomeOpen = false;
+    if (markSeen) this.welcomeSeen = true;
+    return true;
   },
   tryUnlockToolmaker() {
     if (!this.dungeons.flint_scar.completed) return false;
@@ -461,7 +494,7 @@ OTZI.game = {
       this.updateTransition(dt);
       return;
     }
-    if (this.factOpen) {
+    if (this.factOpen || this.welcomeOpen) {
       actions.moveX = 0;
       actions.moveY = 0;
       actions.sprint = false;
@@ -490,7 +523,7 @@ OTZI.game = {
       OTZI.dialogue.toast("Dodge/Sprint burst");
       OTZI.audio.blip(330, 0.035);
     }
-    if (this.menuOpen) {
+    if (this.menuOpen || this.welcomeOpen) {
       actions.moveX = 0;
       actions.moveY = 0;
       actions.sprint = false;
@@ -506,6 +539,7 @@ OTZI.game = {
     else this.maybeTransitionScreen();
     OTZI.camera.update();
     this.updateFocusState();
+    if (!this.isAreaCardVisible()) this.areaCard = null;
   }
 };
 
@@ -552,6 +586,10 @@ OTZI.game = {
       await OTZI.audio.unlock();
       OTZI.dom.startPanel.hidden = true;
       OTZI.game.running = true;
+      if (!OTZI.game.welcomeSeen) OTZI.game.openWelcome();
+    });
+    OTZI.dom.welcomeOkBtn.addEventListener("click", () => {
+      OTZI.game.dismissWelcome(true);
     });
     OTZI.dom.menuCloseBtn.addEventListener("click", () => {
       OTZI.game.menuOpen = false;

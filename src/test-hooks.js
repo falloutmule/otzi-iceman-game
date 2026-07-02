@@ -32,7 +32,10 @@ OTZI.installTestHooks = function installTestHooks() {
         minimap: g.minimap,
         inventoryOpen: g.inventoryOpen,
         menuOpen: g.menuOpen,
+        welcomeOpen: g.welcomeOpen,
         status: OTZI.dialogue.message,
+        objective: OTZI.objectives.current(g),
+        areaCard: g.areaCard,
         world: {
           id: g.world.id,
           currentX: g.world.currentX,
@@ -290,6 +293,20 @@ OTZI.installTestHooks = function installTestHooks() {
     importSave(str) { OTZI.save.importString(str); },
     saveNow() { return OTZI.save.save(); },
     resetSave() { return OTZI.save.clear(); },
+    dismissWelcome() { return OTZI.game.dismissWelcome(true); },
+    readObjective() { return OTZI.objectives.current(OTZI.game); },
+    teleportToAnimalHintScreen() {
+      const world = OTZI.game.world;
+      for (let y = 0; y < world.gridH; y++) {
+        for (let x = 0; x < world.gridW; x++) {
+          const hint = OTZI.objectives.adjacentAnimalHint(world, x, y, OTZI.game.seed);
+          if (!hint) continue;
+          OTZI.game.enterOverworldScreen(x, y);
+          return { snapshot: this.snapshot(), hint };
+        }
+      }
+      return null;
+    },
     toggleDebug() { OTZI.debug.toggle(); }
   };
 };

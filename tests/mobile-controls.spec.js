@@ -31,6 +31,9 @@ test("screen-grid mobile shell supports transitions, screen-local gather, and Fl
   await page.goto(`${baseUrl}/dist/index.html`);
   await expect(page.locator("#worldCanvas")).toBeVisible();
   await page.getByRole("button", { name: /start/i }).tap();
+  if (await page.locator("#welcomePanel").isVisible()) {
+    await page.locator("#welcomeOkBtn").tap();
+  }
   await expect(page.locator("#startPanel")).toBeHidden();
   await expect(page.locator("#gameShell")).toBeVisible();
   await expect(page.locator("#popupBar")).toBeVisible();
@@ -197,6 +200,9 @@ test("screen-grid mobile shell supports transitions, screen-local gather, and Fl
   expect(afterReset.world.currentScreenId).toBe("overworld_4_4");
   expect(afterReset.world.discoveredCount).toBe(1);
   expect(afterReset.dungeon.discoveredCount).toBe(0);
+  if (await page.locator("#welcomePanel").isVisible()) {
+    await page.locator("#welcomeOkBtn").tap();
+  }
 
   const beforeMove = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   const zone = await page.locator("#moveZone").boundingBox();
@@ -227,6 +233,9 @@ test("mobile shell uses full width and keeps ordered controls", async ({ page })
   await page.setViewportSize({ width: 412, height: 839 });
   await page.goto(`${baseUrl}/dist/index.html`);
   await expect(page.locator("#worldCanvas")).toBeVisible();
+  if (await page.locator("#welcomePanel").isVisible()) {
+    await page.locator("#welcomeOkBtn").tap();
+  }
   const appBox = await page.locator("#app").boundingBox();
   const gameBox = await page.locator("#gameShell").boundingBox();
   const popupBox = await page.locator("#popupBar").boundingBox();

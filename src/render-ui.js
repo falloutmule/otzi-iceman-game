@@ -8,6 +8,9 @@ OTZI.renderUi = {
     OTZI.dom.staminaChip.textContent = `STAM ${Math.round(game.player.stamina)}`;
     OTZI.dom.hungerChip.textContent = `HUNGER ${Math.round(game.player.hunger)}`;
     OTZI.dom.warmthChip.textContent = `WARMTH ${Math.round(game.player.warmth)}`;
+    const objective = OTZI.objectives.current(game);
+    OTZI.dom.objectiveTitle.textContent = objective.title;
+    OTZI.dom.objectiveText.textContent = objective.text;
     if (!OTZI.dialogue.hasActiveToast()) {
       OTZI.dialogue.message = game.transition.active ? `Traveling ${game.transition.direction}` :
         game.focusedEntity?.kind === "hare" ? "USE: catch hare" :
@@ -15,6 +18,12 @@ OTZI.renderUi = {
         game.focusedEntrance ? `USE: enter ${game.focusedEntrance.label}` :
         game.focusedResource ? `USE: gather ${game.focusedResource.resource}` : "No resource nearby";
       OTZI.dom.statusLine.textContent = OTZI.dialogue.message;
+    }
+    OTZI.dom.welcomePanel.hidden = !game.welcomeOpen;
+    OTZI.dom.areaCard.hidden = !game.isAreaCardVisible();
+    if (game.isAreaCardVisible() && game.areaCard) {
+      OTZI.dom.areaCardTitle.textContent = game.areaCard.title;
+      OTZI.dom.areaCardText.textContent = game.areaCard.text;
     }
     OTZI.dom.minimapPanel.hidden = !game.minimap;
     if (game.minimap) this.drawMinimap();

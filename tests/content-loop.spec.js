@@ -31,6 +31,9 @@ test("content loop adds screen kinds, hare catch, Flint Scar core, toolmaker unl
   await page.goto(`${baseUrl}/dist/index.html`);
   await expect(page.locator("#worldCanvas")).toBeVisible();
   await page.getByRole("button", { name: /start/i }).tap();
+  if (await page.locator("#welcomePanel").isVisible()) {
+    await page.locator("#welcomeOkBtn").tap();
+  }
   await expect(page.locator("#startPanel")).toBeHidden();
 
   const kindCounts = await page.evaluate(() => window.__OTZI_TEST__.screenKindCounts());
@@ -109,6 +112,9 @@ test("content loop adds screen kinds, hare catch, Flint Scar core, toolmaker unl
   await page.reload();
   await expect(page.locator("#worldCanvas")).toBeVisible();
   await page.getByRole("button", { name: /start/i }).tap();
+  if (await page.locator("#welcomePanel").isVisible()) {
+    await page.locator("#welcomeOkBtn").tap();
+  }
   const afterReload = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(afterReload.village.unlocked).toContain("toolmaker");
   expect(afterReload.facts.discovered).toContain("retoucheur_tool");
