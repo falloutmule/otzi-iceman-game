@@ -36,7 +36,7 @@ OTZI.game = {
       this.tryGather();
     }
     if (actions.sprintPressed) {
-      this.player.stamina = Math.max(0, this.player.stamina - 8);
+      OTZI.survival.spendStamina(this.player, 8);
       OTZI.dialogue.toast("Dodge/Sprint burst");
       OTZI.audio.blip(330, 0.035);
     }
@@ -45,9 +45,10 @@ OTZI.game = {
       actions.moveY = 0;
       actions.sprint = false;
     }
-    const speed = actions.sprint ? OTZI.CFG.sprintSpeed : OTZI.CFG.playerSpeed;
+    const sprinting = actions.sprint && this.player.stamina > 0;
+    const speed = sprinting ? OTZI.CFG.sprintSpeed : OTZI.CFG.playerSpeed;
     OTZI.collision.moveCircle(this.player, actions.moveX * speed * dt, actions.moveY * speed * dt);
-    this.player.stamina = Math.max(0, Math.min(100, this.player.stamina + (actions.sprint ? -22 : 12) * dt));
+    OTZI.survival.update(this.player, dt, sprinting);
     OTZI.entities.update(dt);
     OTZI.camera.update();
   },

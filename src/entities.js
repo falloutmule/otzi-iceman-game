@@ -12,8 +12,8 @@ OTZI.entities = {
       radius: 8,
       health: 100,
       stamina: 100,
-      hunger: 4,
-      warmth: 86,
+      hunger: 0,
+      warmth: 100,
       wetness: 0
     };
   },

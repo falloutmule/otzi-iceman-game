@@ -94,6 +94,10 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
   await expect(page.locator("#inventoryChip")).toContainText("BARK 1");
   await expect(page.locator("#inventoryChip")).toContainText("GRASS 1");
   await expect(page.locator("#inventoryChip")).toContainText("FOOD 1");
+  await expect(page.locator("#staminaChip")).toContainText("HP 100");
+  await expect(page.locator("#staminaChip")).toContainText("STAM");
+  await expect(page.locator("#staminaChip")).toContainText("HUNGER");
+  await expect(page.locator("#staminaChip")).toContainText("WARMTH");
   await page.screenshot({ path: "artifacts/screenshots/gather-success-flint.png", fullPage: true });
 
   await page.locator("#hudStrip #mapTab").tap();
@@ -124,6 +128,27 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
   const afterSprint = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(afterSprint.player.stamina).toBeLessThan(beforeSprint.player.stamina);
   expect(afterSprint.input.sprintHeld).toBe(false);
+  await page.waitForTimeout(700);
+  const afterSprintRecovery = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
+  expect(afterSprintRecovery.player.stamina).toBeGreaterThan(afterSprint.player.stamina);
+
+  await page.evaluate(() => window.__OTZI_TEST__.setMeters({
+    health: 140,
+    stamina: -12,
+    hunger: 130,
+    warmth: -5,
+    wetness: 160
+  }));
+  await page.evaluate(() => window.__OTZI_TEST__.stepFrames(1));
+  const clampedMeters = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
+  expect(clampedMeters.player.health).toBe(100);
+  expect(clampedMeters.player.stamina).toBeGreaterThanOrEqual(0);
+  expect(clampedMeters.player.hunger).toBeLessThanOrEqual(100);
+  expect(clampedMeters.player.warmth).toBeGreaterThanOrEqual(0);
+  expect(clampedMeters.player.wetness).toBe(100);
+  const saveSnapshot = await page.evaluate(() => JSON.parse(decodeURIComponent(escape(atob(window.__OTZI_TEST__.exportSave())))));
+  expect(saveSnapshot.meters.health).toBe(clampedMeters.player.health);
+  expect(saveSnapshot.meters.stamina).toBe(clampedMeters.player.stamina);
 
   const beforeMove = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   const zone = await page.locator("#moveZone").boundingBox();

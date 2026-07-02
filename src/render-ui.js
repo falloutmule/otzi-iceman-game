@@ -12,7 +12,12 @@ OTZI.renderUi = {
       `GRASS ${game.inventory.grass || 0}`,
       `FOOD ${game.inventory.food || 0}`
     ].join("  ");
-    OTZI.dom.staminaChip.textContent = `STAM: ${Math.round(game.player.stamina)}`;
+    OTZI.dom.staminaChip.textContent = [
+      `HP ${Math.round(game.player.health)}`,
+      `STAM ${Math.round(game.player.stamina)}`,
+      `HUNGER ${Math.round(game.player.hunger)}`,
+      `WARMTH ${Math.round(game.player.warmth)}`
+    ].join(" | ");
     if (performance.now() > OTZI.dialogue.toastUntil && OTZI.dialogue.message !== "Milestone 1 engine shell") {
       OTZI.dialogue.message = "Milestone 1 engine shell";
       OTZI.dom.statusLine.textContent = OTZI.dialogue.message;

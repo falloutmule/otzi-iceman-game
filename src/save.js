@@ -10,6 +10,7 @@ OTZI.save = {
       seed: g.seed,
       scene: g.scene,
       player: { x: g.player.x, y: g.player.y },
+      meters: OTZI.survival.snapshot(g.player),
       inventory: g.inventory,
       village: g.village,
       facts: g.facts
@@ -20,6 +21,7 @@ OTZI.save = {
     OTZI.game.setSeed(data.seed || OTZI.CFG.defaultSeed);
     OTZI.game.player.x = data.player?.x || OTZI.game.player.x;
     OTZI.game.player.y = data.player?.y || OTZI.game.player.y;
+    OTZI.survival.apply(OTZI.game.player, data.meters);
     OTZI.game.inventory = { ...OTZI.game.inventory, ...(data.inventory || {}) };
     OTZI.game.village = { ...OTZI.game.village, ...(data.village || {}) };
     OTZI.game.facts = { ...OTZI.game.facts, ...(data.facts || {}) };

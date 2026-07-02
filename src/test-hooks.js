@@ -101,6 +101,7 @@ OTZI.installTestHooks = function installTestHooks() {
       return node ? { ...node } : null;
     },
     give(item, n = 1) { OTZI.inventory.add(item, n); },
+    setMeters(meters) { OTZI.survival.apply(OTZI.game.player, meters); },
     completeDungeon(id = "flint_cave") {
       if (!OTZI.game.village.unlocked.includes(id)) OTZI.game.village.unlocked.push(id);
     },

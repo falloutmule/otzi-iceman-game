@@ -559,8 +559,8 @@ OTZI.entities = {
       radius: 8,
       health: 100,
       stamina: 100,
-      hunger: 4,
-      warmth: 86,
+      hunger: 0,
+      warmth: 100,
       wetness: 0
     };
   },
@@ -665,6 +665,44 @@ OTZI.resources = {
       acc.byResource[node.resource][bucket]++;
       return acc;
     }, { total: 0, active: 0, depleted: 0, byResource: {} });
+  }
+};
+
+
+
+/* MODULE: survival.js */
+/* SECTION 08C: SURVIVAL */
+var OTZI = window.OTZI || (window.OTZI = {});
+
+OTZI.survival = {
+  clamp(v, min = 0, max = 100) {
+    return Math.max(min, Math.min(max, v));
+  },
+  spendStamina(player, amount) {
+    player.stamina = this.clamp(player.stamina - amount);
+  },
+  update(player, dt, sprinting) {
+    player.health = this.clamp(player.health);
+    player.stamina = this.clamp(player.stamina + (sprinting ? -22 : 14) * dt);
+    player.hunger = this.clamp(player.hunger + 0.08 * dt);
+    player.warmth = this.clamp(player.warmth + (player.wetness > 50 ? -0.5 : 0.08) * dt);
+    player.wetness = this.clamp(player.wetness);
+  },
+  snapshot(player) {
+    return {
+      health: player.health,
+      stamina: player.stamina,
+      hunger: player.hunger,
+      warmth: player.warmth,
+      wetness: player.wetness
+    };
+  },
+  apply(player, meters = {}) {
+    player.health = this.clamp(meters.health ?? player.health);
+    player.stamina = this.clamp(meters.stamina ?? player.stamina);
+    player.hunger = this.clamp(meters.hunger ?? player.hunger);
+    player.warmth = this.clamp(meters.warmth ?? player.warmth);
+    player.wetness = this.clamp(meters.wetness ?? player.wetness);
   }
 };
 
@@ -910,7 +948,12 @@ OTZI.renderUi = {
       `GRASS ${game.inventory.grass || 0}`,
       `FOOD ${game.inventory.food || 0}`
     ].join("  ");
-    OTZI.dom.staminaChip.textContent = `STAM: ${Math.round(game.player.stamina)}`;
+    OTZI.dom.staminaChip.textContent = [
+      `HP ${Math.round(game.player.health)}`,
+      `STAM ${Math.round(game.player.stamina)}`,
+      `HUNGER ${Math.round(game.player.hunger)}`,
+      `WARMTH ${Math.round(game.player.warmth)}`
+    ].join(" | ");
     if (performance.now() > OTZI.dialogue.toastUntil && OTZI.dialogue.message !== "Milestone 1 engine shell") {
       OTZI.dialogue.message = "Milestone 1 engine shell";
       OTZI.dom.statusLine.textContent = OTZI.dialogue.message;
@@ -1009,6 +1052,7 @@ OTZI.save = {
       seed: g.seed,
       scene: g.scene,
       player: { x: g.player.x, y: g.player.y },
+      meters: OTZI.survival.snapshot(g.player),
       inventory: g.inventory,
       village: g.village,
       facts: g.facts
@@ -1019,6 +1063,7 @@ OTZI.save = {
     OTZI.game.setSeed(data.seed || OTZI.CFG.defaultSeed);
     OTZI.game.player.x = data.player?.x || OTZI.game.player.x;
     OTZI.game.player.y = data.player?.y || OTZI.game.player.y;
+    OTZI.survival.apply(OTZI.game.player, data.meters);
     OTZI.game.inventory = { ...OTZI.game.inventory, ...(data.inventory || {}) };
     OTZI.game.village = { ...OTZI.game.village, ...(data.village || {}) };
     OTZI.game.facts = { ...OTZI.game.facts, ...(data.facts || {}) };
@@ -1154,6 +1199,7 @@ OTZI.installTestHooks = function installTestHooks() {
       return node ? { ...node } : null;
     },
     give(item, n = 1) { OTZI.inventory.add(item, n); },
+    setMeters(meters) { OTZI.survival.apply(OTZI.game.player, meters); },
     completeDungeon(id = "flint_cave") {
       if (!OTZI.game.village.unlocked.includes(id)) OTZI.game.village.unlocked.push(id);
     },
@@ -1203,7 +1249,7 @@ OTZI.game = {
       this.tryGather();
     }
     if (actions.sprintPressed) {
-      this.player.stamina = Math.max(0, this.player.stamina - 8);
+      OTZI.survival.spendStamina(this.player, 8);
       OTZI.dialogue.toast("Dodge/Sprint burst");
       OTZI.audio.blip(330, 0.035);
     }
@@ -1212,9 +1258,10 @@ OTZI.game = {
       actions.moveY = 0;
       actions.sprint = false;
     }
-    const speed = actions.sprint ? OTZI.CFG.sprintSpeed : OTZI.CFG.playerSpeed;
+    const sprinting = actions.sprint && this.player.stamina > 0;
+    const speed = sprinting ? OTZI.CFG.sprintSpeed : OTZI.CFG.playerSpeed;
     OTZI.collision.moveCircle(this.player, actions.moveX * speed * dt, actions.moveY * speed * dt);
-    this.player.stamina = Math.max(0, Math.min(100, this.player.stamina + (actions.sprint ? -22 : 12) * dt));
+    OTZI.survival.update(this.player, dt, sprinting);
     OTZI.entities.update(dt);
     OTZI.camera.update();
   },
@@ -1299,6 +1346,6 @@ OTZI.game = {
 })();
 
   </script>
-  <!-- build: 2026-07-02T00:25:02.413Z modules:26 -->
+  <!-- build: 2026-07-02T00:27:40.199Z modules:27 -->
 </body>
 </html>
