@@ -146,6 +146,25 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
   await page.locator("#menuCloseBtn").tap();
   await expect(page.locator("#menuPanel")).toBeHidden();
 
+  const beforeSave = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
+  const saved = await page.evaluate(() => window.__OTZI_TEST__.saveNow());
+  expect(saved).toBe(true);
+  await page.reload();
+  await expect(page.locator("#worldCanvas")).toBeVisible();
+  await page.getByRole("button", { name: /start/i }).tap();
+  await expect(page.locator("#startPanel")).toBeHidden();
+  const afterReload = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
+  expect(afterReload.inventory).toMatchObject(beforeSave.inventory);
+  expect(afterReload.resourceNodes.depleted).toBe(beforeSave.resourceNodes.depleted);
+  expect(afterReload.player.x).toBeCloseTo(beforeSave.player.x, 4);
+  expect(afterReload.player.y).toBeCloseTo(beforeSave.player.y, 4);
+  expect(afterReload.player.health).toBeCloseTo(beforeSave.player.health, 4);
+  expect(afterReload.player.stamina).toBeCloseTo(beforeSave.player.stamina, 4);
+  expect(afterReload.minimap).toBe(beforeSave.minimap);
+  await expect(page.locator("#inventoryChip")).toContainText("STONE 1");
+  await expect(page.locator("#inventoryChip")).toContainText("BARK 1");
+  await expect(page.locator("#inventoryChip")).toContainText("FOOD 1");
+
   const beforeSprint = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   await page.locator("#sprintBtn").tap();
   await expect(page.locator("#statusLine")).toContainText("Dodge/Sprint burst");

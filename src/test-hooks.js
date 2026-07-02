@@ -107,6 +107,7 @@ OTZI.installTestHooks = function installTestHooks() {
     },
     exportSave() { return OTZI.save.exportString(); },
     importSave(str) { OTZI.save.importString(str); },
+    saveNow() { return OTZI.save.save(); },
     toggleDebug() { OTZI.debug.toggle(); }
   };
 };

@@ -3,9 +3,9 @@ var OTZI = window.OTZI || (window.OTZI = {});
 
 OTZI.CFG = {
   engineVersion: "otzi-milestone1-0.1.0",
-  saveVersion: 1,
+  saveVersion: 2,
   worldgenVersion: 1,
-  saveKey: "otzi_milestone1_save_v1",
+  saveKey: "otzi_milestone2_save_v2",
   defaultSeed: "otzi-m1",
   tileSize: 24,
   mapW: 72,

@@ -58,6 +58,18 @@ OTZI.resources = {
     map.setGround(node.tileX, node.tileY, OTZI.TILE.DEPLETED);
     map.clearFlags(node.tileX, node.tileY, OTZI.FLAG.HARVEST | OTZI.FLAG.BLOCKED);
   },
+  depletedDeltas(nodes) {
+    return nodes
+      .filter((node) => node.saveable && node.depleted)
+      .map((node) => node.saveDeltaId);
+  },
+  applyDepletedDeltas(nodes, map, deltas = []) {
+    const wanted = new Set(deltas);
+    for (const node of nodes) {
+      if (!wanted.has(node.saveDeltaId)) continue;
+      this.deplete(node, map);
+    }
+  },
   count(nodes) {
     return nodes.reduce((acc, node) => {
       const bucket = node.depleted ? "depleted" : "active";
