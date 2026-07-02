@@ -9,8 +9,8 @@ OTZI.renderUi = {
     OTZI.dom.hungerChip.textContent = `HUNGER ${Math.round(game.player.hunger)}`;
     OTZI.dom.warmthChip.textContent = `WARMTH ${Math.round(game.player.warmth)}`;
     if (!OTZI.dialogue.hasActiveToast()) {
-      const focus = game.focusedResource;
-      OTZI.dialogue.message = focus ? `USE: gather ${focus.resource}` : "No resource nearby";
+      OTZI.dialogue.message = game.focusedEntrance ? `USE: enter ${game.focusedEntrance.label}` :
+        game.focusedResource ? `USE: gather ${game.focusedResource.resource}` : "No resource nearby";
       OTZI.dom.statusLine.textContent = OTZI.dialogue.message;
     }
     OTZI.dom.minimapPanel.hidden = !game.minimap;
@@ -42,12 +42,17 @@ OTZI.renderUi = {
       OTZI.dom.debugPanel.hidden = true;
       return;
     }
-    OTZI.dom.debugPanel.hidden = false;
+      OTZI.dom.debugPanel.hidden = false;
     const tileX = Math.floor(game.player.x / OTZI.CFG.tileSize);
     const tileY = Math.floor(game.player.y / OTZI.CFG.tileSize);
+    const areaDebug = game.scene === "dungeon" && game.currentDungeon ?
+      `dungeon ${game.currentDungeon.id} room ${game.currentDungeon.currentX},${game.currentDungeon.currentY}` :
+      `screen ${game.world.currentX},${game.world.currentY} ${game.currentScreen ? game.currentScreen.kind : "none"}`;
     OTZI.dom.debugPanel.textContent = [
       `seed ${game.seed}`,
+      areaDebug,
       `tile ${tileX},${tileY}`,
+      `entry ${game.focusedEntrance ? `${game.focusedEntrance.label} ${game.focusedEntrance.id}` : "none"}`,
       `focus ${game.focusedResource ? `${game.focusedResource.resource} ${game.focusedResource.id} tile ${game.focusedResource.tileX},${game.focusedResource.tileY} dist ${game.focusedResource.dist.toFixed(1)}` : "none"}`,
       `fps ${game.fps.toFixed(1)}`,
       `entities ${game.entities.length}`,
@@ -59,26 +64,49 @@ OTZI.renderUi = {
   },
   drawMinimap() {
     const ctx = OTZI.dom.minimapCtx;
-    const map = OTZI.game.map;
     const w = OTZI.dom.minimapCanvas.width;
     const h = OTZI.dom.minimapCanvas.height;
     ctx.fillStyle = "#07100c";
     ctx.fillRect(0, 0, w, h);
-    const sx = w / map.w;
-    const sy = h / map.h;
-    for (let y = 0; y < map.h; y += 3) {
-      for (let x = 0; x < map.w; x += 3) {
-        const flags = map.getFlags(x, y);
-        const ground = map.getGround(x, y);
-        ctx.fillStyle = flags & OTZI.FLAG.BLOCKED ? "#172a1d" :
-          ground === OTZI.TILE.PATH ? "#9a784b" :
-          ground === OTZI.TILE.WATER ? "#2d6f86" : "#315b36";
-        ctx.fillRect(Math.floor(x * sx), Math.floor(y * sy), Math.ceil(sx * 3), Math.ceil(sy * 3));
+    const game = OTZI.game;
+    if (game.scene === "dungeon" && game.currentDungeon) {
+      OTZI.dom.minimapTitle.textContent = "FLINT SCAR";
+      const dungeon = game.currentDungeon;
+      const cellW = Math.floor(w / dungeon.gridW);
+      const cellH = Math.floor(h / dungeon.gridH);
+      for (let y = 0; y < dungeon.gridH; y++) {
+        for (let x = 0; x < dungeon.gridW; x++) {
+          const discovered = OTZI.worldGrid.isDiscovered(dungeon, x, y);
+          ctx.fillStyle = discovered ? "#4d4b3d" : "#101611";
+          ctx.fillRect(x * cellW + 1, y * cellH + 1, cellW - 2, cellH - 2);
+        }
+      }
+      ctx.fillStyle = "#f0c666";
+      ctx.fillRect(dungeon.currentX * cellW + 4, dungeon.currentY * cellH + 4, cellW - 8, cellH - 8);
+      return;
+    }
+    OTZI.dom.minimapTitle.textContent = "OVERWORLD MAP";
+    const world = game.world;
+    const cellW = Math.floor(w / world.gridW);
+    const cellH = Math.floor(h / world.gridH);
+    for (let y = 0; y < world.gridH; y++) {
+      for (let x = 0; x < world.gridW; x++) {
+        if (!OTZI.worldGrid.isDiscovered(world, x, y)) {
+          ctx.fillStyle = "#0e140f";
+          ctx.fillRect(x * cellW + 1, y * cellH + 1, cellW - 2, cellH - 2);
+          continue;
+        }
+        const screen = OTZI.worldGrid.getOverworldScreen(world, game.seed, x, y);
+        ctx.fillStyle = screen.kind === "village_crossroads" ? "#9a784b" :
+          screen.kind === "flint_scar" ? "#c9d0d4" : "#315b36";
+        ctx.fillRect(x * cellW + 1, y * cellH + 1, cellW - 2, cellH - 2);
+        if (screen.kind === "flint_scar") {
+          ctx.fillStyle = "#ffe3a5";
+          ctx.fillRect(x * cellW + Math.floor(cellW / 2) - 2, y * cellH + Math.floor(cellH / 2) - 2, 4, 4);
+        }
       }
     }
     ctx.fillStyle = "#f0c666";
-    ctx.beginPath();
-    ctx.arc((OTZI.game.player.x / OTZI.CFG.tileSize) * sx, (OTZI.game.player.y / OTZI.CFG.tileSize) * sy, 3, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillRect(world.currentX * cellW + 4, world.currentY * cellH + 4, cellW - 8, cellH - 8);
   }
 };

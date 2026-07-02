@@ -16,6 +16,7 @@ const modules = [
   "audio.js",
   "assets.js",
   "tilemap.js",
+  "world-grid.js",
   "worldgen.js",
   "entities.js",
   "resources.js",

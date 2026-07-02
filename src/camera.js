@@ -7,8 +7,11 @@ OTZI.camera = {
   update() {
     const vp = OTZI.viewport;
     const p = OTZI.game.player;
-    this.x = Math.max(0, Math.min(OTZI.CFG.mapW * OTZI.CFG.tileSize - vp.cssW, p.x - vp.cssW / 2));
-    this.y = Math.max(0, Math.min(OTZI.CFG.mapH * OTZI.CFG.tileSize - vp.cssH, p.y - vp.cssH * 0.42));
+    const map = OTZI.game.map;
+    const worldW = (map?.w || OTZI.CFG.screenTileW) * OTZI.CFG.tileSize;
+    const worldH = (map?.h || OTZI.CFG.screenTileH) * OTZI.CFG.tileSize;
+    this.x = Math.max(0, Math.min(worldW - vp.cssW, p.x - vp.cssW / 2));
+    this.y = Math.max(0, Math.min(worldH - vp.cssH, p.y - vp.cssH * 0.42));
     this.x = Math.floor(this.x);
     this.y = Math.floor(this.y);
   },

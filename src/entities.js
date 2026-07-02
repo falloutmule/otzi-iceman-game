@@ -7,8 +7,8 @@ OTZI.entities = {
     return {
       id: "player",
       kind: "player",
-      x: cfg.mapW * cfg.tileSize / 2,
-      y: cfg.mapH * cfg.tileSize / 2,
+      x: cfg.screenTileW * cfg.tileSize / 2,
+      y: cfg.screenTileH * cfg.tileSize / 2,
       radius: 8,
       health: 100,
       stamina: 100,
@@ -17,15 +17,23 @@ OTZI.entities = {
       wetness: 0
     };
   },
-  spawnWorld(seed) {
-    const rng = OTZI.rng.make(seed + ":entities");
+  spawnScreen(seed, areaId, map, kind) {
+    const rng = OTZI.rng.make(`${seed}:entities:${areaId}`);
     const out = [];
-    for (let i = 0; i < 12; i++) {
+    const count = kind === "village_crossroads" || kind === "flint_scar" || areaId.indexOf("dungeon") === 0 ? 0 : 2;
+    for (let i = 0; i < count; i++) {
+      let x = 0;
+      let y = 0;
+      for (let attempt = 0; attempt < 24; attempt++) {
+        x = rng.range(3, map.w - 3) * OTZI.CFG.tileSize;
+        y = rng.range(3, map.h - 3) * OTZI.CFG.tileSize;
+        if (!(map.getFlags(Math.floor(x / OTZI.CFG.tileSize), Math.floor(y / OTZI.CFG.tileSize)) & OTZI.FLAG.BLOCKED)) break;
+      }
       out.push({
-        id: "deer-" + i,
+        id: `${areaId}-deer-${i}`,
         kind: "deer",
-        x: rng.range(8, OTZI.CFG.mapW - 8) * OTZI.CFG.tileSize,
-        y: rng.range(8, OTZI.CFG.mapH - 8) * OTZI.CFG.tileSize,
+        x,
+        y,
         radius: 7,
         phase: rng.range(0, Math.PI * 2)
       });

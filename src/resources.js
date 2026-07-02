@@ -2,7 +2,7 @@
 var OTZI = window.OTZI || (window.OTZI = {});
 
 OTZI.resources = {
-  createFromMap(seed, map) {
+  createFromMap(areaId, map) {
     const nodes = [];
     const ts = OTZI.CFG.tileSize;
     for (let y = 0; y < map.h; y++) {
@@ -11,7 +11,7 @@ OTZI.resources = {
         const resource = this.resourceForTile(map.getGround(x, y));
         if (!resource) continue;
         nodes.push({
-          id: `node_${seed}_${x}_${y}_${resource}`.replace(/[^a-zA-Z0-9_-]/g, "_"),
+          id: `node_${areaId}_${x}_${y}_${resource}`.replace(/[^a-zA-Z0-9_-]/g, "_"),
           kind: "resource",
           resource,
           x: (x + 0.5) * ts,
@@ -22,7 +22,7 @@ OTZI.resources = {
           amount: 1,
           depleted: false,
           respawn: "none",
-          saveDeltaId: `${x},${y}:${resource}`,
+          saveDeltaId: `${areaId}:${x},${y}:${resource}`,
           saveable: true
         });
       }

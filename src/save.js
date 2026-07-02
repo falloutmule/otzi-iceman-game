@@ -13,6 +13,20 @@ OTZI.save = {
       meters: OTZI.survival.snapshot(g.player),
       minimap: g.minimap,
       inventory: g.inventory,
+      overworld: {
+        currentX: g.world.currentX,
+        currentY: g.world.currentY,
+        discovered: Object.keys(g.world.discovered),
+        screens: OTZI.worldGrid.collectAreaStates(g.world.screens)
+      },
+      dungeon: g.currentDungeon ? {
+        id: g.currentDungeon.id,
+        currentX: g.currentDungeon.currentX,
+        currentY: g.currentDungeon.currentY,
+        discovered: Object.keys(g.currentDungeon.discovered),
+        rooms: OTZI.worldGrid.collectAreaStates(g.currentDungeon.rooms),
+        returnScreen: g.returnScreen
+      } : null,
       resources: {
         depleted: OTZI.resources.depletedDeltas(g.resourceNodes)
       },
@@ -22,15 +36,31 @@ OTZI.save = {
   },
   apply(data) {
     if (!data || data.version !== OTZI.CFG.saveVersion) throw new Error("Unsupported save version");
-    OTZI.game.setSeed(data.seed || OTZI.CFG.defaultSeed);
-    OTZI.game.player.x = data.player?.x || OTZI.game.player.x;
-    OTZI.game.player.y = data.player?.y || OTZI.game.player.y;
+    const g = OTZI.game;
+    g.setSeed(data.seed || OTZI.CFG.defaultSeed);
+    if (data.overworld?.discovered) {
+      g.world.discovered = Object.fromEntries(data.overworld.discovered.map((key) => [key, true]));
+    }
+    for (const state of data.overworld?.screens || []) OTZI.worldGrid.applyAreaState(g.world, g.seed, state);
+    if (data.dungeon?.id) {
+      g.currentDungeon = OTZI.worldGrid.createDungeon(g.seed, data.dungeon.id);
+      g.currentDungeon.discovered = Object.fromEntries((data.dungeon.discovered || []).map((key) => [key, true]));
+      for (const state of data.dungeon.rooms || []) OTZI.worldGrid.applyAreaState(g.currentDungeon, g.seed, state);
+      g.returnScreen = data.dungeon.returnScreen || null;
+    }
+    if (data.scene === "dungeon" && data.dungeon?.id) {
+      g.enterDungeonRoom(data.dungeon.currentX, data.dungeon.currentY, { keepScene: true, restorePlayer: true });
+    } else {
+      g.enterOverworldScreen(data.overworld?.currentX ?? g.world.homeX, data.overworld?.currentY ?? g.world.homeY, { keepScene: true, restorePlayer: true });
+    }
+    g.player.x = data.player?.x || g.player.x;
+    g.player.y = data.player?.y || g.player.y;
     OTZI.survival.apply(OTZI.game.player, data.meters);
-    OTZI.game.inventory = { ...OTZI.game.inventory, ...(data.inventory || {}) };
-    OTZI.resources.applyDepletedDeltas(OTZI.game.resourceNodes, OTZI.game.map, data.resources?.depleted || []);
-    OTZI.game.minimap = !!data.minimap;
-    OTZI.game.village = { ...OTZI.game.village, ...(data.village || {}) };
-    OTZI.game.facts = { ...OTZI.game.facts, ...(data.facts || {}) };
+    g.inventory = { ...g.inventory, ...(data.inventory || {}) };
+    g.minimap = !!data.minimap;
+    g.village = { ...g.village, ...(data.village || {}) };
+    g.facts = { ...g.facts, ...(data.facts || {}) };
+    g.updateFocusState();
   },
   save() {
     try {

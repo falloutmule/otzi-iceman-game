@@ -10,7 +10,7 @@ OTZI.dom = {
     this.uiRoot.innerHTML = `
       <section id="gameShell" class="game-shell" aria-label="Game viewport">
         <div id="minimapPanel" class="minimap-panel" hidden aria-label="Trail map preview">
-          <div class="panel-title">TRAIL MAP</div>
+          <div class="panel-title" id="minimapTitle">TRAIL MAP</div>
           <canvas id="minimapCanvas" width="104" height="104" aria-hidden="true"></canvas>
         </div>
         <div id="inventoryPanel" class="inventory-panel" hidden aria-label="Pack inventory">
@@ -88,6 +88,7 @@ OTZI.dom = {
     this.gameShell = document.getElementById("gameShell");
     this.gameShell.prepend(this.canvas);
     this.minimapPanel = document.getElementById("minimapPanel");
+    this.minimapTitle = document.getElementById("minimapTitle");
     this.minimapCanvas = document.getElementById("minimapCanvas");
     this.minimapCtx = this.minimapCanvas.getContext("2d", { alpha: false });
     this.inventoryPanel = document.getElementById("inventoryPanel");

@@ -75,7 +75,9 @@ OTZI.renderWorld = {
       }
     }
 
-    const focusId = OTZI.game.focusedResourceId;
+    const focusId = OTZI.game.focusedTargetType === "resource" ? OTZI.game.focusedResourceId : null;
+    const entranceId = OTZI.game.focusedTargetType === "entrance" ? OTZI.game.focusedEntranceId : null;
+    for (const entrance of OTZI.game.entrances || []) this.drawEntranceNode(ctx, entrance, entranceId === entrance.id);
     for (const node of OTZI.game.resourceNodes) this.drawResourceNode(ctx, node, focusId === node.id);
     for (const e of OTZI.game.entities) this.drawEntity(ctx, e, pal.deer);
     this.drawEntity(ctx, OTZI.game.player, pal.player);
@@ -104,6 +106,28 @@ OTZI.renderWorld = {
     if (highlighted) {
       this.drawResourceFocus(ctx, node.resource, x, y);
     }
+    ctx.restore();
+  },
+  drawEntranceNode(ctx, entrance, highlighted) {
+    const p = OTZI.camera.worldToScreen(entrance.x, entrance.y);
+    if (p.x < -32 || p.y < -36 || p.x > OTZI.viewport.cssW + 32 || p.y > OTZI.viewport.cssH + 32) return;
+    const x = Math.floor(p.x);
+    const y = Math.floor(p.y);
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,.4)";
+    ctx.fillRect(x - 11, y + 11, 22, 4);
+    ctx.fillStyle = "#2a2318";
+    ctx.strokeStyle = "#d8ccb0";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x - 10, y + 10);
+    ctx.lineTo(x - 10, y - 2);
+    ctx.quadraticCurveTo(x, y - 15, x + 10, y - 2);
+    ctx.lineTo(x + 10, y + 10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    if (highlighted) this.drawResourceFocus(ctx, entrance.label.toUpperCase(), x, y);
     ctx.restore();
   },
   drawResourceIcon(ctx, resource, x, y) {
