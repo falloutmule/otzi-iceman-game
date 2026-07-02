@@ -25,16 +25,25 @@ OTZI.worldgen = {
     for (let x = 5; x < cfg.mapW - 5; x++) map.setGround(x, cy, OTZI.TILE.PATH);
     for (let y = 5; y < cfg.mapH - 5; y++) map.setGround(cx, y, OTZI.TILE.PATH);
 
+    const resourceTiles = [
+      OTZI.TILE.TREE,
+      OTZI.TILE.ROCK,
+      OTZI.TILE.DEADWOOD,
+      OTZI.TILE.STONE,
+      OTZI.TILE.BIRCH,
+      OTZI.TILE.GRASS_CLUMP,
+      OTZI.TILE.BERRY
+    ];
     for (let i = 0; i < 380; i++) {
       const x = rng.int(3, cfg.mapW - 4);
       const y = rng.int(3, cfg.mapH - 4);
       if (Math.abs(x - cx) < 4 || Math.abs(y - cy) < 4) continue;
-      if (rng.next() < 0.76) {
-        map.setGround(x, y, OTZI.TILE.TREE);
-      } else {
-        map.setGround(x, y, OTZI.TILE.ROCK);
+      const tile = resourceTiles[rng.int(0, resourceTiles.length)];
+      map.setGround(x, y, tile);
+      map.addFlags(x, y, OTZI.FLAG.HARVEST);
+      if (tile !== OTZI.TILE.GRASS_CLUMP && tile !== OTZI.TILE.BERRY) {
+        map.addFlags(x, y, OTZI.FLAG.BLOCKED);
       }
-      map.addFlags(x, y, OTZI.FLAG.BLOCKED | OTZI.FLAG.HARVEST);
     }
 
     for (let y = cy - 3; y <= cy + 3; y++) {

@@ -25,6 +25,11 @@ OTZI.renderWorld = {
           t === OTZI.TILE.PATH ? pal.path :
           t === OTZI.TILE.TREE ? pal.tree :
           t === OTZI.TILE.ROCK ? pal.rock :
+          t === OTZI.TILE.DEADWOOD ? "#6b4a2f" :
+          t === OTZI.TILE.STONE ? "#545a55" :
+          t === OTZI.TILE.BIRCH ? "#d8d3ba" :
+          t === OTZI.TILE.GRASS_CLUMP ? "#6faa42" :
+          t === OTZI.TILE.BERRY ? "#315b36" :
           t === OTZI.TILE.DEPLETED ? "#4d4b3d" :
           t === OTZI.TILE.DARK_GRASS ? pal.darkGrass : pal.grass;
         ctx.fillRect(x * cfg.tileSize - cam.x, y * cfg.tileSize - cam.y, cfg.tileSize, cfg.tileSize);
@@ -35,6 +40,33 @@ OTZI.renderWorld = {
         if (t === OTZI.TILE.ROCK) {
           ctx.fillStyle = "#8b8d83";
           ctx.fillRect(x * cfg.tileSize - cam.x + 5, y * cfg.tileSize - cam.y + 7, 14, 10);
+        }
+        if (t === OTZI.TILE.DEADWOOD) {
+          ctx.fillStyle = "#9b6b3e";
+          ctx.fillRect(x * cfg.tileSize - cam.x + 4, y * cfg.tileSize - cam.y + 13, 16, 5);
+        }
+        if (t === OTZI.TILE.STONE) {
+          ctx.fillStyle = "#a5aaa0";
+          ctx.fillRect(x * cfg.tileSize - cam.x + 7, y * cfg.tileSize - cam.y + 9, 10, 8);
+        }
+        if (t === OTZI.TILE.BIRCH) {
+          ctx.fillStyle = "#f1ead0";
+          ctx.fillRect(x * cfg.tileSize - cam.x + 9, y * cfg.tileSize - cam.y + 4, 7, 18);
+          ctx.fillStyle = "#332d24";
+          ctx.fillRect(x * cfg.tileSize - cam.x + 10, y * cfg.tileSize - cam.y + 8, 5, 2);
+        }
+        if (t === OTZI.TILE.GRASS_CLUMP) {
+          ctx.fillStyle = "#9bd35e";
+          ctx.fillRect(x * cfg.tileSize - cam.x + 5, y * cfg.tileSize - cam.y + 13, 3, 7);
+          ctx.fillRect(x * cfg.tileSize - cam.x + 11, y * cfg.tileSize - cam.y + 9, 3, 11);
+          ctx.fillRect(x * cfg.tileSize - cam.x + 17, y * cfg.tileSize - cam.y + 12, 3, 8);
+        }
+        if (t === OTZI.TILE.BERRY) {
+          ctx.fillStyle = "#233a20";
+          ctx.fillRect(x * cfg.tileSize - cam.x + 5, y * cfg.tileSize - cam.y + 7, 14, 12);
+          ctx.fillStyle = "#c43d4b";
+          ctx.fillRect(x * cfg.tileSize - cam.x + 9, y * cfg.tileSize - cam.y + 9, 3, 3);
+          ctx.fillRect(x * cfg.tileSize - cam.x + 14, y * cfg.tileSize - cam.y + 13, 3, 3);
         }
         if (t === OTZI.TILE.DEPLETED) {
           ctx.fillStyle = "rgba(0,0,0,.22)";

@@ -58,31 +58,42 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
   const initial = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(initial.resourceNodes.total).toBeGreaterThan(0);
   expect(initial.resourceNodes.active).toBeGreaterThan(0);
-  expect(initial.resourceNodes.byResource.flint.active).toBeGreaterThan(0);
+  for (const resource of ["flint", "stick", "stone", "bark", "grass", "food"]) {
+    expect(initial.resourceNodes.byResource[resource].active).toBeGreaterThan(0);
+  }
   await page.locator("#useBtn").tap();
   await expect(page.locator("#statusLine")).toContainText("No resource nearby");
-  await expect(page.locator("#inventoryChip")).toContainText("FLINT: 0");
+  await expect(page.locator("#inventoryChip")).toContainText("FLINT 0");
   const afterFailedUse = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(afterFailedUse.inventory.flint || 0).toBe(initial.inventory.flint || 0);
   expect(afterFailedUse.resourceNodes.depleted).toBe(initial.resourceNodes.depleted);
   await page.screenshot({ path: "artifacts/screenshots/gather-fail-no-resource.png", fullPage: true });
 
-  await page.evaluate(() => window.__OTZI_TEST__.teleportToNearestResource());
-  const nearResource = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
-  expect(nearResource.nearestResource?.resource).toBe("flint");
-  expect(nearResource.nearestResource?.kind).toBe("resource");
-  expect(nearResource.nearestResource?.saveDeltaId).toBeTruthy();
-  const gatheredNodeId = nearResource.nearestResource.id;
-  await page.locator("#useBtn").tap();
-  await expect(page.locator("#statusLine")).toContainText("Gathered flint +1");
-  await expect(page.locator("#inventoryChip")).toContainText("FLINT: 1");
-  const afterUse = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
-  expect(afterUse.inventory.flint).toBe((initial.inventory.flint || 0) + 1);
-  expect(afterUse.resourceNodes.depleted).toBe(initial.resourceNodes.depleted + 1);
-  expect(afterUse.resourceNodes.active).toBe(initial.resourceNodes.active - 1);
-  const depletedNode = await page.evaluate((id) => window.__OTZI_TEST__.resourceNode(id), gatheredNodeId);
-  expect(depletedNode.depleted).toBe(true);
-  expect(depletedNode.amount).toBe(0);
+  let previous = afterFailedUse;
+  for (const resource of ["flint", "stick", "stone", "bark", "grass", "food"]) {
+    await page.evaluate((kind) => window.__OTZI_TEST__.teleportToNearestResource(kind), resource);
+    const nearResource = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
+    expect(nearResource.nearestResource?.resource).toBe(resource);
+    expect(nearResource.nearestResource?.kind).toBe("resource");
+    expect(nearResource.nearestResource?.saveDeltaId).toBeTruthy();
+    const gatheredNodeId = nearResource.nearestResource.id;
+    await page.locator("#useBtn").tap();
+    await expect(page.locator("#statusLine")).toContainText(`Gathered ${resource} +1`);
+    const afterUse = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
+    expect(afterUse.inventory[resource]).toBe((previous.inventory[resource] || 0) + 1);
+    expect(afterUse.resourceNodes.depleted).toBe(previous.resourceNodes.depleted + 1);
+    expect(afterUse.resourceNodes.active).toBe(previous.resourceNodes.active - 1);
+    const depletedNode = await page.evaluate((id) => window.__OTZI_TEST__.resourceNode(id), gatheredNodeId);
+    expect(depletedNode.depleted).toBe(true);
+    expect(depletedNode.amount).toBe(0);
+    previous = afterUse;
+  }
+  await expect(page.locator("#inventoryChip")).toContainText("FLINT 1");
+  await expect(page.locator("#inventoryChip")).toContainText("STICK 1");
+  await expect(page.locator("#inventoryChip")).toContainText("STONE 1");
+  await expect(page.locator("#inventoryChip")).toContainText("BARK 1");
+  await expect(page.locator("#inventoryChip")).toContainText("GRASS 1");
+  await expect(page.locator("#inventoryChip")).toContainText("FOOD 1");
   await page.screenshot({ path: "artifacts/screenshots/gather-success-flint.png", fullPage: true });
 
   await page.locator("#hudStrip #mapTab").tap();

@@ -52,6 +52,7 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 #startBtn { padding:12px 18px; background:#513d1e; border-color:#a88345; }
 .hud-strip { grid-area:hud; min-height:54px; display:grid; grid-template-columns:auto auto minmax(0,1fr) 52px 48px; align-items:center; gap:8px; padding:8px 10px; border-top:1px solid rgba(243,234,215,.18); border-bottom:1px solid rgba(0,0,0,.45); background:linear-gradient(180deg,#111812,#0b110d); pointer-events:auto; }
 .stat-chip { padding:5px 8px; border:1px solid rgba(143,192,169,.4); border-radius:8px; background:rgba(9,18,14,.72); color:#c7f0dc; font:800 12px ui-monospace,Consolas,monospace; white-space:nowrap; }
+#inventoryChip { white-space:normal; line-height:1.12; max-width:260px; }
 .status-line { min-width:0; color:#ffe3a5; font-weight:800; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 #mapTab { width:52px; min-width:52px; height:42px; min-height:42px; background:#142820; border-color:rgba(143,192,169,.5); }
 #debugBtn { width:46px; }

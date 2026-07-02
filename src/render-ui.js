@@ -4,7 +4,14 @@ var OTZI = window.OTZI || (window.OTZI = {});
 OTZI.renderUi = {
   sync() {
     const game = OTZI.game;
-    OTZI.dom.inventoryChip.textContent = `FLINT: ${game.inventory.flint || 0}`;
+    OTZI.dom.inventoryChip.textContent = [
+      `FLINT ${game.inventory.flint || 0}`,
+      `STICK ${game.inventory.stick || 0}`,
+      `STONE ${game.inventory.stone || 0}`,
+      `BARK ${game.inventory.bark || 0}`,
+      `GRASS ${game.inventory.grass || 0}`,
+      `FOOD ${game.inventory.food || 0}`
+    ].join("  ");
     OTZI.dom.staminaChip.textContent = `STAM: ${Math.round(game.player.stamina)}`;
     if (performance.now() > OTZI.dialogue.toastUntil && OTZI.dialogue.message !== "Milestone 1 engine shell") {
       OTZI.dialogue.message = "Milestone 1 engine shell";
@@ -30,6 +37,7 @@ OTZI.renderUi = {
       `tile ${tileX},${tileY}`,
       `fps ${game.fps.toFixed(1)}`,
       `entities ${game.entities.length}`,
+      `resources ${game.resourceNodes ? OTZI.resources.count(game.resourceNodes).active : 0}`,
       `pointers ${OTZI.input.pointers.size}`,
       `canvas ${OTZI.viewport.internalW}x${OTZI.viewport.internalH}`,
       `flint ${game.inventory.flint || 0}`

@@ -31,6 +31,11 @@ OTZI.resources = {
   },
   resourceForTile(tile) {
     if (tile === OTZI.TILE.ROCK) return "flint";
+    if (tile === OTZI.TILE.DEADWOOD) return "stick";
+    if (tile === OTZI.TILE.STONE) return "stone";
+    if (tile === OTZI.TILE.BIRCH) return "bark";
+    if (tile === OTZI.TILE.GRASS_CLUMP) return "grass";
+    if (tile === OTZI.TILE.BERRY) return "food";
     return null;
   },
   findNearest(nodes, player, resourceType = null) {

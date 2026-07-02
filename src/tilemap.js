@@ -1,7 +1,21 @@
 /* SECTION 07A: TILEMAP */
 var OTZI = window.OTZI || (window.OTZI = {});
 
-OTZI.TILE = { GRASS: 0, DARK_GRASS: 1, PATH: 2, WATER: 3, SNOW: 4, TREE: 5, ROCK: 6, DEPLETED: 7 };
+OTZI.TILE = {
+  GRASS: 0,
+  DARK_GRASS: 1,
+  PATH: 2,
+  WATER: 3,
+  SNOW: 4,
+  TREE: 5,
+  ROCK: 6,
+  DEPLETED: 7,
+  DEADWOOD: 8,
+  STONE: 9,
+  BIRCH: 10,
+  GRASS_CLUMP: 11,
+  BERRY: 12
+};
 OTZI.FLAG = { BLOCKED: 1, HARVEST: 2, VILLAGE: 4 };
 
 OTZI.tilemap = {

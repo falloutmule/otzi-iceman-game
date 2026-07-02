@@ -70,13 +70,14 @@ OTZI.installTestHooks = function installTestHooks() {
       OTZI.game.player.x = OTZI.CFG.mapW * OTZI.CFG.tileSize / 2;
       OTZI.game.player.y = OTZI.CFG.mapH * OTZI.CFG.tileSize / 2;
     },
-    teleportToNearestResource() {
+    teleportToNearestResource(resourceType = null) {
       let best = null;
       const ts = OTZI.CFG.tileSize;
       const px = OTZI.game.player.x;
       const py = OTZI.game.player.y;
       for (const node of OTZI.game.resourceNodes) {
         if (node.depleted) continue;
+        if (resourceType && node.resource !== resourceType) continue;
         const dist = Math.hypot(node.x - px, node.y - py);
         if (!best || dist < best.dist) best = { ...node, dist };
       }

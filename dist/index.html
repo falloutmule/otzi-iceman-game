@@ -21,6 +21,7 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 #startBtn { padding:12px 18px; background:#513d1e; border-color:#a88345; }
 .hud-strip { grid-area:hud; min-height:54px; display:grid; grid-template-columns:auto auto minmax(0,1fr) 52px 48px; align-items:center; gap:8px; padding:8px 10px; border-top:1px solid rgba(243,234,215,.18); border-bottom:1px solid rgba(0,0,0,.45); background:linear-gradient(180deg,#111812,#0b110d); pointer-events:auto; }
 .stat-chip { padding:5px 8px; border:1px solid rgba(143,192,169,.4); border-radius:8px; background:rgba(9,18,14,.72); color:#c7f0dc; font:800 12px ui-monospace,Consolas,monospace; white-space:nowrap; }
+#inventoryChip { white-space:normal; line-height:1.12; max-width:260px; }
 .status-line { min-width:0; color:#ffe3a5; font-weight:800; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 #mapTab { width:52px; min-width:52px; height:42px; min-height:42px; background:#142820; border-color:rgba(143,192,169,.5); }
 #debugBtn { width:46px; }
@@ -436,7 +437,21 @@ OTZI.assets = {
 /* SECTION 07A: TILEMAP */
 var OTZI = window.OTZI || (window.OTZI = {});
 
-OTZI.TILE = { GRASS: 0, DARK_GRASS: 1, PATH: 2, WATER: 3, SNOW: 4, TREE: 5, ROCK: 6, DEPLETED: 7 };
+OTZI.TILE = {
+  GRASS: 0,
+  DARK_GRASS: 1,
+  PATH: 2,
+  WATER: 3,
+  SNOW: 4,
+  TREE: 5,
+  ROCK: 6,
+  DEPLETED: 7,
+  DEADWOOD: 8,
+  STONE: 9,
+  BIRCH: 10,
+  GRASS_CLUMP: 11,
+  BERRY: 12
+};
 OTZI.FLAG = { BLOCKED: 1, HARVEST: 2, VILLAGE: 4 };
 
 OTZI.tilemap = {
@@ -487,16 +502,25 @@ OTZI.worldgen = {
     for (let x = 5; x < cfg.mapW - 5; x++) map.setGround(x, cy, OTZI.TILE.PATH);
     for (let y = 5; y < cfg.mapH - 5; y++) map.setGround(cx, y, OTZI.TILE.PATH);
 
+    const resourceTiles = [
+      OTZI.TILE.TREE,
+      OTZI.TILE.ROCK,
+      OTZI.TILE.DEADWOOD,
+      OTZI.TILE.STONE,
+      OTZI.TILE.BIRCH,
+      OTZI.TILE.GRASS_CLUMP,
+      OTZI.TILE.BERRY
+    ];
     for (let i = 0; i < 380; i++) {
       const x = rng.int(3, cfg.mapW - 4);
       const y = rng.int(3, cfg.mapH - 4);
       if (Math.abs(x - cx) < 4 || Math.abs(y - cy) < 4) continue;
-      if (rng.next() < 0.76) {
-        map.setGround(x, y, OTZI.TILE.TREE);
-      } else {
-        map.setGround(x, y, OTZI.TILE.ROCK);
+      const tile = resourceTiles[rng.int(0, resourceTiles.length)];
+      map.setGround(x, y, tile);
+      map.addFlags(x, y, OTZI.FLAG.HARVEST);
+      if (tile !== OTZI.TILE.GRASS_CLUMP && tile !== OTZI.TILE.BERRY) {
+        map.addFlags(x, y, OTZI.FLAG.BLOCKED);
       }
-      map.addFlags(x, y, OTZI.FLAG.BLOCKED | OTZI.FLAG.HARVEST);
     }
 
     for (let y = cy - 3; y <= cy + 3; y++) {
@@ -594,6 +618,11 @@ OTZI.resources = {
   },
   resourceForTile(tile) {
     if (tile === OTZI.TILE.ROCK) return "flint";
+    if (tile === OTZI.TILE.DEADWOOD) return "stick";
+    if (tile === OTZI.TILE.STONE) return "stone";
+    if (tile === OTZI.TILE.BIRCH) return "bark";
+    if (tile === OTZI.TILE.GRASS_CLUMP) return "grass";
+    if (tile === OTZI.TILE.BERRY) return "food";
     return null;
   },
   findNearest(nodes, player, resourceType = null) {
@@ -716,7 +745,7 @@ OTZI.dialogue = {
 var OTZI = window.OTZI || (window.OTZI = {});
 OTZI.inventory = {
   create() {
-    return { flint: 0, bark: 0, grass: 0, sticks: 0 };
+    return { flint: 0, stick: 0, stone: 0, bark: 0, grass: 0, food: 0 };
   },
   add(item, n) {
     OTZI.game.inventory[item] = (OTZI.game.inventory[item] || 0) + n;
@@ -790,6 +819,11 @@ OTZI.renderWorld = {
           t === OTZI.TILE.PATH ? pal.path :
           t === OTZI.TILE.TREE ? pal.tree :
           t === OTZI.TILE.ROCK ? pal.rock :
+          t === OTZI.TILE.DEADWOOD ? "#6b4a2f" :
+          t === OTZI.TILE.STONE ? "#545a55" :
+          t === OTZI.TILE.BIRCH ? "#d8d3ba" :
+          t === OTZI.TILE.GRASS_CLUMP ? "#6faa42" :
+          t === OTZI.TILE.BERRY ? "#315b36" :
           t === OTZI.TILE.DEPLETED ? "#4d4b3d" :
           t === OTZI.TILE.DARK_GRASS ? pal.darkGrass : pal.grass;
         ctx.fillRect(x * cfg.tileSize - cam.x, y * cfg.tileSize - cam.y, cfg.tileSize, cfg.tileSize);
@@ -800,6 +834,33 @@ OTZI.renderWorld = {
         if (t === OTZI.TILE.ROCK) {
           ctx.fillStyle = "#8b8d83";
           ctx.fillRect(x * cfg.tileSize - cam.x + 5, y * cfg.tileSize - cam.y + 7, 14, 10);
+        }
+        if (t === OTZI.TILE.DEADWOOD) {
+          ctx.fillStyle = "#9b6b3e";
+          ctx.fillRect(x * cfg.tileSize - cam.x + 4, y * cfg.tileSize - cam.y + 13, 16, 5);
+        }
+        if (t === OTZI.TILE.STONE) {
+          ctx.fillStyle = "#a5aaa0";
+          ctx.fillRect(x * cfg.tileSize - cam.x + 7, y * cfg.tileSize - cam.y + 9, 10, 8);
+        }
+        if (t === OTZI.TILE.BIRCH) {
+          ctx.fillStyle = "#f1ead0";
+          ctx.fillRect(x * cfg.tileSize - cam.x + 9, y * cfg.tileSize - cam.y + 4, 7, 18);
+          ctx.fillStyle = "#332d24";
+          ctx.fillRect(x * cfg.tileSize - cam.x + 10, y * cfg.tileSize - cam.y + 8, 5, 2);
+        }
+        if (t === OTZI.TILE.GRASS_CLUMP) {
+          ctx.fillStyle = "#9bd35e";
+          ctx.fillRect(x * cfg.tileSize - cam.x + 5, y * cfg.tileSize - cam.y + 13, 3, 7);
+          ctx.fillRect(x * cfg.tileSize - cam.x + 11, y * cfg.tileSize - cam.y + 9, 3, 11);
+          ctx.fillRect(x * cfg.tileSize - cam.x + 17, y * cfg.tileSize - cam.y + 12, 3, 8);
+        }
+        if (t === OTZI.TILE.BERRY) {
+          ctx.fillStyle = "#233a20";
+          ctx.fillRect(x * cfg.tileSize - cam.x + 5, y * cfg.tileSize - cam.y + 7, 14, 12);
+          ctx.fillStyle = "#c43d4b";
+          ctx.fillRect(x * cfg.tileSize - cam.x + 9, y * cfg.tileSize - cam.y + 9, 3, 3);
+          ctx.fillRect(x * cfg.tileSize - cam.x + 14, y * cfg.tileSize - cam.y + 13, 3, 3);
         }
         if (t === OTZI.TILE.DEPLETED) {
           ctx.fillStyle = "rgba(0,0,0,.22)";
@@ -831,7 +892,14 @@ var OTZI = window.OTZI || (window.OTZI = {});
 OTZI.renderUi = {
   sync() {
     const game = OTZI.game;
-    OTZI.dom.inventoryChip.textContent = `FLINT: ${game.inventory.flint || 0}`;
+    OTZI.dom.inventoryChip.textContent = [
+      `FLINT ${game.inventory.flint || 0}`,
+      `STICK ${game.inventory.stick || 0}`,
+      `STONE ${game.inventory.stone || 0}`,
+      `BARK ${game.inventory.bark || 0}`,
+      `GRASS ${game.inventory.grass || 0}`,
+      `FOOD ${game.inventory.food || 0}`
+    ].join("  ");
     OTZI.dom.staminaChip.textContent = `STAM: ${Math.round(game.player.stamina)}`;
     if (performance.now() > OTZI.dialogue.toastUntil && OTZI.dialogue.message !== "Milestone 1 engine shell") {
       OTZI.dialogue.message = "Milestone 1 engine shell";
@@ -857,6 +925,7 @@ OTZI.renderUi = {
       `tile ${tileX},${tileY}`,
       `fps ${game.fps.toFixed(1)}`,
       `entities ${game.entities.length}`,
+      `resources ${game.resourceNodes ? OTZI.resources.count(game.resourceNodes).active : 0}`,
       `pointers ${OTZI.input.pointers.size}`,
       `canvas ${OTZI.viewport.internalW}x${OTZI.viewport.internalH}`,
       `flint ${game.inventory.flint || 0}`
@@ -1039,13 +1108,14 @@ OTZI.installTestHooks = function installTestHooks() {
       OTZI.game.player.x = OTZI.CFG.mapW * OTZI.CFG.tileSize / 2;
       OTZI.game.player.y = OTZI.CFG.mapH * OTZI.CFG.tileSize / 2;
     },
-    teleportToNearestResource() {
+    teleportToNearestResource(resourceType = null) {
       let best = null;
       const ts = OTZI.CFG.tileSize;
       const px = OTZI.game.player.x;
       const py = OTZI.game.player.y;
       for (const node of OTZI.game.resourceNodes) {
         if (node.depleted) continue;
+        if (resourceType && node.resource !== resourceType) continue;
         const dist = Math.hypot(node.x - px, node.y - py);
         if (!best || dist < best.dist) best = { ...node, dist };
       }
@@ -1214,6 +1284,6 @@ OTZI.game = {
 })();
 
   </script>
-  <!-- build: 2026-07-02T00:17:21.158Z modules:26 -->
+  <!-- build: 2026-07-02T00:22:52.146Z modules:26 -->
 </body>
 </html>
