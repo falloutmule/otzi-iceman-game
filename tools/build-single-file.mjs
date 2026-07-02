@@ -18,6 +18,7 @@ const modules = [
   "tilemap.js",
   "worldgen.js",
   "entities.js",
+  "resources.js",
   "collision.js",
   "camera.js",
   "scenes.js",

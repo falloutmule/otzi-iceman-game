@@ -14,6 +14,7 @@ OTZI.game = {
     this.map = OTZI.worldgen.generate(this.seed);
     this.player = OTZI.entities.makePlayer();
     this.entities = OTZI.entities.spawnWorld(this.seed);
+    this.resourceNodes = OTZI.resources.createFromMap(this.seed, this.map);
     this.inventory = OTZI.inventory.create();
     this.village = OTZI.village.create();
     this.facts = OTZI.facts.create();
@@ -51,40 +52,19 @@ OTZI.game = {
     OTZI.camera.update();
   },
   findNearestResource() {
-    const ts = OTZI.CFG.tileSize;
-    const px = this.player.x;
-    const py = this.player.y;
-    const centerX = Math.floor(px / ts);
-    const centerY = Math.floor(py / ts);
-    let best = null;
-    const maxTiles = Math.ceil(OTZI.CFG.gatherRadius / ts) + 1;
-    for (let y = centerY - maxTiles; y <= centerY + maxTiles; y++) {
-      for (let x = centerX - maxTiles; x <= centerX + maxTiles; x++) {
-        if (!(this.map.getFlags(x, y) & OTZI.FLAG.HARVEST)) continue;
-        const tile = this.map.getGround(x, y);
-        const resource = tile === OTZI.TILE.ROCK ? "flint" : null;
-        if (!resource) continue;
-        const wx = (x + 0.5) * ts;
-        const wy = (y + 0.5) * ts;
-        const dist = Math.hypot(wx - px, wy - py);
-        if (dist <= OTZI.CFG.gatherRadius && (!best || dist < best.dist)) {
-          best = { x, y, tile, resource, dist };
-        }
-      }
-    }
-    return best;
+    return OTZI.resources.findNearest(this.resourceNodes, this.player);
   },
   tryGather() {
-    const node = this.findNearestResource();
+    const found = this.findNearestResource();
+    const node = found ? OTZI.resources.getById(this.resourceNodes, found.id) : null;
     if (!node) {
       OTZI.dialogue.toast("No resource nearby");
       OTZI.audio.blip(220, 0.035);
       return false;
     }
-    OTZI.inventory.add(node.resource, 1);
-    this.map.setGround(node.x, node.y, OTZI.TILE.DEPLETED);
-    this.map.clearFlags(node.x, node.y, OTZI.FLAG.HARVEST | OTZI.FLAG.BLOCKED);
-    OTZI.dialogue.toast("Gathered flint +1");
+    OTZI.inventory.add(node.resource, node.amount);
+    OTZI.resources.deplete(node, this.map);
+    OTZI.dialogue.toast(`Gathered ${node.resource} +1`);
     OTZI.audio.blip(660, 0.04);
     return true;
   }

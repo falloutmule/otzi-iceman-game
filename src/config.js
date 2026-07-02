@@ -15,5 +15,6 @@ OTZI.CFG = {
   playerSpeed: 118,
   sprintSpeed: 166,
   gatherRadius: 42,
+  resourceNodeRadius: 42,
   dprCap: 2
 };
