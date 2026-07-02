@@ -105,6 +105,12 @@ test("milestone 1 mobile controls are visible and responsive", async ({ page }) 
   await page.locator("#menuBtn").tap();
   await expect(page.locator("#menuPanel")).toBeVisible();
   await expect(page.locator("#menuPanel")).toContainText("control path works");
+  await expect(page.locator("#menuFlint")).toHaveText("1");
+  await expect(page.locator("#menuStick")).toHaveText("1");
+  await expect(page.locator("#menuStone")).toHaveText("1");
+  await expect(page.locator("#menuBark")).toHaveText("1");
+  await expect(page.locator("#menuGrass")).toHaveText("1");
+  await expect(page.locator("#menuFood")).toHaveText("1");
   const afterMenuOpen = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(afterMenuOpen.menuOpen).toBe(true);
   expect(afterMenuOpen.input.sprintHeld).toBe(false);

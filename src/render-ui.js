@@ -23,6 +23,11 @@ OTZI.renderUi = {
     if (game.menuOpen) {
       OTZI.dom.menuSeed.textContent = game.seed;
       OTZI.dom.menuFlint.textContent = String(game.inventory.flint || 0);
+      OTZI.dom.menuStick.textContent = String(game.inventory.stick || 0);
+      OTZI.dom.menuStone.textContent = String(game.inventory.stone || 0);
+      OTZI.dom.menuBark.textContent = String(game.inventory.bark || 0);
+      OTZI.dom.menuGrass.textContent = String(game.inventory.grass || 0);
+      OTZI.dom.menuFood.textContent = String(game.inventory.food || 0);
       OTZI.dom.menuStamina.textContent = Math.round(game.player.stamina).toString();
     }
     if (!game.debug) {
