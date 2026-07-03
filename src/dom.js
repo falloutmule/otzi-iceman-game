@@ -34,6 +34,8 @@ OTZI.dom = {
             <div><dt>Grass</dt><dd id="invGrass">0</dd></div>
             <div><dt>Food</dt><dd id="invFood">0</dd></div>
             <div><dt>Crude tools</dt><dd id="invCrudeTool">0</dd></div>
+            <div><dt>Crude spears</dt><dd id="invCrudeSpear">0</dd></div>
+            <div><dt>Hardened spears</dt><dd id="invHardenedSpear">0</dd></div>
             <div><dt>Good flint core</dt><dd id="invGoodFlintCore">0</dd></div>
           </dl>
         </div>
@@ -57,8 +59,9 @@ OTZI.dom = {
           <span id="objectiveText">Travel east from the village.</span>
         </div>
       </section>
-      <section id="popupBar" class="popup-bar" aria-label="Map and inventory buttons">
+      <section id="popupBar" class="popup-bar" aria-label="Map menu and inventory buttons">
         <button id="mapTab" type="button" aria-label="Trail map">MAP</button>
+        <button id="menuBtn" type="button" aria-label="Open menu">MENU</button>
         <button id="inventoryBtn" type="button" aria-label="Open inventory">PACK</button>
       </section>
       <section class="controls" id="controls" aria-label="Touch controls">
@@ -69,7 +72,6 @@ OTZI.dom = {
         <div class="action-cluster">
           <button id="useBtn" type="button">USE<br>GATHER</button>
           <button id="sprintBtn" type="button">DODGE<br>SPRINT</button>
-          <button id="menuBtn" type="button">CRAFT<br>MENU</button>
         </div>
       </section>
       <section id="statsStrip" class="stats-strip" aria-label="Stats and status">
@@ -81,9 +83,9 @@ OTZI.dom = {
         <button id="debugBtn" type="button" aria-label="Toggle debug">D</button>
       </section>
       <div id="debugPanel" class="debug-panel" hidden></div>
-      <div id="menuPanel" class="menu-panel" hidden role="dialog" aria-modal="false" aria-label="Craft and menu placeholder">
-        <div class="panel-title">CRAFT / MENU</div>
-        <p>Craft/Menu placeholder &mdash; control path works.</p>
+      <div id="menuPanel" class="menu-panel" hidden role="dialog" aria-modal="false" aria-label="Menu">
+        <div class="panel-title">MENU</div>
+        <p>Crafting, facts, and system tools.</p>
         <dl>
           <div><dt>Seed</dt><dd id="menuSeed">-</dd></div>
           <div><dt>Flint</dt><dd id="menuFlint">0</dd></div>
@@ -93,12 +95,15 @@ OTZI.dom = {
           <div><dt>Grass</dt><dd id="menuGrass">0</dd></div>
           <div><dt>Food</dt><dd id="menuFood">0</dd></div>
           <div><dt>Crude cutting tools</dt><dd id="menuCrudeTool">0</dd></div>
+          <div><dt>Crude spears</dt><dd id="menuCrudeSpear">0</dd></div>
+          <div><dt>Hardened spears</dt><dd id="menuHardenedSpear">0</dd></div>
           <div><dt>Good flint core</dt><dd id="menuGoodFlintCore">0</dd></div>
           <div><dt>Toolmaker</dt><dd id="menuToolmaker">Locked</dd></div>
           <div><dt>Latest fact</dt><dd id="menuLatestFact">None</dd></div>
           <div><dt>Stamina</dt><dd id="menuStamina">100</dd></div>
         </dl>
         <button id="craftCrudeToolBtn" type="button">Craft Crude Cutting Tool</button>
+        <button id="craftCrudeSpearBtn" type="button">Craft Crude Spear</button>
         <button id="viewFactBtn" type="button">View Latest Fact</button>
         <button id="showHelpBtn" type="button">Show Objective Help</button>
         <button id="fullscreenBtn" type="button">Fullscreen</button>
@@ -151,6 +156,8 @@ OTZI.dom = {
     this.invGrass = document.getElementById("invGrass");
     this.invFood = document.getElementById("invFood");
     this.invCrudeTool = document.getElementById("invCrudeTool");
+    this.invCrudeSpear = document.getElementById("invCrudeSpear");
+    this.invHardenedSpear = document.getElementById("invHardenedSpear");
     this.invGoodFlintCore = document.getElementById("invGoodFlintCore");
     this.menuPanel = document.getElementById("menuPanel");
     this.menuSeed = document.getElementById("menuSeed");
@@ -161,11 +168,14 @@ OTZI.dom = {
     this.menuGrass = document.getElementById("menuGrass");
     this.menuFood = document.getElementById("menuFood");
     this.menuCrudeTool = document.getElementById("menuCrudeTool");
+    this.menuCrudeSpear = document.getElementById("menuCrudeSpear");
+    this.menuHardenedSpear = document.getElementById("menuHardenedSpear");
     this.menuGoodFlintCore = document.getElementById("menuGoodFlintCore");
     this.menuToolmaker = document.getElementById("menuToolmaker");
     this.menuLatestFact = document.getElementById("menuLatestFact");
     this.menuStamina = document.getElementById("menuStamina");
     this.craftCrudeToolBtn = document.getElementById("craftCrudeToolBtn");
+    this.craftCrudeSpearBtn = document.getElementById("craftCrudeSpearBtn");
     this.viewFactBtn = document.getElementById("viewFactBtn");
     this.showHelpBtn = document.getElementById("showHelpBtn");
     this.fullscreenBtn = document.getElementById("fullscreenBtn");

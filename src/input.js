@@ -17,7 +17,7 @@ OTZI.input = {
       if (ev.code === "Escape" && OTZI.game.menuOpen) {
         OTZI.game.menuOpen = false;
         this.clearAll();
-        OTZI.dialogue.toast("Craft/Menu closed");
+        OTZI.dialogue.toast("Menu closed");
       }
       if (ev.code === "KeyR") OTZI.game.setSeed("otzi-" + Date.now().toString(36));
     });

@@ -42,11 +42,12 @@ test("screen-grid mobile shell supports transitions, screen-local gather, and Fl
   await expect(page.locator("#aimStrip")).toHaveCount(0);
   await expect(page.locator(".aim-strip")).toHaveCount(0);
   await expect(page.locator("#popupBar #mapTab")).toBeVisible();
+  await expect(page.locator("#popupBar #menuBtn")).toBeVisible();
   await expect(page.locator("#popupBar #inventoryBtn")).toBeVisible();
   await expect(page.locator("#controls #moveZone")).toBeVisible();
   await expect(page.locator("#controls #useBtn")).toBeVisible();
   await expect(page.locator("#controls #sprintBtn")).toBeVisible();
-  await expect(page.locator("#controls #menuBtn")).toBeVisible();
+  await expect(page.locator("#controls #menuBtn")).toHaveCount(0);
 
   const initial = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(initial.scene).toBe("overworld");
@@ -113,8 +114,10 @@ test("screen-grid mobile shell supports transitions, screen-local gather, and Fl
   await page.waitForTimeout(1200);
   await expect(page.locator("#statusLine")).toContainText("USE: gather flint");
   const nearFlint = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
+  const blockedHarvestTiles = await page.evaluate(() => window.__OTZI_TEST__.blockedHarvestTiles());
   expect(nearFlint.focusedResource?.resource).toBe("flint");
   expect(nearFlint.world.currentScreenId).not.toBe(initial.world.currentScreenId);
+  expect(blockedHarvestTiles).toEqual([]);
   await page.screenshot({ path: "artifacts/screenshots/no-aim-map-in-hud.png", fullPage: true });
   await page.screenshot({ path: "artifacts/screenshots/bottom-controls-no-aim.png", fullPage: true });
   await page.screenshot({ path: "artifacts/screenshots/focused-resource-label.png", fullPage: true });
@@ -166,6 +169,9 @@ test("screen-grid mobile shell supports transitions, screen-local gather, and Fl
   expect(inDungeon.scene).toBe("dungeon");
   expect(inDungeon.dungeon?.id).toBe("flint_scar");
   expect(inDungeon.dungeon?.currentRoomId).toBeTruthy();
+  const laneCheck = await page.evaluate(() => window.__OTZI_TEST__.inspectFlintScarEntranceLane());
+  expect(laneCheck.roomId).toBe("dungeon_flint_scar_0_1");
+  for (const sample of laneCheck.samples) expect(sample.blocked).toBe(false);
   await page.locator("#mapTab").tap();
   await expect(page.locator("#minimapPanel")).toBeVisible();
   await expect(page.locator("#minimapTitle")).toContainText("FLINT SCAR MAP");

@@ -139,23 +139,48 @@ OTZI.renderWorld = {
     for (const hazard of area.hazards || []) this.drawHazard(ctx, hazard, cam, state.offsetX, state.offsetY);
     for (const e of area.entities || []) this.drawEntity(ctx, e, pal.deer, cam, state.offsetX, state.offsetY, OTZI.game.focusedEntityId === e.id);
     this.drawEntity(ctx, state.player, pal.player, cam, state.offsetX, state.offsetY);
-    if (state.debug) OTZI.debug.draw(ctx, startX, startY, endX, endY);
+    if (state.debug) OTZI.debug.draw(ctx, area, startX, startY, endX, endY, cam, state.offsetX, state.offsetY);
   },
   drawAreaLandmarks(ctx, area, camera, offsetX = 0, offsetY = 0) {
     const ts = OTZI.CFG.tileSize;
     if (area.kind === "village_home") {
       const x = area.map.w * ts * 0.5;
       const y = area.map.h * ts * 0.5;
-      const p = this.project(camera, x, y, offsetX, offsetY);
+      const hut = this.project(camera, x - ts * 1.4, y - ts * 0.2, offsetX, offsetY);
+      const fire = this.project(camera, x + ts * 2.2, y + ts * 0.6, offsetX, offsetY);
       ctx.save();
-      ctx.fillStyle = "#6c3d18";
-      ctx.fillRect(p.x - 18, p.y + 8, 36, 8);
-      ctx.fillStyle = "#e6a052";
+      ctx.fillStyle = "#5b3419";
+      ctx.fillRect(hut.x - 26, hut.y - 2, 52, 30);
+      ctx.fillStyle = "#8e6032";
       ctx.beginPath();
-      ctx.arc(p.x, p.y + 2, 11, 0, Math.PI * 2);
+      ctx.moveTo(hut.x - 30, hut.y - 2);
+      ctx.lineTo(hut.x, hut.y - 28);
+      ctx.lineTo(hut.x + 30, hut.y - 2);
+      ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = "#2d190d";
-      ctx.fillRect(p.x - 4, p.y - 6, 8, 18);
+      ctx.fillStyle = "#2a160d";
+      ctx.fillRect(hut.x - 6, hut.y + 7, 12, 21);
+      ctx.fillStyle = "#b18b56";
+      ctx.fillRect(hut.x - 20, hut.y + 7, 10, 12);
+      ctx.fillRect(hut.x + 10, hut.y + 7, 10, 12);
+      ctx.fillStyle = "#3f2411";
+      ctx.fillRect(fire.x - 16, fire.y + 8, 32, 7);
+      ctx.fillStyle = "#6a3c16";
+      ctx.beginPath();
+      ctx.arc(fire.x, fire.y + 4, 16, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#f0c666";
+      ctx.beginPath();
+      ctx.moveTo(fire.x, fire.y - 14);
+      ctx.quadraticCurveTo(fire.x + 10, fire.y - 2, fire.x, fire.y + 8);
+      ctx.quadraticCurveTo(fire.x - 10, fire.y - 2, fire.x, fire.y - 14);
+      ctx.fill();
+      ctx.fillStyle = "#ff7b3c";
+      ctx.beginPath();
+      ctx.moveTo(fire.x + 1, fire.y - 8);
+      ctx.quadraticCurveTo(fire.x + 5, fire.y, fire.x + 1, fire.y + 6);
+      ctx.quadraticCurveTo(fire.x - 4, fire.y, fire.x + 1, fire.y - 8);
+      ctx.fill();
       ctx.restore();
       if (OTZI.village.has("toolmaker")) {
         const tp = this.project(camera, x + ts * 3.2, y - ts * 1.4, offsetX, offsetY);
@@ -336,29 +361,55 @@ OTZI.renderWorld = {
   },
   drawEntity(ctx, e, color, camera, offsetX = 0, offsetY = 0, highlighted = false) {
     const p = this.project(camera, e.x, e.y, offsetX, offsetY);
-    if (e.kind === "hare") {
-      if (e.caught || e.escaped) return;
+    if (e.kind === "hare" || e.kind === "grouse") {
+      if ((e.caught || e.escaped) && (e.resolveTimer || 0) <= 0) return;
       ctx.save();
+      const outcome = e.outcome || null;
+      const alpha = (e.caught || e.escaped) ? Math.max(0.2, Math.min(1, (e.resolveTimer || 0) / 0.9)) : 1;
+      ctx.globalAlpha = alpha;
       ctx.fillStyle = "rgba(0,0,0,.28)";
       ctx.fillRect(p.x - 10, p.y + 8, 20, 4);
-      ctx.fillStyle = e.state === "alert" ? "#dfd3b7" : "#c9b58d";
-      ctx.beginPath();
-      ctx.ellipse(p.x, p.y, 11, 8, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#c9b58d";
-      ctx.beginPath();
-      ctx.arc(p.x + 8, p.y - 4, 5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillRect(p.x + 9, p.y - 15, 2, 9);
-      ctx.fillRect(p.x + 5, p.y - 15, 2, 9);
-      ctx.fillStyle = "#473b30";
-      ctx.fillRect(p.x - 4, p.y + 5, 2, 6);
-      ctx.fillRect(p.x + 2, p.y + 5, 2, 6);
-      if (e.state === "alert") {
+      if (e.kind === "hare") {
+        ctx.fillStyle = outcome === "caught" ? "#c6d685" : outcome === "escaped" ? "#c98b72" : e.state === "alert" ? "#dfd3b7" : "#c9b58d";
+        ctx.beginPath();
+        ctx.ellipse(p.x, p.y, 11, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#c9b58d";
+        ctx.beginPath();
+        ctx.arc(p.x + 8, p.y - 4, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillRect(p.x + 9, p.y - 15, 2, 9);
+        ctx.fillRect(p.x + 5, p.y - 15, 2, 9);
+        ctx.fillStyle = "#473b30";
+        ctx.fillRect(p.x - 4, p.y + 5, 2, 6);
+        ctx.fillRect(p.x + 2, p.y + 5, 2, 6);
+      } else {
+        ctx.fillStyle = outcome === "caught" ? "#c7d283" : outcome === "escaped" ? "#8f7b66" : e.state === "alert" ? "#7d5840" : "#62442f";
+        ctx.beginPath();
+        ctx.ellipse(p.x, p.y + 1, 10, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(p.x + 7, p.y - 5, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#d3c7ab";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(p.x - 6, p.y - 9);
+        ctx.lineTo(p.x - 12, p.y - 15);
+        ctx.moveTo(p.x - 2, p.y - 10);
+        ctx.lineTo(p.x - 8, p.y - 17);
+        ctx.stroke();
+        ctx.fillStyle = "#3a2415";
+        ctx.fillRect(p.x - 2, p.y + 5, 2, 6);
+        ctx.fillRect(p.x + 2, p.y + 5, 2, 6);
+      }
+      if (e.state === "alert" && !outcome) {
         ctx.fillStyle = "#ffe08a";
         ctx.fillRect(p.x - 2, p.y - 22, 4, 8);
       }
-      if (highlighted) this.drawResourceFocus(ctx, "HARE", Math.floor(p.x), Math.floor(p.y - 2));
+      if (outcome === "caught") this.drawResourceFocus(ctx, "CAUGHT", Math.floor(p.x), Math.floor(p.y - 2));
+      else if (outcome === "escaped") this.drawResourceFocus(ctx, "ESCAPED", Math.floor(p.x), Math.floor(p.y - 2));
+      else if (highlighted) this.drawResourceFocus(ctx, e.kind === "grouse" ? "GROUSE" : "HARE", Math.floor(p.x), Math.floor(p.y - 2));
       ctx.restore();
       return;
     }

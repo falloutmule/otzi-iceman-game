@@ -7,6 +7,12 @@ OTZI.crafting = {
       name: "Crude Cutting Tool",
       inputs: { stick: 1, flint: 1, grass: 1 },
       output: { item: "crudeTool", count: 1 }
+    },
+    {
+      id: "crude_spear",
+      name: "Crude Spear",
+      inputs: { stick: 1, stone: 1, bark: 1 },
+      output: { item: "crudeSpear", count: 1 }
     }
   ],
   getRecipe(id) {

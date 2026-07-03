@@ -2,7 +2,7 @@ import { test, expect, devices } from "@playwright/test";
 
 test.use({ ...devices["Pixel 7"] });
 
-test("content loop adds screen kinds, hare catch, Flint Scar core, toolmaker unlock, and first fact", async ({ page }) => {
+test("content loop adds screen kinds, small-game catch, Flint Scar core, toolmaker unlock, and first fact", async ({ page }) => {
   const baseUrl = process.env.OTZI_BASE_URL || "http://127.0.0.1:8099";
   const consoleErrors = [];
   const pageErrors = [];
@@ -48,23 +48,28 @@ test("content loop adds screen kinds, hare catch, Flint Scar core, toolmaker unl
 
   const hareFlee = await page.evaluate(() => window.__OTZI_TEST__.triggerHareFlee());
   const hareState = await page.evaluate(() => {
-    const hare = OTZI.game.entities.find((entity) => entity.kind === "hare");
-    return hare ? { state: hare.state, escaped: hare.escaped } : null;
+    const animal = OTZI.game.entities.find((entity) => entity.kind === "hare" || entity.kind === "grouse");
+    return animal ? { kind: animal.kind, state: animal.state, escaped: animal.escaped } : null;
   });
   expect(hareFlee.world.currentScreenKind).toBe("animal_clearing");
   expect(hareState?.state).toBe("fleeing");
+  const hareEscaped = await page.evaluate(() => window.__OTZI_TEST__.stepHareOutcome());
+  expect(hareEscaped?.escaped).toBe(true);
+  expect(hareEscaped?.outcome).toBe("escaped");
+  await expect(page.locator("#statusLine")).toContainText("escaped");
 
   await page.evaluate(() => {
     const seed = OTZI.game.seed;
     OTZI.game.setSeed(seed);
     return window.__OTZI_TEST__.teleportNearHare();
   });
-  await expect(page.locator("#statusLine")).toContainText("USE: catch hare");
+  await expect(page.locator("#statusLine")).toContainText("USE: catch");
   const beforeCatch = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   await page.locator("#useBtn").tap();
-  await expect(page.locator("#statusLine")).toContainText("Caught hare +1 food");
+  await expect(page.locator("#statusLine")).toContainText("Caught");
   const afterCatch = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(afterCatch.inventory.food).toBe((beforeCatch.inventory.food || 0) + 1);
+  expect(afterCatch.focusedEntity).toBeNull();
   await page.screenshot({ path: "artifacts/screenshots/content-hare-caught.png", fullPage: true });
 
   await page.evaluate(() => window.__OTZI_TEST__.teleportToFlintScarEntrance());

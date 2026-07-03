@@ -25,7 +25,9 @@ OTZI.renderUi = {
     if (!OTZI.dialogue.hasActiveToast()) {
       OTZI.dialogue.message = game.transition.active ? `Traveling ${game.transition.direction}` :
         game.focusedEntity?.kind === "hare" ? "USE: catch hare" :
+        game.focusedEntity?.kind === "grouse" ? "USE: catch grouse" :
         game.focusedEntity?.kind === "good_flint_core" ? "USE: take good flint core" :
+        game.focusedEntrance?.kind === "hearth" ? "USE: harden spear tip" :
         game.focusedEntrance ? `USE: enter ${game.focusedEntrance.label}` :
         game.focusedResource ? `USE: gather ${game.focusedResource.resource}` : "No resource nearby";
       OTZI.dom.statusLine.textContent = OTZI.dialogue.message;
@@ -47,6 +49,8 @@ OTZI.renderUi = {
       OTZI.dom.invGrass.textContent = String(game.inventory.grass || 0);
       OTZI.dom.invFood.textContent = String(game.inventory.food || 0);
       OTZI.dom.invCrudeTool.textContent = String(game.inventory.crudeTool || 0);
+      OTZI.dom.invCrudeSpear.textContent = String(game.inventory.crudeSpear || 0);
+      OTZI.dom.invHardenedSpear.textContent = String(game.inventory.hardenedSpear || 0);
       OTZI.dom.invGoodFlintCore.textContent = String(game.inventory.goodFlintCore || 0);
     }
     OTZI.dom.menuPanel.hidden = !game.menuOpen;
@@ -59,6 +63,8 @@ OTZI.renderUi = {
       OTZI.dom.menuGrass.textContent = String(game.inventory.grass || 0);
       OTZI.dom.menuFood.textContent = String(game.inventory.food || 0);
       OTZI.dom.menuCrudeTool.textContent = String(game.inventory.crudeTool || 0);
+      OTZI.dom.menuCrudeSpear.textContent = String(game.inventory.crudeSpear || 0);
+      OTZI.dom.menuHardenedSpear.textContent = String(game.inventory.hardenedSpear || 0);
       OTZI.dom.menuGoodFlintCore.textContent = String(game.inventory.goodFlintCore || 0);
       OTZI.dom.menuToolmaker.textContent = OTZI.village.has("toolmaker") ? "Unlocked" : "Locked";
       OTZI.dom.menuLatestFact.textContent = OTZI.facts.latestDiscovered()?.title || "None";

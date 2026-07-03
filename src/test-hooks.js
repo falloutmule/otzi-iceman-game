@@ -95,6 +95,7 @@ OTZI.installTestHooks = function installTestHooks() {
           id: g.focusedEntity.id,
           kind: g.focusedEntity.kind,
           state: g.focusedEntity.state || null,
+          outcome: g.focusedEntity.outcome || null,
           dist: g.focusedEntity.dist
         } : null,
         resourceNodes: OTZI.resources.count(g.resourceNodes),
@@ -206,7 +207,7 @@ OTZI.installTestHooks = function installTestHooks() {
     },
     triggerHareFlee() {
       if (OTZI.game.currentScreen?.kind !== "animal_clearing") this.teleportToAnimalClearing();
-      const hare = (OTZI.game.entities || []).find((entity) => entity.kind === "hare" && !entity.caught && !entity.escaped);
+      const hare = (OTZI.game.entities || []).find((entity) => (entity.kind === "hare" || entity.kind === "grouse") && !entity.caught && !entity.escaped);
       if (!hare) return null;
       OTZI.game.player.x = hare.x - 10;
       OTZI.game.player.y = hare.y;
@@ -215,15 +216,62 @@ OTZI.installTestHooks = function installTestHooks() {
       OTZI.game.lastSprinting = false;
       return this.snapshot();
     },
+    stepHareOutcome(frames = 180) {
+      this.stepFrames(frames);
+      const animal = (OTZI.game.entities || []).find((entity) => entity.kind === "hare" || entity.kind === "grouse");
+      return animal ? {
+        kind: animal.kind,
+        state: animal.state,
+        caught: !!animal.caught,
+        escaped: !!animal.escaped,
+        outcome: animal.outcome || null,
+        resolveTimer: animal.resolveTimer || 0
+      } : null;
+    },
     teleportNearHare() {
       if (OTZI.game.currentScreen?.kind !== "animal_clearing") this.teleportToAnimalClearing();
-      const hare = (OTZI.game.entities || []).find((entity) => entity.kind === "hare" && !entity.caught && !entity.escaped);
-      if (!hare) return null;
-      OTZI.game.player.x = hare.x - OTZI.CFG.tileSize * 0.9;
-      OTZI.game.player.y = hare.y;
+      const animal = (OTZI.game.entities || []).find((entity) => (entity.kind === "hare" || entity.kind === "grouse") && !entity.caught && !entity.escaped);
+      if (!animal) return null;
+      OTZI.game.player.x = animal.x - OTZI.CFG.tileSize * 0.9;
+      OTZI.game.player.y = animal.y;
       OTZI.camera.update();
       OTZI.game.updateFocusState();
-      return { ...hare };
+      return { ...animal };
+    },
+    teleportToVillageHearth() {
+      this.teleportToVillage();
+      const hearth = (OTZI.game.entrances || []).find((entry) => entry.kind === "hearth");
+      if (!hearth) return null;
+      OTZI.game.player.x = hearth.x - OTZI.CFG.tileSize * 0.75;
+      OTZI.game.player.y = hearth.y;
+      OTZI.camera.update();
+      OTZI.game.updateFocusState();
+      return { ...hearth };
+    },
+    inspectFlintScarEntranceLane() {
+      OTZI.game.ensureDungeon("flint_scar");
+      OTZI.game.enterDungeonRoom(0, 1, { entrySide: "w" });
+      const ts = OTZI.CFG.tileSize;
+      const cy = Math.floor(OTZI.game.map.h / 2) + 0.5;
+      const samples = [
+        { label: "entry", x: 2.4, y: cy },
+        { label: "entryMid", x: 4.2, y: cy },
+        { label: "cross", x: Math.floor(OTZI.game.map.w / 2) - 0.5, y: cy },
+        { label: "eastLane", x: OTZI.game.map.w - 3.3, y: cy }
+      ].map((sample) => {
+        const worldX = sample.x * ts;
+        const worldY = sample.y * ts;
+        return {
+          label: sample.label,
+          worldX,
+          worldY,
+          blocked: OTZI.collision.circleBlocked(worldX, worldY, OTZI.game.player.radius)
+        };
+      });
+      return {
+        roomId: OTZI.game.currentRoom?.id || null,
+        samples
+      };
     },
     teleportNearCore() {
       OTZI.game.ensureDungeon("flint_scar");
@@ -283,6 +331,22 @@ OTZI.installTestHooks = function installTestHooks() {
     resourceNode(id) {
       const node = OTZI.resources.getById(OTZI.game.resourceNodes, id);
       return node ? { ...node } : null;
+    },
+    blockedHarvestTiles() {
+      const out = [];
+      for (let y = 0; y < OTZI.game.map.h; y++) {
+        for (let x = 0; x < OTZI.game.map.w; x++) {
+          const flags = OTZI.game.map.getFlags(x, y);
+          if ((flags & OTZI.FLAG.HARVEST) && (flags & OTZI.FLAG.BLOCKED)) {
+            out.push({
+              tileX: x,
+              tileY: y,
+              ground: OTZI.game.map.getGround(x, y)
+            });
+          }
+        }
+      }
+      return out;
     },
     give(item, n = 1) { OTZI.inventory.add(item, n); },
     setMeters(meters) { OTZI.survival.apply(OTZI.game.player, meters); },

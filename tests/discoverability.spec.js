@@ -112,8 +112,8 @@ test("discoverability guidance exposes the first playable loop", async ({ page }
   expect(animalScreen.world.currentScreenKind).toBe("animal_clearing");
   await expect(page.locator("#areaCardTitle")).toContainText("Animal Clearing");
   const hare = await page.evaluate(() => {
-    const active = OTZI.game.entities.find((entity) => entity.kind === "hare" && !entity.caught && !entity.escaped);
-    return active ? { id: active.id } : null;
+    const active = OTZI.game.entities.find((entity) => (entity.kind === "hare" || entity.kind === "grouse") && !entity.caught && !entity.escaped);
+    return active ? { id: active.id, kind: active.kind } : null;
   });
   expect(hare?.id).toBeTruthy();
 

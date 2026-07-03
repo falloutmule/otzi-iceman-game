@@ -59,7 +59,7 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 .objective-copy { min-width:0; display:grid; gap:1px; }
 .objective-copy strong { color:#f4ebd8; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .objective-copy span { color:#d5c9b4; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.popup-bar { grid-area:popupbar; width:100%; min-width:0; display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:8px 10px; border-top:1px solid rgba(243,234,215,.16); border-bottom:1px solid rgba(0,0,0,.48); background:linear-gradient(180deg,#101711,#0b110d); pointer-events:auto; }
+.popup-bar { grid-area:popupbar; width:100%; min-width:0; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; padding:8px 10px; border-top:1px solid rgba(243,234,215,.16); border-bottom:1px solid rgba(0,0,0,.48); background:linear-gradient(180deg,#101711,#0b110d); pointer-events:auto; }
 .popup-bar button { height:44px; background:#142820; border-color:rgba(143,192,169,.5); }
 .stats-strip { grid-area:stats; width:100%; min-width:0; min-height:42px; display:grid; grid-template-columns:auto auto auto auto minmax(0,1fr) 44px; align-items:center; gap:6px; padding:6px 8px max(6px,env(safe-area-inset-bottom)); border-top:1px solid rgba(243,234,215,.14); background:#070a08; pointer-events:auto; }
 .stat-chip { padding:4px 6px; border:1px solid rgba(143,192,169,.4); border-radius:8px; background:rgba(9,18,14,.72); color:#c7f0dc; font:800 11px ui-monospace,Consolas,monospace; white-space:nowrap; }
@@ -98,7 +98,8 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 .stick-knob { position:absolute; left:50%; top:50%; width:46px; height:46px; margin:-23px 0 0 -23px; border-radius:50%; background:var(--accent); box-shadow:0 7px 20px rgba(0,0,0,.4); }
 .action-cluster { position:absolute; right:14px; top:22px; display:grid; grid-template-columns:86px 86px; gap:8px; pointer-events:auto; }
 .action-cluster button { height:58px; font-size:12px; }
-#useBtn { grid-column:span 2; background:#513d1e; border-color:#a88345; }
+#useBtn { background:#513d1e; border-color:#a88345; }
+#sprintBtn { background:#263228; border-color:rgba(243,234,215,.22); }
 @media (min-width: 900px) and (pointer: fine) { #app { left:50%; right:auto; transform:translateX(-50%); width:min(100vw,520px); box-shadow:0 0 0 1px rgba(243,234,215,.08), 0 0 42px rgba(0,0,0,.55); } .controls { min-height:188px; } .stick-zone { left:calc(50% - 250px); } .action-cluster { right:calc(50% - 250px); } }
 @media (orientation: landscape) {
   .objective-bar { padding:4px 8px; gap:6px; }

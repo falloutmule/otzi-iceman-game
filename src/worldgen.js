@@ -55,6 +55,18 @@ OTZI.worldgen = {
         radius: cfg.interactRadius
       });
     }
+    if (kind === "village_home") {
+      area.entrances.push({
+        id: `${area.id}_hearth`,
+        kind: "hearth",
+        label: "Village Hearth",
+        x: (cx + 2.2) * cfg.tileSize,
+        y: (cy + 0.6) * cfg.tileSize,
+        tileX: cx + 2,
+        tileY: cy + 1,
+        radius: 20
+      });
+    }
     area.resources = OTZI.resources.createFromMap(area.id, map);
     area.entities = OTZI.entities.spawnScreen(seed, area.id, map, kind);
     return area;
@@ -72,13 +84,14 @@ OTZI.worldgen = {
       }
     }
     if (roomKind !== "side_room") {
-      for (let tx = 2; tx < map.w - 2; tx++) map.setGround(tx, cy, OTZI.TILE.PATH);
-      for (let ty = 2; ty < map.h - 2; ty++) map.setGround(cx, ty, OTZI.TILE.PATH);
+      this.carveDungeonLane(map, "h", cy, 2, map.w - 2, 1);
+      this.carveDungeonLane(map, "v", cx, 2, map.h - 2, 1);
     }
     for (let i = 0; i < (roomKind === "narrow_passage" ? 22 : 34); i++) {
       const tx = rng.int(2, map.w - 3);
       const ty = rng.int(2, map.h - 3);
-      if (Math.abs(tx - cx) < 3 && Math.abs(ty - cy) < 3) continue;
+      if (Math.abs(tx - cx) <= 2 || Math.abs(ty - cy) <= 2) continue;
+      if (x === 0 && y === 1 && tx <= 5 && Math.abs(ty - cy) <= 2) continue;
       map.setGround(tx, ty, OTZI.TILE.STONE);
       map.addFlags(tx, ty, OTZI.FLAG.BLOCKED);
     }
@@ -167,10 +180,23 @@ OTZI.worldgen = {
     const cx = Math.floor(map.w / 2);
     const cy = Math.floor(map.h / 2);
     map.setGround(cx, cy, OTZI.TILE.PATH);
-    if (exits.n) for (let ty = 0; ty <= cy; ty++) map.setGround(cx, ty, OTZI.TILE.PATH);
-    if (exits.s) for (let ty = cy; ty < map.h; ty++) map.setGround(cx, ty, OTZI.TILE.PATH);
-    if (exits.w) for (let tx = 0; tx <= cx; tx++) map.setGround(tx, cy, OTZI.TILE.PATH);
-    if (exits.e) for (let tx = cx; tx < map.w; tx++) map.setGround(tx, cy, OTZI.TILE.PATH);
+    if (exits.n) this.carveDungeonLane(map, "v", cx, 0, cy, 1);
+    if (exits.s) this.carveDungeonLane(map, "v", cx, cy, map.h - 1, 1);
+    if (exits.w) this.carveDungeonLane(map, "h", cy, 0, cx, 1);
+    if (exits.e) this.carveDungeonLane(map, "h", cy, cx, map.w - 1, 1);
+  },
+  carveDungeonLane(map, axis, fixed, start, end, halfWidth = 0) {
+    const min = Math.min(start, end);
+    const max = Math.max(start, end);
+    for (let primary = min; primary <= max; primary++) {
+      for (let offset = -halfWidth; offset <= halfWidth; offset++) {
+        const tx = axis === "h" ? primary : fixed + offset;
+        const ty = axis === "h" ? fixed + offset : primary;
+        if (tx < 0 || ty < 0 || tx >= map.w || ty >= map.h) continue;
+        map.setGround(tx, ty, OTZI.TILE.PATH);
+        map.setFlags(tx, ty, map.getFlags(tx, ty) & ~OTZI.FLAG.BLOCKED);
+      }
+    }
   },
   placeVillageCenter(map) {
     const cx = Math.floor(map.w / 2);
@@ -238,7 +264,7 @@ OTZI.worldgen = {
         const tile = baseTiles[rng.int(0, baseTiles.length)];
         map.setGround(tx, ty, tile);
         map.addFlags(tx, ty, OTZI.FLAG.HARVEST);
-        if (tile !== OTZI.TILE.GRASS_CLUMP && tile !== OTZI.TILE.BERRY) map.addFlags(tx, ty, OTZI.FLAG.BLOCKED);
+        map.setFlags(tx, ty, map.getFlags(tx, ty) & ~OTZI.FLAG.BLOCKED);
         break;
       }
     }
@@ -254,7 +280,7 @@ OTZI.worldgen = {
     for (const [tx, ty, tile] of drops) {
       map.setGround(tx, ty, tile);
       map.addFlags(tx, ty, OTZI.FLAG.HARVEST);
-      map.addFlags(tx, ty, OTZI.FLAG.BLOCKED);
+      map.setFlags(tx, ty, map.getFlags(tx, ty) & ~OTZI.FLAG.BLOCKED);
     }
   }
 };

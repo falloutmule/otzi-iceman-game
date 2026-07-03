@@ -24,6 +24,27 @@ OTZI.objectives = {
         text: "Bring the good flint core back to the village."
       };
     }
+    if (OTZI.village.has("toolmaker") && (game.inventory.crudeSpear || 0) < 1 && (game.inventory.hardenedSpear || 0) < 1) {
+      return {
+        id: "craft_crude_spear",
+        title: "Craft a Crude Spear",
+        text: "Open MENU and shape a spear from stick, stone, and bark."
+      };
+    }
+    if ((game.inventory.crudeSpear || 0) > 0 && (game.inventory.hardenedSpear || 0) < 1) {
+      return {
+        id: "harden_spear_tip",
+        title: "Harden the Spear Tip",
+        text: "Return to the village hearth and use the fire."
+      };
+    }
+    if ((game.inventory.hardenedSpear || 0) > 0) {
+      return {
+        id: "hunt_small_game",
+        title: "Prepare for the Hunt",
+        text: "Search animal clearings and test the hardened spear."
+      };
+    }
     return {
       id: "explore",
       title: "Explore",
@@ -54,7 +75,7 @@ OTZI.objectives = {
     const cards = {
       village_home: {
         title: "Village Camp",
-        text: "Home base. Flint Scar lies one screen east."
+        text: OTZI.village.has("toolmaker") ? "Your hearth is ready. Harden spear tips here." : "Home base. Flint Scar lies one screen east."
       },
       easy_gather: {
         title: "Easy Gathering",

@@ -360,6 +360,9 @@ OTZI.game = {
       return this.tryEntityUse();
     }
     if (this.focusedEntrance) {
+      if (this.focusedEntrance.kind === "hearth") {
+        return this.useVillageHearth();
+      }
       if (this.focusedEntrance.targetScene === "dungeon") {
         this.enterDungeon(this.focusedEntrance.dungeonId);
         return true;
@@ -371,17 +374,33 @@ OTZI.game = {
     }
     return this.tryGather();
   },
+  useVillageHearth() {
+    if ((this.inventory.crudeSpear || 0) < 1) {
+      OTZI.dialogue.toast("Craft a crude spear first");
+      OTZI.audio.blip(220, 0.035);
+      return false;
+    }
+    OTZI.inventory.add("crudeSpear", -1);
+    OTZI.inventory.add("hardenedSpear", 1);
+    OTZI.dialogue.toast("Hardened spear tip");
+    OTZI.audio.blip(700, 0.045);
+    this.updateFocusState();
+    return true;
+  },
   tryEntityUse() {
     const entity = (this.entities || []).find((item) => item.id === this.focusedEntityId);
     if (!entity) return false;
-    if (entity.kind === "hare") {
+    if (entity.kind === "hare" || entity.kind === "grouse") {
       if (entity.state === "fleeing" || entity.escaped) {
         OTZI.dialogue.toast("Too startled to catch");
         return false;
       }
+      entity.state = "caught";
       entity.caught = true;
+      entity.outcome = "caught";
+      entity.resolveTimer = 0.9;
       OTZI.inventory.add("food", 1);
-      OTZI.dialogue.toast("Caught hare +1 food");
+      OTZI.dialogue.toast(`Caught ${entity.kind} +1 food`);
       OTZI.audio.blip(600, 0.05);
       this.updateFocusState();
       return true;
@@ -540,7 +559,7 @@ OTZI.game = {
       OTZI.input.clearAll();
       if (this.menuOpen) this.minimap = false;
       if (this.menuOpen) this.inventoryOpen = false;
-      OTZI.dialogue.toast(this.menuOpen ? "Craft/Menu opened" : "Craft/Menu closed");
+      OTZI.dialogue.toast(this.menuOpen ? "Menu opened" : "Menu closed");
     }
     if (actions.usePressed) this.tryUse();
     if (actions.sprintPressed) {
@@ -619,10 +638,13 @@ OTZI.game = {
     OTZI.dom.menuCloseBtn.addEventListener("click", () => {
       OTZI.game.menuOpen = false;
       OTZI.input.clearAll();
-      OTZI.dialogue.toast("Craft/Menu closed");
+      OTZI.dialogue.toast("Menu closed");
     });
     OTZI.dom.craftCrudeToolBtn.addEventListener("click", () => {
       OTZI.crafting.craft("crude_cutting_tool");
+    });
+    OTZI.dom.craftCrudeSpearBtn.addEventListener("click", () => {
+      OTZI.crafting.craft("crude_spear");
     });
     OTZI.dom.factCloseBtn.addEventListener("click", () => {
       OTZI.game.closeFact();
