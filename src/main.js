@@ -54,6 +54,12 @@ OTZI.game = {
     smallGameHunts: 0,
     lastSmallGame: null
   },
+  get craftOpen() {
+    return this.inventoryOpen;
+  },
+  set craftOpen(value) {
+    this.inventoryOpen = !!value;
+  },
   welcomeOpen: false,
   areaCard: null,
   areaCardUntil: 0,
@@ -388,6 +394,9 @@ OTZI.game = {
       durability
     };
   },
+  panelBlocksGameplay() {
+    return !!(this.inventoryOpen || this.menuOpen || this.welcomeOpen || this.factOpen);
+  },
   updateFocusState() {
     const entity = this.findNearestEntity();
     const entrance = this.findNearestEntrance();
@@ -650,12 +659,6 @@ OTZI.game = {
       return;
     }
     this.transitionCooldown = Math.max(0, this.transitionCooldown - dt);
-    if (this.factOpen || this.welcomeOpen) {
-      actions.moveX = 0;
-      actions.moveY = 0;
-      actions.sprint = false;
-      actions.toolPressed = false;
-    }
     if (actions.debugPressed) OTZI.debug.toggle();
     if (actions.mapPressed) {
       this.minimap = !this.minimap;
@@ -676,18 +679,21 @@ OTZI.game = {
       if (this.menuOpen) this.inventoryOpen = false;
       OTZI.dialogue.toast(this.menuOpen ? "System open" : "System closed");
     }
+    const panelBlocksGameplay = this.panelBlocksGameplay();
+    if (panelBlocksGameplay) {
+      actions.moveX = 0;
+      actions.moveY = 0;
+      actions.sprint = false;
+      actions.usePressed = false;
+      actions.toolPressed = false;
+      actions.sprintPressed = false;
+    }
     if (actions.usePressed) this.tryUse();
     if (actions.toolPressed) this.tryToolUse();
     if (actions.sprintPressed) {
       OTZI.survival.spendStamina(this.player, 8);
       OTZI.dialogue.toast("Dodge/Sprint burst");
       OTZI.audio.blip(330, 0.035);
-    }
-    if (this.menuOpen || this.inventoryOpen || this.welcomeOpen) {
-      actions.moveX = 0;
-      actions.moveY = 0;
-      actions.sprint = false;
-      actions.toolPressed = false;
     }
     const sprinting = actions.sprint && this.player.stamina > 0;
     this.lastSprinting = sprinting;
@@ -788,6 +794,27 @@ OTZI.game = {
       OTZI.game.menuOpen = false;
       OTZI.game.openWelcome();
       OTZI.dialogue.toast("Objective help open");
+    });
+    OTZI.dom.saveNowBtn.addEventListener("click", () => {
+      const ok = OTZI.save.save();
+      OTZI.dialogue.toast(ok ? "Save written" : "Save failed");
+    });
+    OTZI.dom.exportSaveBtn.addEventListener("click", () => {
+      OTZI.dom.saveDataBox.value = OTZI.save.exportString();
+      OTZI.dialogue.toast("Save exported");
+    });
+    OTZI.dom.importSaveBtn.addEventListener("click", () => {
+      try {
+        const payload = OTZI.dom.saveDataBox.value.trim();
+        if (!payload) {
+          OTZI.dialogue.toast("Paste save data first");
+          return;
+        }
+        OTZI.save.importString(payload);
+        OTZI.dialogue.toast("Save imported");
+      } catch (_) {
+        OTZI.dialogue.toast("Import failed");
+      }
     });
     OTZI.dom.resetSaveBtn.addEventListener("click", () => {
       if (!OTZI.game.resetConfirm) {

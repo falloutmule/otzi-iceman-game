@@ -33,6 +33,7 @@ OTZI.installTestHooks = function installTestHooks() {
         currentAreaId: g.currentArea ? g.currentArea.id : null,
         minimap: g.minimap,
         inventoryOpen: g.inventoryOpen,
+        craftOpen: g.craftOpen,
         menuOpen: g.menuOpen,
         welcomeOpen: g.welcomeOpen,
         status: OTZI.dialogue.message,
@@ -355,7 +356,7 @@ OTZI.installTestHooks = function installTestHooks() {
     equipSpear(kind) { return OTZI.game.equipSpear(kind); },
     throwTool() { return OTZI.game.tryToolUse(); },
     setMeters(meters) { OTZI.survival.apply(OTZI.game.player, meters); },
-    completeDungeon(id = "flint_cave") {
+    completeDungeon(id = "flint_scar") {
       if (!OTZI.game.village.unlocked.includes(id)) OTZI.game.village.unlocked.push(id);
     },
     exportSave() { return OTZI.save.exportString(); },

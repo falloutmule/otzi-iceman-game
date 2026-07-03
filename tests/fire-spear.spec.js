@@ -61,6 +61,9 @@ test("menu row, hearth mission, and spear throw loop work on mobile", async ({ p
   await expect(page.locator("#craftCrudeSpear")).toHaveText("1");
   await page.locator("#equipCrudeSpearBtn").tap();
   await expect(page.locator("#statusLine")).toContainText("Equipped crude spear");
+  await page.keyboard.press("KeyF");
+  await expect(page.locator("#statusLine")).not.toContainText("spear lost");
+  await expect(page.locator("#craftCrudeSpear")).toHaveText("1");
   await page.screenshot({ path: "artifacts/screenshots/fire-spear-menu-craft.png", fullPage: true });
   await page.locator("#craftCloseBtn").tap();
 
@@ -85,6 +88,20 @@ test("menu row, hearth mission, and spear throw loop work on mobile", async ({ p
 
   await page.evaluate(() => window.__OTZI_TEST__.teleportNearHare());
   await expect(page.locator("#statusLine")).toContainText("THROW: hunt");
+  await page.locator("#systemBtn").tap();
+  await expect(page.locator("#systemPanel")).toBeVisible();
+  await page.keyboard.press("KeyE");
+  await expect(page.locator("#statusLine")).not.toContainText("Returned to forest");
+  await expect(page.locator("#statusLine")).not.toContainText("Gathered");
+  await expect(page.locator("#saveNowBtn")).toBeVisible();
+  await expect(page.locator("#exportSaveBtn")).toBeVisible();
+  await expect(page.locator("#importSaveBtn")).toBeVisible();
+  await page.locator("#saveNowBtn").tap();
+  await expect(page.locator("#statusLine")).toContainText("Save written");
+  await page.locator("#exportSaveBtn").tap();
+  const exported = await page.locator("#saveDataBox").inputValue();
+  expect(exported.length).toBeGreaterThan(10);
+  await page.locator("#systemCloseBtn").tap();
   const beforeThrow = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   await page.locator("#toolBtn").tap();
   await expect(page.locator("#statusLine")).toContainText("caught");

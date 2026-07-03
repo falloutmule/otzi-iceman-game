@@ -103,6 +103,11 @@ OTZI.dom = {
         <p class="panel-hint">MOVE with the left pad. USE handles gathering, entrances, and nearby interactions.</p>
         <button id="viewFactBtn" type="button">View Latest Fact</button>
         <button id="showHelpBtn" type="button">Show Objective Help</button>
+        <div class="panel-title">SAVE</div>
+        <button id="saveNowBtn" type="button">Save Now</button>
+        <button id="exportSaveBtn" type="button">Export Save</button>
+        <button id="importSaveBtn" type="button">Import Save</button>
+        <textarea id="saveDataBox" class="save-data-box" spellcheck="false" aria-label="Save data"></textarea>
         <button id="fullscreenBtn" type="button">Fullscreen</button>
         <button id="resetSaveBtn" type="button">Reset Save</button>
         <dl>
@@ -177,6 +182,10 @@ OTZI.dom = {
     this.craftCloseBtn = document.getElementById("craftCloseBtn");
     this.viewFactBtn = document.getElementById("viewFactBtn");
     this.showHelpBtn = document.getElementById("showHelpBtn");
+    this.saveNowBtn = document.getElementById("saveNowBtn");
+    this.exportSaveBtn = document.getElementById("exportSaveBtn");
+    this.importSaveBtn = document.getElementById("importSaveBtn");
+    this.saveDataBox = document.getElementById("saveDataBox");
     this.fullscreenBtn = document.getElementById("fullscreenBtn");
     this.resetSaveBtn = document.getElementById("resetSaveBtn");
     this.menuBuildVersion = document.getElementById("menuBuildVersion");

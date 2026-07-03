@@ -58,7 +58,6 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 .menu-panel button { width:100%; background:#513d1e; border-color:#a88345; }
 .menu-panel button:disabled { opacity:.65; background:#2e2c25; border-color:#5a564b; color:#d4c7ad; }
 .menu-panel button + button { margin-top:8px; }
-.save-data-box { width:100%; min-height:88px; resize:vertical; margin:8px 0 12px; padding:8px; border:1px solid rgba(143,192,169,.35); border-radius:8px; background:#0a110d; color:var(--ink); font:11px/1.35 ui-monospace,Consolas,monospace; }
 .controls { grid-area:controls; position:relative; width:100%; min-width:0; max-width:100%; min-height:172px; height:min(28dvh,224px); padding:12px 10px; border-top:1px solid rgba(243,234,215,.16); background:linear-gradient(180deg,#111812,#070a08); pointer-events:none; }
 .stick-zone { position:absolute; left:16px; top:26px; width:132px; height:132px; pointer-events:auto; touch-action:none; }
 .stick-label { position:absolute; left:0; top:-20px; color:var(--muted); font-size:11px; font-weight:800; }
@@ -243,11 +242,6 @@ OTZI.dom = {
         <p class="panel-hint">MOVE with the left pad. USE handles gathering, entrances, and nearby interactions.</p>
         <button id="viewFactBtn" type="button">View Latest Fact</button>
         <button id="showHelpBtn" type="button">Show Objective Help</button>
-        <div class="panel-title">SAVE</div>
-        <button id="saveNowBtn" type="button">Save Now</button>
-        <button id="exportSaveBtn" type="button">Export Save</button>
-        <button id="importSaveBtn" type="button">Import Save</button>
-        <textarea id="saveDataBox" class="save-data-box" spellcheck="false" aria-label="Save data"></textarea>
         <button id="fullscreenBtn" type="button">Fullscreen</button>
         <button id="resetSaveBtn" type="button">Reset Save</button>
         <dl>
@@ -322,10 +316,6 @@ OTZI.dom = {
     this.craftCloseBtn = document.getElementById("craftCloseBtn");
     this.viewFactBtn = document.getElementById("viewFactBtn");
     this.showHelpBtn = document.getElementById("showHelpBtn");
-    this.saveNowBtn = document.getElementById("saveNowBtn");
-    this.exportSaveBtn = document.getElementById("exportSaveBtn");
-    this.importSaveBtn = document.getElementById("importSaveBtn");
-    this.saveDataBox = document.getElementById("saveDataBox");
     this.fullscreenBtn = document.getElementById("fullscreenBtn");
     this.resetSaveBtn = document.getElementById("resetSaveBtn");
     this.menuBuildVersion = document.getElementById("menuBuildVersion");
@@ -2346,7 +2336,6 @@ OTZI.renderUi = {
       OTZI.dom.menuBuildVersion.textContent = OTZI.CFG.engineVersion;
       OTZI.dom.menuSaveVersion.textContent = String(OTZI.CFG.saveVersion);
       OTZI.dom.menuWorldgenVersion.textContent = String(OTZI.CFG.worldgenVersion);
-      OTZI.dom.saveDataBox.placeholder = "Exported save data appears here. Paste save data here to import.";
       OTZI.dom.resetSaveBtn.textContent = game.resetConfirm ? "Confirm Reset Save" : "Reset Save";
       OTZI.dom.viewFactBtn.hidden = !OTZI.facts.latestDiscovered();
     }
@@ -2683,7 +2672,6 @@ OTZI.installTestHooks = function installTestHooks() {
         currentAreaId: g.currentArea ? g.currentArea.id : null,
         minimap: g.minimap,
         inventoryOpen: g.inventoryOpen,
-        craftOpen: g.craftOpen,
         menuOpen: g.menuOpen,
         welcomeOpen: g.welcomeOpen,
         status: OTZI.dialogue.message,
@@ -3006,7 +2994,7 @@ OTZI.installTestHooks = function installTestHooks() {
     equipSpear(kind) { return OTZI.game.equipSpear(kind); },
     throwTool() { return OTZI.game.tryToolUse(); },
     setMeters(meters) { OTZI.survival.apply(OTZI.game.player, meters); },
-    completeDungeon(id = "flint_scar") {
+    completeDungeon(id = "flint_cave") {
       if (!OTZI.game.village.unlocked.includes(id)) OTZI.game.village.unlocked.push(id);
     },
     exportSave() { return OTZI.save.exportString(); },
@@ -3088,12 +3076,6 @@ OTZI.game = {
   progress: {
     smallGameHunts: 0,
     lastSmallGame: null
-  },
-  get craftOpen() {
-    return this.inventoryOpen;
-  },
-  set craftOpen(value) {
-    this.inventoryOpen = !!value;
   },
   welcomeOpen: false,
   areaCard: null,
@@ -3429,9 +3411,6 @@ OTZI.game = {
       durability
     };
   },
-  panelBlocksGameplay() {
-    return !!(this.inventoryOpen || this.menuOpen || this.welcomeOpen || this.factOpen);
-  },
   updateFocusState() {
     const entity = this.findNearestEntity();
     const entrance = this.findNearestEntrance();
@@ -3694,6 +3673,12 @@ OTZI.game = {
       return;
     }
     this.transitionCooldown = Math.max(0, this.transitionCooldown - dt);
+    if (this.factOpen || this.welcomeOpen) {
+      actions.moveX = 0;
+      actions.moveY = 0;
+      actions.sprint = false;
+      actions.toolPressed = false;
+    }
     if (actions.debugPressed) OTZI.debug.toggle();
     if (actions.mapPressed) {
       this.minimap = !this.minimap;
@@ -3714,21 +3699,18 @@ OTZI.game = {
       if (this.menuOpen) this.inventoryOpen = false;
       OTZI.dialogue.toast(this.menuOpen ? "System open" : "System closed");
     }
-    const panelBlocksGameplay = this.panelBlocksGameplay();
-    if (panelBlocksGameplay) {
-      actions.moveX = 0;
-      actions.moveY = 0;
-      actions.sprint = false;
-      actions.usePressed = false;
-      actions.toolPressed = false;
-      actions.sprintPressed = false;
-    }
     if (actions.usePressed) this.tryUse();
     if (actions.toolPressed) this.tryToolUse();
     if (actions.sprintPressed) {
       OTZI.survival.spendStamina(this.player, 8);
       OTZI.dialogue.toast("Dodge/Sprint burst");
       OTZI.audio.blip(330, 0.035);
+    }
+    if (this.menuOpen || this.inventoryOpen || this.welcomeOpen) {
+      actions.moveX = 0;
+      actions.moveY = 0;
+      actions.sprint = false;
+      actions.toolPressed = false;
     }
     const sprinting = actions.sprint && this.player.stamina > 0;
     this.lastSprinting = sprinting;
@@ -3830,27 +3812,6 @@ OTZI.game = {
       OTZI.game.openWelcome();
       OTZI.dialogue.toast("Objective help open");
     });
-    OTZI.dom.saveNowBtn.addEventListener("click", () => {
-      const ok = OTZI.save.save();
-      OTZI.dialogue.toast(ok ? "Save written" : "Save failed");
-    });
-    OTZI.dom.exportSaveBtn.addEventListener("click", () => {
-      OTZI.dom.saveDataBox.value = OTZI.save.exportString();
-      OTZI.dialogue.toast("Save exported");
-    });
-    OTZI.dom.importSaveBtn.addEventListener("click", () => {
-      try {
-        const payload = OTZI.dom.saveDataBox.value.trim();
-        if (!payload) {
-          OTZI.dialogue.toast("Paste save data first");
-          return;
-        }
-        OTZI.save.importString(payload);
-        OTZI.dialogue.toast("Save imported");
-      } catch (_) {
-        OTZI.dialogue.toast("Import failed");
-      }
-    });
     OTZI.dom.resetSaveBtn.addEventListener("click", () => {
       if (!OTZI.game.resetConfirm) {
         OTZI.game.resetConfirm = true;
@@ -3875,6 +3836,6 @@ OTZI.game = {
 })();
 
   </script>
-  <!-- build: 2026-07-03T12:11:41.227Z modules:30 -->
+  <!-- build: 2026-07-03T11:24:33.451Z modules:30 -->
 </body>
 </html>

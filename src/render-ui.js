@@ -83,6 +83,7 @@ OTZI.renderUi = {
       OTZI.dom.menuBuildVersion.textContent = OTZI.CFG.engineVersion;
       OTZI.dom.menuSaveVersion.textContent = String(OTZI.CFG.saveVersion);
       OTZI.dom.menuWorldgenVersion.textContent = String(OTZI.CFG.worldgenVersion);
+      OTZI.dom.saveDataBox.placeholder = "Exported save data appears here. Paste save data here to import.";
       OTZI.dom.resetSaveBtn.textContent = game.resetConfirm ? "Confirm Reset Save" : "Reset Save";
       OTZI.dom.viewFactBtn.hidden = !OTZI.facts.latestDiscovered();
     }

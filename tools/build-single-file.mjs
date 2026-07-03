@@ -93,6 +93,7 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 .menu-panel button { width:100%; background:#513d1e; border-color:#a88345; }
 .menu-panel button:disabled { opacity:.65; background:#2e2c25; border-color:#5a564b; color:#d4c7ad; }
 .menu-panel button + button { margin-top:8px; }
+.save-data-box { width:100%; min-height:88px; resize:vertical; margin:8px 0 12px; padding:8px; border:1px solid rgba(143,192,169,.35); border-radius:8px; background:#0a110d; color:var(--ink); font:11px/1.35 ui-monospace,Consolas,monospace; }
 .controls { grid-area:controls; position:relative; width:100%; min-width:0; max-width:100%; min-height:172px; height:min(28dvh,224px); padding:12px 10px; border-top:1px solid rgba(243,234,215,.16); background:linear-gradient(180deg,#111812,#070a08); pointer-events:none; }
 .stick-zone { position:absolute; left:16px; top:26px; width:132px; height:132px; pointer-events:auto; touch-action:none; }
 .stick-label { position:absolute; left:0; top:-20px; color:var(--muted); font-size:11px; font-weight:800; }

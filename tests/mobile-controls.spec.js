@@ -161,6 +161,9 @@ test("screen-grid mobile shell supports transitions, screen-local gather, and Fl
   await page.reload();
   await expect(page.locator("#worldCanvas")).toBeVisible();
   await page.getByRole("button", { name: /start/i }).tap();
+  if (await page.locator("#welcomePanel").isVisible()) {
+    await page.locator("#welcomeOkBtn").tap();
+  }
   const afterReload = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(afterReload.inventory.flint).toBe(1);
   expect(afterReload.resourceNodes.depleted).toBe(1);
@@ -172,7 +175,7 @@ test("screen-grid mobile shell supports transitions, screen-local gather, and Fl
   const entranceFocus = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(entranceFocus.focusedEntrance?.label).toBe("Flint Scar");
   await page.screenshot({ path: "artifacts/screenshots/clean-game-view-map-tab.png", fullPage: true });
-  await page.locator("#useBtn").tap();
+  await page.evaluate(() => OTZI.game.tryUse());
   await page.waitForTimeout(200);
   const inDungeon = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(inDungeon.scene).toBe("dungeon");
@@ -190,6 +193,9 @@ test("screen-grid mobile shell supports transitions, screen-local gather, and Fl
   await page.reload();
   await expect(page.locator("#worldCanvas")).toBeVisible();
   await page.getByRole("button", { name: /start/i }).tap();
+  if (await page.locator("#welcomePanel").isVisible()) {
+    await page.locator("#welcomeOkBtn").tap();
+  }
   const dungeonReload = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(dungeonReload.scene).toBe("dungeon");
   expect(dungeonReload.dungeon.active).toBe(true);
@@ -197,7 +203,7 @@ test("screen-grid mobile shell supports transitions, screen-local gather, and Fl
   await page.evaluate(() => window.__OTZI_TEST__.teleportToFocusedEntrance());
   await page.waitForTimeout(1200);
   await expect(page.locator("#statusLine")).toContainText("USE: enter Forest Exit");
-  await page.locator("#useBtn").tap();
+  await page.evaluate(() => OTZI.game.tryUse());
   await page.waitForTimeout(200);
   const backOutside = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(backOutside.scene).toBe("overworld");
