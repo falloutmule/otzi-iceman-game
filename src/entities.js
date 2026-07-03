@@ -73,7 +73,8 @@ OTZI.entities = {
       escaped: !!entity.escaped,
       resolveTimer: entity.resolveTimer || 0,
       outcome: entity.outcome || null,
-      collected: !!entity.collected
+      collected: !!entity.collected,
+      noticeCooldown: entity.noticeCooldown || 0
     }));
   },
   applyState(list, states = []) {
@@ -90,6 +91,7 @@ OTZI.entities = {
       if ("resolveTimer" in entity) entity.resolveTimer = state.resolveTimer || 0;
       if ("outcome" in entity) entity.outcome = state.outcome || null;
       if ("collected" in entity) entity.collected = !!state.collected;
+      if ("noticeCooldown" in entity) entity.noticeCooldown = state.noticeCooldown || 0;
     }
   },
   spawnScreen(seed, areaId, map, kind) {
@@ -143,6 +145,7 @@ OTZI.entities = {
         e.outcome = "escaped";
         e.resolveTimer = 0.9;
         OTZI.dialogue.toast(`The ${e.kind} escaped`);
+        OTZI.audio.blip(280, 0.04);
       }
       return;
     }
@@ -161,14 +164,18 @@ OTZI.entities = {
   },
   nearestInteractable(list, player) {
     let best = null;
+    const activeSpear = OTZI.game?.activeSpearStatus?.() || { kind: null };
     for (const entity of list) {
       if ((entity.kind === "hare" || entity.kind === "grouse") && (entity.caught || entity.escaped || entity.state === "fleeing")) continue;
       if (entity.kind === "good_flint_core" && entity.collected) continue;
       if (entity.kind !== "hare" && entity.kind !== "grouse" && entity.kind !== "good_flint_core") continue;
-      const radius = entity.kind === "hare" || entity.kind === "grouse" ? OTZI.CFG.catchRadius : OTZI.CFG.interactRadius;
+      const radius = entity.kind === "hare" || entity.kind === "grouse" ?
+        (activeSpear.kind ? OTZI.CFG.throwRadius : OTZI.CFG.catchRadius) :
+        OTZI.CFG.interactRadius;
       const dist = Math.hypot(entity.x - player.x, entity.y - player.y);
       if (dist > radius) continue;
-      if (!best || dist < best.dist) best = { ...entity, dist };
+      const interactMode = (entity.kind === "hare" || entity.kind === "grouse") && activeSpear.kind && dist > OTZI.CFG.catchRadius ? "throw" : "catch";
+      if (!best || dist < best.dist) best = { ...entity, dist, interactMode };
     }
     return best;
   }

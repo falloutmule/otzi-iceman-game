@@ -23,6 +23,8 @@ OTZI.installTestHooks = function installTestHooks() {
           wetness: g.player.wetness
         },
         inventory: { ...g.inventory },
+        equipment: JSON.parse(JSON.stringify(g.equipment || {})),
+        progress: JSON.parse(JSON.stringify(g.progress || {})),
         village: JSON.parse(JSON.stringify(g.village)),
         facts: JSON.parse(JSON.stringify(g.facts)),
         entityCount: g.entities.length,
@@ -96,7 +98,8 @@ OTZI.installTestHooks = function installTestHooks() {
           kind: g.focusedEntity.kind,
           state: g.focusedEntity.state || null,
           outcome: g.focusedEntity.outcome || null,
-          dist: g.focusedEntity.dist
+          dist: g.focusedEntity.dist,
+          interactMode: g.focusedEntity.interactMode || null
         } : null,
         resourceNodes: OTZI.resources.count(g.resourceNodes),
         viewport: {
@@ -349,6 +352,8 @@ OTZI.installTestHooks = function installTestHooks() {
       return out;
     },
     give(item, n = 1) { OTZI.inventory.add(item, n); },
+    equipSpear(kind) { return OTZI.game.equipSpear(kind); },
+    throwTool() { return OTZI.game.tryToolUse(); },
     setMeters(meters) { OTZI.survival.apply(OTZI.game.player, meters); },
     completeDungeon(id = "flint_cave") {
       if (!OTZI.game.village.unlocked.includes(id)) OTZI.game.village.unlocked.push(id);

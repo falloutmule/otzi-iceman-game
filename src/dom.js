@@ -57,6 +57,7 @@ OTZI.dom = {
         <div class="action-cluster">
           <button id="useBtn" type="button">USE<br>GATHER</button>
           <button id="sprintBtn" type="button">DODGE<br>SPRINT</button>
+          <button id="toolBtn" type="button">THROW<br>TOOL</button>
         </div>
       </section>
       <section id="statsStrip" class="stats-strip" aria-label="Stats and status">
@@ -69,8 +70,9 @@ OTZI.dom = {
       </section>
       <div id="debugPanel" class="debug-panel" hidden></div>
       <div id="craftPanel" class="menu-panel" hidden role="dialog" aria-modal="false" aria-label="Craft and inventory">
-        <div class="panel-title">CRAFT / PACK</div>
+        <div class="panel-title">CRAFT</div>
         <p>Inventory, recipes, and hearth upgrades.</p>
+        <div class="panel-title">INVENTORY</div>
         <dl>
           <div><dt>Flint</dt><dd id="craftFlint">0</dd></div>
           <div><dt>Sticks</dt><dd id="craftStick">0</dd></div>
@@ -87,6 +89,10 @@ OTZI.dom = {
         <button id="craftCrudeToolBtn" type="button">Craft Crude Cutting Tool</button>
         <button id="craftCrudeSpearBtn" type="button">Craft Crude Spear</button>
         <button id="hardenSpearBtn" type="button">Harden Spear Tip</button>
+        <div class="panel-title">EQUIP</div>
+        <button id="equipCrudeSpearBtn" type="button">Equip Crude Spear</button>
+        <button id="equipHardenedSpearBtn" type="button">Equip Hardened Spear</button>
+        <p id="equipHint" class="panel-hint">No spear equipped.</p>
         <p id="craftHint" class="panel-hint">Return to the village hearth to harden wooden spear points.</p>
         <button id="craftCloseBtn" type="button">Close</button>
       </div>
@@ -164,6 +170,9 @@ OTZI.dom = {
     this.craftCrudeToolBtn = document.getElementById("craftCrudeToolBtn");
     this.craftCrudeSpearBtn = document.getElementById("craftCrudeSpearBtn");
     this.hardenSpearBtn = document.getElementById("hardenSpearBtn");
+    this.equipCrudeSpearBtn = document.getElementById("equipCrudeSpearBtn");
+    this.equipHardenedSpearBtn = document.getElementById("equipHardenedSpearBtn");
+    this.equipHint = document.getElementById("equipHint");
     this.craftHint = document.getElementById("craftHint");
     this.craftCloseBtn = document.getElementById("craftCloseBtn");
     this.viewFactBtn = document.getElementById("viewFactBtn");
@@ -184,6 +193,7 @@ OTZI.dom = {
     this.stickKnob = document.getElementById("stickKnob");
     this.useBtn = document.getElementById("useBtn");
     this.sprintBtn = document.getElementById("sprintBtn");
+    this.toolBtn = document.getElementById("toolBtn");
     this.systemBtn = document.getElementById("systemBtn");
     this.mapTab = document.getElementById("mapTab");
     this.craftBtn = document.getElementById("craftBtn");

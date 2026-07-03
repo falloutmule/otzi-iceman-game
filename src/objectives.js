@@ -38,10 +38,10 @@ OTZI.objectives = {
         text: "Return to the village hearth and use the fire."
       };
     }
-    if ((game.inventory.hardenedSpear || 0) > 0) {
+    if ((game.inventory.hardenedSpear || 0) > 0 && (game.progress?.smallGameHunts || 0) < 1) {
       return {
         id: "hunt_small_game",
-        title: "Prepare for the Hunt",
+        title: "Hunt Small Game",
         text: "Search animal clearings and test the hardened spear."
       };
     }

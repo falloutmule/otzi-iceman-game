@@ -148,6 +148,7 @@ OTZI.renderWorld = {
       const y = area.map.h * ts * 0.5;
       const hut = this.project(camera, x - ts * 1.4, y - ts * 0.2, offsetX, offsetY);
       const fire = this.project(camera, x + ts * 2.2, y + ts * 0.6, offsetX, offsetY);
+      const flamePulse = 1 + Math.sin(performance.now() * 0.01) * 0.08;
       ctx.save();
       ctx.fillStyle = "#5b3419";
       ctx.fillRect(hut.x - 26, hut.y - 2, 52, 30);
@@ -171,16 +172,23 @@ OTZI.renderWorld = {
       ctx.fill();
       ctx.fillStyle = "#f0c666";
       ctx.beginPath();
-      ctx.moveTo(fire.x, fire.y - 14);
+      ctx.moveTo(fire.x, fire.y - 14 * flamePulse);
       ctx.quadraticCurveTo(fire.x + 10, fire.y - 2, fire.x, fire.y + 8);
-      ctx.quadraticCurveTo(fire.x - 10, fire.y - 2, fire.x, fire.y - 14);
+      ctx.quadraticCurveTo(fire.x - 10, fire.y - 2, fire.x, fire.y - 14 * flamePulse);
       ctx.fill();
       ctx.fillStyle = "#ff7b3c";
       ctx.beginPath();
-      ctx.moveTo(fire.x + 1, fire.y - 8);
+      ctx.moveTo(fire.x + 1, fire.y - 8 * flamePulse);
       ctx.quadraticCurveTo(fire.x + 5, fire.y, fire.x + 1, fire.y + 6);
-      ctx.quadraticCurveTo(fire.x - 4, fire.y, fire.x + 1, fire.y - 8);
+      ctx.quadraticCurveTo(fire.x - 4, fire.y, fire.x + 1, fire.y - 8 * flamePulse);
       ctx.fill();
+      ctx.fillStyle = "rgba(0,0,0,.72)";
+      ctx.fillRect(fire.x - 24, fire.y - 32, 48, 14);
+      ctx.fillStyle = "#f2ddb2";
+      ctx.font = "800 10px ui-monospace,Consolas,monospace";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
+      ctx.fillText("HEARTH", fire.x, fire.y - 21);
       ctx.restore();
       if (OTZI.village.has("toolmaker")) {
         const tp = this.project(camera, x + ts * 3.2, y - ts * 1.4, offsetX, offsetY);

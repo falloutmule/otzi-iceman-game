@@ -2,10 +2,10 @@
 var OTZI = window.OTZI || (window.OTZI = {});
 
 OTZI.CFG = {
-  engineVersion: "otzi-discoverability-0.4.0",
-  saveVersion: 6,
+  engineVersion: "otzi-fire-spear-0.5.0",
+  saveVersion: 7,
   worldgenVersion: 3,
-  saveKey: "otzi_content_loop_save_v5",
+  saveKey: "otzi_content_loop_save_v6",
   defaultSeed: "otzi-m1",
   tileSize: 24,
   screenTileW: 24,
@@ -21,6 +21,8 @@ OTZI.CFG = {
   gatherRadius: 24,
   interactRadius: 26,
   catchRadius: 22,
+  throwRadius: 88,
+  throwRecoverRadius: 44,
   resourceNodeRadius: 10,
   transitionEdgePad: 18,
   screenTransitionDuration: 0.18,

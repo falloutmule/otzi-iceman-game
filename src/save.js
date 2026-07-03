@@ -28,6 +28,8 @@ OTZI.save = {
         returnScreen: g.returnScreen
       } : null,
       dungeons: g.dungeons,
+      equipment: g.equipment,
+      progress: g.progress,
       guide: {
         welcomeSeenVersion: g.guide?.welcomeSeenVersion || 0
       },
@@ -36,7 +38,7 @@ OTZI.save = {
     };
   },
   apply(data) {
-    if (!data || (data.version !== 5 && data.version !== OTZI.CFG.saveVersion)) throw new Error("Unsupported save version");
+    if (!data || (data.version !== 5 && data.version !== 6 && data.version !== OTZI.CFG.saveVersion)) throw new Error("Unsupported save version");
     const g = OTZI.game;
     g.setSeed(data.seed || OTZI.CFG.defaultSeed);
     if (data.overworld?.discovered) {
@@ -62,6 +64,14 @@ OTZI.save = {
     g.dungeons = {
       ...g.dungeons,
       ...(data.dungeons || {})
+    };
+    g.equipment = {
+      spear: data.equipment?.spear || null,
+      durability: data.equipment?.durability || 0
+    };
+    g.progress = {
+      smallGameHunts: data.progress?.smallGameHunts || 0,
+      lastSmallGame: data.progress?.lastSmallGame || null
     };
     g.guide = {
       welcomeSeenVersion: data.guide?.welcomeSeenVersion || (data.ui?.welcomeSeen ? OTZI.CFG.saveVersion : 0)

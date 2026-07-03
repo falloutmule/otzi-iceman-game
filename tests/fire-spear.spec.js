@@ -2,7 +2,7 @@ import { test, expect, devices } from "@playwright/test";
 
 test.use({ ...devices["Pixel 7"] });
 
-test("menu row, village hearth, and crude spear progression work on mobile", async ({ page }) => {
+test("menu row, hearth mission, and spear throw loop work on mobile", async ({ page }) => {
   const baseUrl = process.env.OTZI_BASE_URL || "http://127.0.0.1:8099";
   const consoleErrors = [];
   const pageErrors = [];
@@ -39,6 +39,7 @@ test("menu row, village hearth, and crude spear progression work on mobile", asy
   await expect(page.locator("#popupBar #systemBtn")).toBeVisible();
   await expect(page.locator("#popupBar")).not.toContainText("PACK");
   await expect(page.locator("#controls #menuBtn")).toHaveCount(0);
+  await expect(page.locator("#controls #toolBtn")).toBeVisible();
 
   await page.evaluate(() => {
     OTZI.game.dungeons.flint_scar.completed = true;
@@ -58,6 +59,8 @@ test("menu row, village hearth, and crude spear progression work on mobile", asy
   await page.locator("#craftCrudeSpearBtn").tap();
   await expect(page.locator("#statusLine")).toContainText("Crafted Crude Spear");
   await expect(page.locator("#craftCrudeSpear")).toHaveText("1");
+  await page.locator("#equipCrudeSpearBtn").tap();
+  await expect(page.locator("#statusLine")).toContainText("Equipped crude spear");
   await page.screenshot({ path: "artifacts/screenshots/fire-spear-menu-craft.png", fullPage: true });
   await page.locator("#craftCloseBtn").tap();
 
@@ -69,12 +72,39 @@ test("menu row, village hearth, and crude spear progression work on mobile", asy
   await expect(page.locator("#hardenSpearBtn")).toBeEnabled();
   await page.locator("#hardenSpearBtn").tap();
   await expect(page.locator("#statusLine")).toContainText("Hardened spear tip");
+  await expect(page.locator("#equipHint")).toContainText("Hardened spear equipped");
+  await page.locator("#craftCloseBtn").tap();
+  await expect(page.locator("#craftPanel")).toBeHidden();
 
   const snap = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(snap.inventory.crudeSpear).toBe(0);
   expect(snap.inventory.hardenedSpear).toBe(1);
-  expect(snap.objective.title).toBe("Prepare for the Hunt");
+  expect(snap.equipment.spear).toBe("hardenedSpear");
+  expect(snap.objective.title).toBe("Hunt Small Game");
   await page.screenshot({ path: "artifacts/screenshots/fire-spear-hardened-objective.png", fullPage: true });
+
+  await page.evaluate(() => window.__OTZI_TEST__.teleportNearHare());
+  await expect(page.locator("#statusLine")).toContainText("THROW: hunt");
+  const beforeThrow = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
+  await page.locator("#toolBtn").tap();
+  await expect(page.locator("#statusLine")).toContainText("caught");
+  const afterThrow = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
+  expect(afterThrow.inventory.food).toBeGreaterThan(beforeThrow.inventory.food || 0);
+  expect(afterThrow.progress.smallGameHunts).toBe(1);
+  expect(afterThrow.objective.title).toBe("Explore");
+  await page.screenshot({ path: "artifacts/screenshots/fire-spear-small-game-hunt.png", fullPage: true });
+
+  const saved = await page.evaluate(() => window.__OTZI_TEST__.saveNow());
+  expect(saved).toBe(true);
+  await page.reload();
+  await page.getByRole("button", { name: /start/i }).tap();
+  if (await page.locator("#welcomePanel").isVisible()) {
+    await page.locator("#welcomeOkBtn").tap();
+  }
+  const afterReload = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
+  expect(afterReload.inventory.hardenedSpear).toBe(afterThrow.inventory.hardenedSpear);
+  expect(afterReload.progress.smallGameHunts).toBe(1);
+  expect(afterReload.equipment.spear).toBe("hardenedSpear");
 
   expect(consoleErrors).toEqual([]);
   expect(pageErrors).toEqual([]);

@@ -48,6 +48,7 @@ test("screen-grid mobile shell supports transitions, screen-local gather, and Fl
   await expect(page.locator("#controls #moveZone")).toBeVisible();
   await expect(page.locator("#controls #useBtn")).toBeVisible();
   await expect(page.locator("#controls #sprintBtn")).toBeVisible();
+  await expect(page.locator("#controls #toolBtn")).toBeVisible();
   await expect(page.locator("#controls #menuBtn")).toHaveCount(0);
 
   const initial = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
@@ -232,6 +233,7 @@ test("screen-grid mobile shell supports transitions, screen-local gather, and Fl
   await page.waitForTimeout(420);
   const duringMove = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   await page.screenshot({ path: "artifacts/screenshots/joystick-bottom-panel.png", fullPage: true });
+  await page.screenshot({ path: "artifacts/screenshots/fire-spear-bottom-controls.png", fullPage: true });
   await page.mouse.up();
   await page.waitForTimeout(80);
   const afterMoveRelease = await page.evaluate(() => window.__OTZI_TEST__.snapshot());

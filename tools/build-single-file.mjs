@@ -98,10 +98,11 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 .stick-label { position:absolute; left:0; top:-20px; color:var(--muted); font-size:11px; font-weight:800; }
 .stick-base { position:absolute; inset:10px; border:2px solid rgba(243,234,215,.25); border-radius:50%; background:rgba(11,16,13,.56); }
 .stick-knob { position:absolute; left:50%; top:50%; width:46px; height:46px; margin:-23px 0 0 -23px; border-radius:50%; background:var(--accent); box-shadow:0 7px 20px rgba(0,0,0,.4); }
-.action-cluster { position:absolute; right:14px; top:22px; display:grid; grid-template-columns:86px 86px; gap:8px; pointer-events:auto; }
+.action-cluster { position:absolute; right:14px; top:22px; display:grid; grid-template-columns:86px; gap:8px; pointer-events:auto; }
 .action-cluster button { height:58px; font-size:12px; }
 #useBtn { background:#513d1e; border-color:#a88345; }
 #sprintBtn { background:#263228; border-color:rgba(243,234,215,.22); }
+#toolBtn { background:#24304a; border-color:rgba(198,214,255,.28); }
 @media (min-width: 900px) and (pointer: fine) { #app { left:50%; right:auto; transform:translateX(-50%); width:min(100vw,520px); box-shadow:0 0 0 1px rgba(243,234,215,.08), 0 0 42px rgba(0,0,0,.55); } .controls { min-height:188px; } .stick-zone { left:calc(50% - 250px); } .action-cluster { right:calc(50% - 250px); } }
 @media (orientation: landscape) {
   .objective-bar { padding:4px 8px; gap:6px; }
@@ -117,7 +118,7 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
   .stick-zone { left:10px; top:20px; width:88px; height:88px; }
   .stick-label { top:-16px; font-size:10px; }
   .stick-knob { width:34px; height:34px; margin:-17px 0 0 -17px; }
-  .action-cluster { right:8px; top:16px; grid-template-columns:68px 68px; gap:6px; }
+  .action-cluster { right:8px; top:16px; grid-template-columns:68px; gap:6px; }
   .action-cluster button { height:46px; font-size:10px; }
 }
 `;

@@ -5,13 +5,14 @@ OTZI.input = {
   keys: new Set(),
   pointers: new Map(),
   moveVector: { x: 0, y: 0 },
-  pressed: { use: false, sprint: false, menu: false, debug: false, map: false, inventory: false },
+  pressed: { use: false, sprint: false, menu: false, debug: false, map: false, inventory: false, tool: false },
   sprintHeld: false,
   init() {
     window.addEventListener("keydown", (ev) => {
       this.keys.add(ev.code);
       if (ev.code === "KeyD") this.pressed.debug = true;
       if (ev.code === "KeyE" || ev.code === "Space") this.pressed.use = true;
+      if (ev.code === "KeyF" || ev.code === "KeyT") this.pressed.tool = true;
       if (ev.code === "KeyM") this.pressed.map = true;
       if (ev.code === "KeyI" || ev.code === "KeyC") this.pressed.inventory = true;
       if (ev.code === "Escape" && (OTZI.game.menuOpen || OTZI.game.inventoryOpen)) {
@@ -31,6 +32,7 @@ OTZI.input = {
     this.bindMoveZone();
     this.bindButton(OTZI.dom.useBtn, "use");
     this.bindButton(OTZI.dom.sprintBtn, "sprint");
+    this.bindButton(OTZI.dom.toolBtn, "tool");
     this.bindButton(OTZI.dom.systemBtn, "menu");
     this.bindButton(OTZI.dom.debugBtn, "debug");
     this.bindButton(OTZI.dom.mapTab, "map");
@@ -96,6 +98,7 @@ OTZI.input = {
     this.pressed.debug = false;
     this.pressed.map = false;
     this.pressed.inventory = false;
+    this.pressed.tool = false;
     return out;
   },
   clearAll() {

@@ -63,11 +63,10 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 .stick-label { position:absolute; left:0; top:-20px; color:var(--muted); font-size:11px; font-weight:800; }
 .stick-base { position:absolute; inset:10px; border:2px solid rgba(243,234,215,.25); border-radius:50%; background:rgba(11,16,13,.56); }
 .stick-knob { position:absolute; left:50%; top:50%; width:46px; height:46px; margin:-23px 0 0 -23px; border-radius:50%; background:var(--accent); box-shadow:0 7px 20px rgba(0,0,0,.4); }
-.action-cluster { position:absolute; right:14px; top:22px; display:grid; grid-template-columns:86px; gap:8px; pointer-events:auto; }
+.action-cluster { position:absolute; right:14px; top:22px; display:grid; grid-template-columns:86px 86px; gap:8px; pointer-events:auto; }
 .action-cluster button { height:58px; font-size:12px; }
 #useBtn { background:#513d1e; border-color:#a88345; }
 #sprintBtn { background:#263228; border-color:rgba(243,234,215,.22); }
-#toolBtn { background:#24304a; border-color:rgba(198,214,255,.28); }
 @media (min-width: 900px) and (pointer: fine) { #app { left:50%; right:auto; transform:translateX(-50%); width:min(100vw,520px); box-shadow:0 0 0 1px rgba(243,234,215,.08), 0 0 42px rgba(0,0,0,.55); } .controls { min-height:188px; } .stick-zone { left:calc(50% - 250px); } .action-cluster { right:calc(50% - 250px); } }
 @media (orientation: landscape) {
   .objective-bar { padding:4px 8px; gap:6px; }
@@ -83,7 +82,7 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
   .stick-zone { left:10px; top:20px; width:88px; height:88px; }
   .stick-label { top:-16px; font-size:10px; }
   .stick-knob { width:34px; height:34px; margin:-17px 0 0 -17px; }
-  .action-cluster { right:8px; top:16px; grid-template-columns:68px; gap:6px; }
+  .action-cluster { right:8px; top:16px; grid-template-columns:68px 68px; gap:6px; }
   .action-cluster button { height:46px; font-size:10px; }
 }
 </style>
@@ -108,10 +107,10 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 var OTZI = window.OTZI || (window.OTZI = {});
 
 OTZI.CFG = {
-  engineVersion: "otzi-fire-spear-0.5.0",
-  saveVersion: 7,
+  engineVersion: "otzi-discoverability-0.4.0",
+  saveVersion: 6,
   worldgenVersion: 3,
-  saveKey: "otzi_content_loop_save_v6",
+  saveKey: "otzi_content_loop_save_v5",
   defaultSeed: "otzi-m1",
   tileSize: 24,
   screenTileW: 24,
@@ -127,8 +126,6 @@ OTZI.CFG = {
   gatherRadius: 24,
   interactRadius: 26,
   catchRadius: 22,
-  throwRadius: 88,
-  throwRecoverRadius: 44,
   resourceNodeRadius: 10,
   transitionEdgePad: 18,
   screenTransitionDuration: 0.18,
@@ -196,7 +193,6 @@ OTZI.dom = {
         <div class="action-cluster">
           <button id="useBtn" type="button">USE<br>GATHER</button>
           <button id="sprintBtn" type="button">DODGE<br>SPRINT</button>
-          <button id="toolBtn" type="button">THROW<br>TOOL</button>
         </div>
       </section>
       <section id="statsStrip" class="stats-strip" aria-label="Stats and status">
@@ -209,9 +205,8 @@ OTZI.dom = {
       </section>
       <div id="debugPanel" class="debug-panel" hidden></div>
       <div id="craftPanel" class="menu-panel" hidden role="dialog" aria-modal="false" aria-label="Craft and inventory">
-        <div class="panel-title">CRAFT</div>
+        <div class="panel-title">CRAFT / PACK</div>
         <p>Inventory, recipes, and hearth upgrades.</p>
-        <div class="panel-title">INVENTORY</div>
         <dl>
           <div><dt>Flint</dt><dd id="craftFlint">0</dd></div>
           <div><dt>Sticks</dt><dd id="craftStick">0</dd></div>
@@ -228,10 +223,6 @@ OTZI.dom = {
         <button id="craftCrudeToolBtn" type="button">Craft Crude Cutting Tool</button>
         <button id="craftCrudeSpearBtn" type="button">Craft Crude Spear</button>
         <button id="hardenSpearBtn" type="button">Harden Spear Tip</button>
-        <div class="panel-title">EQUIP</div>
-        <button id="equipCrudeSpearBtn" type="button">Equip Crude Spear</button>
-        <button id="equipHardenedSpearBtn" type="button">Equip Hardened Spear</button>
-        <p id="equipHint" class="panel-hint">No spear equipped.</p>
         <p id="craftHint" class="panel-hint">Return to the village hearth to harden wooden spear points.</p>
         <button id="craftCloseBtn" type="button">Close</button>
       </div>
@@ -309,9 +300,6 @@ OTZI.dom = {
     this.craftCrudeToolBtn = document.getElementById("craftCrudeToolBtn");
     this.craftCrudeSpearBtn = document.getElementById("craftCrudeSpearBtn");
     this.hardenSpearBtn = document.getElementById("hardenSpearBtn");
-    this.equipCrudeSpearBtn = document.getElementById("equipCrudeSpearBtn");
-    this.equipHardenedSpearBtn = document.getElementById("equipHardenedSpearBtn");
-    this.equipHint = document.getElementById("equipHint");
     this.craftHint = document.getElementById("craftHint");
     this.craftCloseBtn = document.getElementById("craftCloseBtn");
     this.viewFactBtn = document.getElementById("viewFactBtn");
@@ -332,7 +320,6 @@ OTZI.dom = {
     this.stickKnob = document.getElementById("stickKnob");
     this.useBtn = document.getElementById("useBtn");
     this.sprintBtn = document.getElementById("sprintBtn");
-    this.toolBtn = document.getElementById("toolBtn");
     this.systemBtn = document.getElementById("systemBtn");
     this.mapTab = document.getElementById("mapTab");
     this.craftBtn = document.getElementById("craftBtn");
@@ -422,14 +409,13 @@ OTZI.input = {
   keys: new Set(),
   pointers: new Map(),
   moveVector: { x: 0, y: 0 },
-  pressed: { use: false, sprint: false, menu: false, debug: false, map: false, inventory: false, tool: false },
+  pressed: { use: false, sprint: false, menu: false, debug: false, map: false, inventory: false },
   sprintHeld: false,
   init() {
     window.addEventListener("keydown", (ev) => {
       this.keys.add(ev.code);
       if (ev.code === "KeyD") this.pressed.debug = true;
       if (ev.code === "KeyE" || ev.code === "Space") this.pressed.use = true;
-      if (ev.code === "KeyF" || ev.code === "KeyT") this.pressed.tool = true;
       if (ev.code === "KeyM") this.pressed.map = true;
       if (ev.code === "KeyI" || ev.code === "KeyC") this.pressed.inventory = true;
       if (ev.code === "Escape" && (OTZI.game.menuOpen || OTZI.game.inventoryOpen)) {
@@ -449,7 +435,6 @@ OTZI.input = {
     this.bindMoveZone();
     this.bindButton(OTZI.dom.useBtn, "use");
     this.bindButton(OTZI.dom.sprintBtn, "sprint");
-    this.bindButton(OTZI.dom.toolBtn, "tool");
     this.bindButton(OTZI.dom.systemBtn, "menu");
     this.bindButton(OTZI.dom.debugBtn, "debug");
     this.bindButton(OTZI.dom.mapTab, "map");
@@ -515,7 +500,6 @@ OTZI.input = {
     this.pressed.debug = false;
     this.pressed.map = false;
     this.pressed.inventory = false;
-    this.pressed.tool = false;
     return out;
   },
   clearAll() {
@@ -554,7 +538,6 @@ OTZI.actionMap = {
       sprint: input.sprintHeld || input.keys.has("ShiftLeft") || input.keys.has("ShiftRight"),
       sprintPressed: pressed.sprint,
       usePressed: pressed.use,
-      toolPressed: pressed.tool,
       menuPressed: pressed.menu,
       debugPressed: pressed.debug,
       mapPressed: pressed.map,
@@ -1127,8 +1110,7 @@ OTZI.entities = {
       escaped: !!entity.escaped,
       resolveTimer: entity.resolveTimer || 0,
       outcome: entity.outcome || null,
-      collected: !!entity.collected,
-      noticeCooldown: entity.noticeCooldown || 0
+      collected: !!entity.collected
     }));
   },
   applyState(list, states = []) {
@@ -1145,7 +1127,6 @@ OTZI.entities = {
       if ("resolveTimer" in entity) entity.resolveTimer = state.resolveTimer || 0;
       if ("outcome" in entity) entity.outcome = state.outcome || null;
       if ("collected" in entity) entity.collected = !!state.collected;
-      if ("noticeCooldown" in entity) entity.noticeCooldown = state.noticeCooldown || 0;
     }
   },
   spawnScreen(seed, areaId, map, kind) {
@@ -1199,7 +1180,6 @@ OTZI.entities = {
         e.outcome = "escaped";
         e.resolveTimer = 0.9;
         OTZI.dialogue.toast(`The ${e.kind} escaped`);
-        OTZI.audio.blip(280, 0.04);
       }
       return;
     }
@@ -1218,18 +1198,14 @@ OTZI.entities = {
   },
   nearestInteractable(list, player) {
     let best = null;
-    const activeSpear = OTZI.game?.activeSpearStatus?.() || { kind: null };
     for (const entity of list) {
       if ((entity.kind === "hare" || entity.kind === "grouse") && (entity.caught || entity.escaped || entity.state === "fleeing")) continue;
       if (entity.kind === "good_flint_core" && entity.collected) continue;
       if (entity.kind !== "hare" && entity.kind !== "grouse" && entity.kind !== "good_flint_core") continue;
-      const radius = entity.kind === "hare" || entity.kind === "grouse" ?
-        (activeSpear.kind ? OTZI.CFG.throwRadius : OTZI.CFG.catchRadius) :
-        OTZI.CFG.interactRadius;
+      const radius = entity.kind === "hare" || entity.kind === "grouse" ? OTZI.CFG.catchRadius : OTZI.CFG.interactRadius;
       const dist = Math.hypot(entity.x - player.x, entity.y - player.y);
       if (dist > radius) continue;
-      const interactMode = (entity.kind === "hare" || entity.kind === "grouse") && activeSpear.kind && dist > OTZI.CFG.catchRadius ? "throw" : "catch";
-      if (!best || dist < best.dist) best = { ...entity, dist, interactMode };
+      if (!best || dist < best.dist) best = { ...entity, dist };
     }
     return best;
   }
@@ -1681,10 +1657,10 @@ OTZI.objectives = {
         text: "Return to the village hearth and use the fire."
       };
     }
-    if ((game.inventory.hardenedSpear || 0) > 0 && (game.progress?.smallGameHunts || 0) < 1) {
+    if ((game.inventory.hardenedSpear || 0) > 0) {
       return {
         id: "hunt_small_game",
-        title: "Hunt Small Game",
+        title: "Prepare for the Hunt",
         text: "Search animal clearings and test the hardened spear."
       };
     }
@@ -1927,7 +1903,6 @@ OTZI.renderWorld = {
       const y = area.map.h * ts * 0.5;
       const hut = this.project(camera, x - ts * 1.4, y - ts * 0.2, offsetX, offsetY);
       const fire = this.project(camera, x + ts * 2.2, y + ts * 0.6, offsetX, offsetY);
-      const flamePulse = 1 + Math.sin(performance.now() * 0.01) * 0.08;
       ctx.save();
       ctx.fillStyle = "#5b3419";
       ctx.fillRect(hut.x - 26, hut.y - 2, 52, 30);
@@ -1951,23 +1926,16 @@ OTZI.renderWorld = {
       ctx.fill();
       ctx.fillStyle = "#f0c666";
       ctx.beginPath();
-      ctx.moveTo(fire.x, fire.y - 14 * flamePulse);
+      ctx.moveTo(fire.x, fire.y - 14);
       ctx.quadraticCurveTo(fire.x + 10, fire.y - 2, fire.x, fire.y + 8);
-      ctx.quadraticCurveTo(fire.x - 10, fire.y - 2, fire.x, fire.y - 14 * flamePulse);
+      ctx.quadraticCurveTo(fire.x - 10, fire.y - 2, fire.x, fire.y - 14);
       ctx.fill();
       ctx.fillStyle = "#ff7b3c";
       ctx.beginPath();
-      ctx.moveTo(fire.x + 1, fire.y - 8 * flamePulse);
+      ctx.moveTo(fire.x + 1, fire.y - 8);
       ctx.quadraticCurveTo(fire.x + 5, fire.y, fire.x + 1, fire.y + 6);
-      ctx.quadraticCurveTo(fire.x - 4, fire.y, fire.x + 1, fire.y - 8 * flamePulse);
+      ctx.quadraticCurveTo(fire.x - 4, fire.y, fire.x + 1, fire.y - 8);
       ctx.fill();
-      ctx.fillStyle = "rgba(0,0,0,.72)";
-      ctx.fillRect(fire.x - 24, fire.y - 32, 48, 14);
-      ctx.fillStyle = "#f2ddb2";
-      ctx.font = "800 10px ui-monospace,Consolas,monospace";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "bottom";
-      ctx.fillText("HEARTH", fire.x, fire.y - 21);
       ctx.restore();
       if (OTZI.village.has("toolmaker")) {
         const tp = this.project(camera, x + ts * 3.2, y - ts * 1.4, offsetX, offsetY);
@@ -2275,21 +2243,14 @@ OTZI.renderUi = {
       <div><span>@</span><span>You</span></div>
       <div><span>?</span><span>Unknown</span></div>
     `;
-    const spear = game.activeSpearStatus();
-    OTZI.dom.toolBtn.innerHTML = spear.kind === "hardenedSpear" ? "THROW<br>HARDENED" :
-      spear.kind === "crudeSpear" ? "THROW<br>CRUDE" :
-      "THROW<br>TOOL";
     if (!OTZI.dialogue.hasActiveToast()) {
       OTZI.dialogue.message = game.transition.active ? `Traveling ${game.transition.direction}` :
-        game.focusedEntity?.kind === "hare" && game.focusedEntity?.interactMode === "throw" ? `THROW: hunt hare with ${spear.label}` :
-        game.focusedEntity?.kind === "grouse" && game.focusedEntity?.interactMode === "throw" ? `THROW: hunt grouse with ${spear.label}` :
         game.focusedEntity?.kind === "hare" ? "USE: catch hare" :
         game.focusedEntity?.kind === "grouse" ? "USE: catch grouse" :
         game.focusedEntity?.kind === "good_flint_core" ? "USE: take good flint core" :
         game.focusedEntrance?.kind === "hearth" ? "USE: harden spear tip" :
         game.focusedEntrance ? `USE: enter ${game.focusedEntrance.label}` :
-        game.focusedResource ? `USE: gather ${game.focusedResource.resource}` :
-        spear.kind ? `THROW: ${spear.label} ready` : "No resource nearby";
+        game.focusedResource ? `USE: gather ${game.focusedResource.resource}` : "No resource nearby";
       OTZI.dom.statusLine.textContent = OTZI.dialogue.message;
     }
     OTZI.dom.welcomePanel.hidden = !game.welcomeOpen;
@@ -2316,13 +2277,6 @@ OTZI.renderUi = {
       OTZI.dom.hardenSpearBtn.disabled = !canHarden;
       OTZI.dom.hardenSpearBtn.textContent = canHarden ? "Harden Spear Tip" :
         (game.inventory.crudeSpear || 0) > 0 ? "Harden Spear Tip (Need Hearth)" : "Harden Spear Tip (Need Crude Spear)";
-      OTZI.dom.equipCrudeSpearBtn.disabled = (game.inventory.crudeSpear || 0) < 1;
-      OTZI.dom.equipHardenedSpearBtn.disabled = (game.inventory.hardenedSpear || 0) < 1;
-      OTZI.dom.equipCrudeSpearBtn.textContent = game.equipment.spear === "crudeSpear" ? "Crude Spear Equipped" : "Equip Crude Spear";
-      OTZI.dom.equipHardenedSpearBtn.textContent = game.equipment.spear === "hardenedSpear" ? `Hardened Spear Equipped (${Math.max(1, game.equipment.durability || 0)})` : "Equip Hardened Spear";
-      OTZI.dom.equipHint.textContent = !spear.kind ? "No spear equipped." :
-        spear.kind === "hardenedSpear" ? `Hardened spear equipped. Durability ${spear.durability}.` :
-        "Crude spear equipped. The next throw will lose it.";
       OTZI.dom.craftHint.textContent = canHarden ? "The village hearth is ready for hardening." :
         (game.inventory.crudeSpear || 0) > 0 ? "Return to the village hearth to harden the spear tip." :
         "Collect materials and craft tools or spears here.";
@@ -2368,8 +2322,6 @@ OTZI.renderUi = {
       `fps ${game.fps.toFixed(1)}`,
       `entities ${game.entities.length}`,
       `resources ${game.resourceNodes ? OTZI.resources.count(game.resourceNodes).active : 0}`,
-      `spear ${spear.kind || "none"}${spear.kind === "hardenedSpear" ? `:${spear.durability}` : ""}`,
-      `hunt ${game.progress.smallGameHunts || 0}`,
       `pointers ${OTZI.input.pointers.size}`,
       `canvas ${OTZI.viewport.internalW}x${OTZI.viewport.internalH}`,
       `flint ${game.inventory.flint || 0}`
@@ -2539,8 +2491,6 @@ OTZI.save = {
         returnScreen: g.returnScreen
       } : null,
       dungeons: g.dungeons,
-      equipment: g.equipment,
-      progress: g.progress,
       guide: {
         welcomeSeenVersion: g.guide?.welcomeSeenVersion || 0
       },
@@ -2549,7 +2499,7 @@ OTZI.save = {
     };
   },
   apply(data) {
-    if (!data || (data.version !== 5 && data.version !== 6 && data.version !== OTZI.CFG.saveVersion)) throw new Error("Unsupported save version");
+    if (!data || (data.version !== 5 && data.version !== OTZI.CFG.saveVersion)) throw new Error("Unsupported save version");
     const g = OTZI.game;
     g.setSeed(data.seed || OTZI.CFG.defaultSeed);
     if (data.overworld?.discovered) {
@@ -2575,14 +2525,6 @@ OTZI.save = {
     g.dungeons = {
       ...g.dungeons,
       ...(data.dungeons || {})
-    };
-    g.equipment = {
-      spear: data.equipment?.spear || null,
-      durability: data.equipment?.durability || 0
-    };
-    g.progress = {
-      smallGameHunts: data.progress?.smallGameHunts || 0,
-      lastSmallGame: data.progress?.lastSmallGame || null
     };
     g.guide = {
       welcomeSeenVersion: data.guide?.welcomeSeenVersion || (data.ui?.welcomeSeen ? OTZI.CFG.saveVersion : 0)
@@ -2662,8 +2604,6 @@ OTZI.installTestHooks = function installTestHooks() {
           wetness: g.player.wetness
         },
         inventory: { ...g.inventory },
-        equipment: JSON.parse(JSON.stringify(g.equipment || {})),
-        progress: JSON.parse(JSON.stringify(g.progress || {})),
         village: JSON.parse(JSON.stringify(g.village)),
         facts: JSON.parse(JSON.stringify(g.facts)),
         entityCount: g.entities.length,
@@ -2737,8 +2677,7 @@ OTZI.installTestHooks = function installTestHooks() {
           kind: g.focusedEntity.kind,
           state: g.focusedEntity.state || null,
           outcome: g.focusedEntity.outcome || null,
-          dist: g.focusedEntity.dist,
-          interactMode: g.focusedEntity.interactMode || null
+          dist: g.focusedEntity.dist
         } : null,
         resourceNodes: OTZI.resources.count(g.resourceNodes),
         viewport: {
@@ -2991,8 +2930,6 @@ OTZI.installTestHooks = function installTestHooks() {
       return out;
     },
     give(item, n = 1) { OTZI.inventory.add(item, n); },
-    equipSpear(kind) { return OTZI.game.equipSpear(kind); },
-    throwTool() { return OTZI.game.tryToolUse(); },
     setMeters(meters) { OTZI.survival.apply(OTZI.game.player, meters); },
     completeDungeon(id = "flint_cave") {
       if (!OTZI.game.village.unlocked.includes(id)) OTZI.game.village.unlocked.push(id);
@@ -3069,14 +3006,6 @@ OTZI.game = {
   guide: {
     welcomeSeenVersion: 0
   },
-  equipment: {
-    spear: null,
-    durability: 0
-  },
-  progress: {
-    smallGameHunts: 0,
-    lastSmallGame: null
-  },
   welcomeOpen: false,
   areaCard: null,
   areaCardUntil: 0,
@@ -3105,14 +3034,6 @@ OTZI.game = {
     this.activeFactId = null;
     this.guide = {
       welcomeSeenVersion: 0
-    };
-    this.equipment = {
-      spear: null,
-      durability: 0
-    };
-    this.progress = {
-      smallGameHunts: 0,
-      lastSmallGame: null
     };
     this.welcomeOpen = false;
     this.areaCard = null;
@@ -3381,36 +3302,6 @@ OTZI.game = {
   findNearestEntity() {
     return OTZI.entities.nearestInteractable(this.entities || [], this.player);
   },
-  equipSpear(kind) {
-    if ((this.inventory[kind] || 0) < 1) {
-      OTZI.dialogue.toast(kind === "hardenedSpear" ? "No hardened spear ready" : "No crude spear ready");
-      OTZI.audio.blip(220, 0.035);
-      return false;
-    }
-    const currentKind = this.equipment.spear;
-    const currentDurability = this.equipment.durability;
-    this.equipment.spear = kind;
-    if (kind === "hardenedSpear") this.equipment.durability = currentKind === "hardenedSpear" && currentDurability > 0 ? currentDurability : 2;
-    else this.equipment.durability = 1;
-    OTZI.dialogue.toast(kind === "hardenedSpear" ? "Equipped hardened spear" : "Equipped crude spear");
-    return true;
-  },
-  clearEquippedSpear() {
-    this.equipment.spear = null;
-    this.equipment.durability = 0;
-  },
-  activeSpearStatus() {
-    const kind = this.equipment?.spear || null;
-    if (!kind || (this.inventory[kind] || 0) < 1) {
-      return { kind: null, label: "none", durability: 0 };
-    }
-    const durability = kind === "hardenedSpear" ? Math.max(1, this.equipment.durability || 2) : 1;
-    return {
-      kind,
-      label: kind === "hardenedSpear" ? "hardened spear" : "crude spear",
-      durability
-    };
-  },
   updateFocusState() {
     const entity = this.findNearestEntity();
     const entrance = this.findNearestEntrance();
@@ -3443,62 +3334,6 @@ OTZI.game = {
     }
     return this.tryGather();
   },
-  tryToolUse() {
-    if (this.transition.active) return false;
-    const spear = this.activeSpearStatus();
-    if (!spear.kind) {
-      OTZI.dialogue.toast("Equip a spear in CRAFT");
-      OTZI.audio.blip(220, 0.035);
-      return false;
-    }
-    const entity = this.focusedEntityId ? (this.entities || []).find((item) => item.id === this.focusedEntityId) : null;
-    if (!entity || (entity.kind !== "hare" && entity.kind !== "grouse")) {
-      OTZI.dialogue.toast("No prey in range");
-      OTZI.audio.blip(220, 0.035);
-      return false;
-    }
-    const liveTarget = OTZI.entities.nearestInteractable(this.entities || [], this.player);
-    if (!liveTarget || liveTarget.id !== entity.id) return this.resolveSpearThrowMiss(spear, "Throw missed");
-    return this.resolveSpearThrowHit(entity, spear);
-  },
-  resolveSpearThrowHit(entity, spear) {
-    entity.state = "caught";
-    entity.caught = true;
-    entity.outcome = "caught";
-    entity.resolveTimer = 1.1;
-    OTZI.inventory.add("food", entity.kind === "grouse" ? 2 : 1);
-    this.progress.smallGameHunts += 1;
-    this.progress.lastSmallGame = entity.kind;
-    const survived = this.consumeEquippedSpear(true);
-    const foodGain = entity.kind === "grouse" ? 2 : 1;
-    OTZI.dialogue.toast(`${entity.kind === "grouse" ? "Grouse" : "Hare"} caught +${foodGain} food ${survived ? "- spear recovered" : "- spear lost"}`);
-    OTZI.audio.blip(760, 0.05);
-    this.updateFocusState();
-    return true;
-  },
-  resolveSpearThrowMiss(spear, message) {
-    const survived = this.consumeEquippedSpear(false);
-    OTZI.dialogue.toast(message || `${spear.label} thrown ${survived ? "- recovered" : "- lost"}`);
-    OTZI.audio.blip(300, 0.04);
-    this.updateFocusState();
-    return false;
-  },
-  consumeEquippedSpear(hit) {
-    const spear = this.activeSpearStatus();
-    if (!spear.kind) return false;
-    if (spear.kind === "crudeSpear") {
-      OTZI.inventory.add("crudeSpear", -1);
-      this.clearEquippedSpear();
-      return false;
-    }
-    this.equipment.durability = Math.max(0, (this.equipment.durability || 2) - 1);
-    if (this.equipment.durability <= 0) {
-      OTZI.inventory.add("hardenedSpear", -1);
-      this.clearEquippedSpear();
-      return false;
-    }
-    return true;
-  },
   useVillageHearth() {
     if ((this.inventory.crudeSpear || 0) < 1) {
       OTZI.dialogue.toast("Craft a crude spear first");
@@ -3507,10 +3342,6 @@ OTZI.game = {
     }
     OTZI.inventory.add("crudeSpear", -1);
     OTZI.inventory.add("hardenedSpear", 1);
-    if (this.equipment.spear === "crudeSpear") {
-      this.equipment.spear = "hardenedSpear";
-      this.equipment.durability = 2;
-    }
     OTZI.dialogue.toast("Hardened spear tip");
     OTZI.audio.blip(700, 0.045);
     this.updateFocusState();
@@ -3520,12 +3351,8 @@ OTZI.game = {
     const entity = (this.entities || []).find((item) => item.id === this.focusedEntityId);
     if (!entity) return false;
     if (entity.kind === "hare" || entity.kind === "grouse") {
-      if (entity.interactMode === "throw") {
-        OTZI.dialogue.toast("Too far away - throw the spear");
-        return false;
-      }
       if (entity.state === "fleeing" || entity.escaped) {
-        OTZI.dialogue.toast("The animal is already escaping");
+        OTZI.dialogue.toast("Too startled to catch");
         return false;
       }
       entity.state = "caught";
@@ -3533,8 +3360,6 @@ OTZI.game = {
       entity.outcome = "caught";
       entity.resolveTimer = 0.9;
       OTZI.inventory.add("food", 1);
-      this.progress.smallGameHunts += 1;
-      this.progress.lastSmallGame = entity.kind;
       OTZI.dialogue.toast(`Caught ${entity.kind} +1 food`);
       OTZI.audio.blip(600, 0.05);
       this.updateFocusState();
@@ -3677,7 +3502,6 @@ OTZI.game = {
       actions.moveX = 0;
       actions.moveY = 0;
       actions.sprint = false;
-      actions.toolPressed = false;
     }
     if (actions.debugPressed) OTZI.debug.toggle();
     if (actions.mapPressed) {
@@ -3700,7 +3524,6 @@ OTZI.game = {
       OTZI.dialogue.toast(this.menuOpen ? "System open" : "System closed");
     }
     if (actions.usePressed) this.tryUse();
-    if (actions.toolPressed) this.tryToolUse();
     if (actions.sprintPressed) {
       OTZI.survival.spendStamina(this.player, 8);
       OTZI.dialogue.toast("Dodge/Sprint burst");
@@ -3710,7 +3533,6 @@ OTZI.game = {
       actions.moveX = 0;
       actions.moveY = 0;
       actions.sprint = false;
-      actions.toolPressed = false;
     }
     const sprinting = actions.sprint && this.player.stamina > 0;
     this.lastSprinting = sprinting;
@@ -3794,12 +3616,6 @@ OTZI.game = {
     OTZI.dom.hardenSpearBtn.addEventListener("click", () => {
       OTZI.crafting.hardenSpearTip();
     });
-    OTZI.dom.equipCrudeSpearBtn.addEventListener("click", () => {
-      OTZI.game.equipSpear("crudeSpear");
-    });
-    OTZI.dom.equipHardenedSpearBtn.addEventListener("click", () => {
-      OTZI.game.equipSpear("hardenedSpear");
-    });
     OTZI.dom.factCloseBtn.addEventListener("click", () => {
       OTZI.game.closeFact();
     });
@@ -3836,6 +3652,6 @@ OTZI.game = {
 })();
 
   </script>
-  <!-- build: 2026-07-03T11:24:33.451Z modules:30 -->
+  <!-- build: 2026-07-03T09:34:56.871Z modules:30 -->
 </body>
 </html>

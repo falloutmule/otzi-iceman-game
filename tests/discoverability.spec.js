@@ -61,8 +61,8 @@ test("discoverability guidance exposes the first playable loop", async ({ page }
 
   await page.locator("#systemBtn").tap();
   await expect(page.locator("#systemPanel")).toBeVisible();
-  await expect(page.locator("#menuBuildVersion")).toHaveText("otzi-discoverability-0.4.0");
-  await expect(page.locator("#menuSaveVersion")).toHaveText("6");
+  await expect(page.locator("#menuBuildVersion")).toHaveText("otzi-fire-spear-0.5.0");
+  await expect(page.locator("#menuSaveVersion")).toHaveText("7");
   await expect(page.locator("#menuWorldgenVersion")).toHaveText("3");
   await page.screenshot({ path: "artifacts/screenshots/fix-menu-build-marker.png", fullPage: true });
   await page.locator("#showHelpBtn").tap();
