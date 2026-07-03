@@ -40,32 +40,29 @@ OTZI.renderUi = {
     }
     OTZI.dom.minimapPanel.hidden = !game.minimap;
     if (game.minimap) this.drawMinimap();
-    OTZI.dom.inventoryPanel.hidden = !game.inventoryOpen;
+    OTZI.dom.craftPanel.hidden = !game.inventoryOpen;
     if (game.inventoryOpen) {
-      OTZI.dom.invFlint.textContent = String(game.inventory.flint || 0);
-      OTZI.dom.invStick.textContent = String(game.inventory.stick || 0);
-      OTZI.dom.invStone.textContent = String(game.inventory.stone || 0);
-      OTZI.dom.invBark.textContent = String(game.inventory.bark || 0);
-      OTZI.dom.invGrass.textContent = String(game.inventory.grass || 0);
-      OTZI.dom.invFood.textContent = String(game.inventory.food || 0);
-      OTZI.dom.invCrudeTool.textContent = String(game.inventory.crudeTool || 0);
-      OTZI.dom.invCrudeSpear.textContent = String(game.inventory.crudeSpear || 0);
-      OTZI.dom.invHardenedSpear.textContent = String(game.inventory.hardenedSpear || 0);
-      OTZI.dom.invGoodFlintCore.textContent = String(game.inventory.goodFlintCore || 0);
+      OTZI.dom.craftFlint.textContent = String(game.inventory.flint || 0);
+      OTZI.dom.craftStick.textContent = String(game.inventory.stick || 0);
+      OTZI.dom.craftStone.textContent = String(game.inventory.stone || 0);
+      OTZI.dom.craftBark.textContent = String(game.inventory.bark || 0);
+      OTZI.dom.craftGrass.textContent = String(game.inventory.grass || 0);
+      OTZI.dom.craftFood.textContent = String(game.inventory.food || 0);
+      OTZI.dom.craftCrudeTool.textContent = String(game.inventory.crudeTool || 0);
+      OTZI.dom.craftCrudeSpear.textContent = String(game.inventory.crudeSpear || 0);
+      OTZI.dom.craftHardenedSpear.textContent = String(game.inventory.hardenedSpear || 0);
+      OTZI.dom.craftGoodFlintCore.textContent = String(game.inventory.goodFlintCore || 0);
+      const canHarden = OTZI.crafting.canHardenAtHearth(game);
+      OTZI.dom.hardenSpearBtn.disabled = !canHarden;
+      OTZI.dom.hardenSpearBtn.textContent = canHarden ? "Harden Spear Tip" :
+        (game.inventory.crudeSpear || 0) > 0 ? "Harden Spear Tip (Need Hearth)" : "Harden Spear Tip (Need Crude Spear)";
+      OTZI.dom.craftHint.textContent = canHarden ? "The village hearth is ready for hardening." :
+        (game.inventory.crudeSpear || 0) > 0 ? "Return to the village hearth to harden the spear tip." :
+        "Collect materials and craft tools or spears here.";
     }
-    OTZI.dom.menuPanel.hidden = !game.menuOpen;
+    OTZI.dom.systemPanel.hidden = !game.menuOpen;
     if (game.menuOpen) {
       OTZI.dom.menuSeed.textContent = game.seed;
-      OTZI.dom.menuFlint.textContent = String(game.inventory.flint || 0);
-      OTZI.dom.menuStick.textContent = String(game.inventory.stick || 0);
-      OTZI.dom.menuStone.textContent = String(game.inventory.stone || 0);
-      OTZI.dom.menuBark.textContent = String(game.inventory.bark || 0);
-      OTZI.dom.menuGrass.textContent = String(game.inventory.grass || 0);
-      OTZI.dom.menuFood.textContent = String(game.inventory.food || 0);
-      OTZI.dom.menuCrudeTool.textContent = String(game.inventory.crudeTool || 0);
-      OTZI.dom.menuCrudeSpear.textContent = String(game.inventory.crudeSpear || 0);
-      OTZI.dom.menuHardenedSpear.textContent = String(game.inventory.hardenedSpear || 0);
-      OTZI.dom.menuGoodFlintCore.textContent = String(game.inventory.goodFlintCore || 0);
       OTZI.dom.menuToolmaker.textContent = OTZI.village.has("toolmaker") ? "Unlocked" : "Locked";
       OTZI.dom.menuLatestFact.textContent = OTZI.facts.latestDiscovered()?.title || "None";
       OTZI.dom.menuStamina.textContent = Math.round(game.player.stamina).toString();

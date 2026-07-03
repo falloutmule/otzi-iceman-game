@@ -28,7 +28,7 @@ OTZI.objectives = {
       return {
         id: "craft_crude_spear",
         title: "Craft a Crude Spear",
-        text: "Open MENU and shape a spear from stick, stone, and bark."
+        text: "Open CRAFT and shape a spear from stick, stone, and bark."
       };
     }
     if ((game.inventory.crudeSpear || 0) > 0 && (game.inventory.hardenedSpear || 0) < 1) {

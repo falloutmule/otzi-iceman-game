@@ -85,11 +85,13 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 .menu-panel[hidden] { display:none; }
 .welcome-panel { top:40%; }
 .menu-panel p { margin:4px 0 12px; color:var(--ink); }
+.panel-hint { color:var(--muted); font-size:12px; }
 .menu-panel dl { margin:0 0 12px; display:grid; gap:6px; }
 .menu-panel dl div { display:flex; justify-content:space-between; gap:16px; border-bottom:1px solid rgba(243,234,215,.1); padding-bottom:4px; }
 .menu-panel dt { color:var(--muted); }
 .menu-panel dd { margin:0; font-weight:800; }
 .menu-panel button { width:100%; background:#513d1e; border-color:#a88345; }
+.menu-panel button:disabled { opacity:.65; background:#2e2c25; border-color:#5a564b; color:#d4c7ad; }
 .menu-panel button + button { margin-top:8px; }
 .controls { grid-area:controls; position:relative; width:100%; min-width:0; max-width:100%; min-height:172px; height:min(28dvh,224px); padding:12px 10px; border-top:1px solid rgba(243,234,215,.16); background:linear-gradient(180deg,#111812,#070a08); pointer-events:none; }
 .stick-zone { position:absolute; left:16px; top:26px; width:132px; height:132px; pointer-events:auto; touch-action:none; }

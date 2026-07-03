@@ -23,6 +23,22 @@ OTZI.crafting = {
     if (!recipe) return false;
     return Object.entries(recipe.inputs).every(([item, count]) => (inventory[item] || 0) >= count);
   },
+  canHardenAtHearth(game = OTZI.game) {
+    return !!game.focusedEntrance && game.focusedEntrance.kind === "hearth" && (game.inventory.crudeSpear || 0) > 0;
+  },
+  hardenSpearTip() {
+    if ((OTZI.game.inventory.crudeSpear || 0) < 1) {
+      OTZI.dialogue.toast("Craft a crude spear first");
+      OTZI.audio.blip(220, 0.035);
+      return false;
+    }
+    if (!this.canHardenAtHearth()) {
+      OTZI.dialogue.toast("Return to the village hearth");
+      OTZI.audio.blip(220, 0.035);
+      return false;
+    }
+    return OTZI.game.useVillageHearth();
+  },
   craft(id) {
     const recipe = this.getRecipe(id);
     if (!recipe) {

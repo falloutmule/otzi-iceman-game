@@ -547,19 +547,21 @@ OTZI.game = {
     if (actions.mapPressed) {
       this.minimap = !this.minimap;
       if (this.minimap) this.inventoryOpen = false;
+      if (this.minimap) this.menuOpen = false;
       OTZI.dialogue.toast(this.minimap ? "Trail map open" : "Trail map closed");
     }
     if (actions.inventoryPressed) {
       this.inventoryOpen = !this.inventoryOpen;
       if (this.inventoryOpen) this.minimap = false;
-      OTZI.dialogue.toast(this.inventoryOpen ? "Pack open" : "Pack closed");
+      if (this.inventoryOpen) this.menuOpen = false;
+      OTZI.dialogue.toast(this.inventoryOpen ? "Craft open" : "Craft closed");
     }
     if (actions.menuPressed) {
       this.menuOpen = !this.menuOpen;
       OTZI.input.clearAll();
       if (this.menuOpen) this.minimap = false;
       if (this.menuOpen) this.inventoryOpen = false;
-      OTZI.dialogue.toast(this.menuOpen ? "Menu opened" : "Menu closed");
+      OTZI.dialogue.toast(this.menuOpen ? "System open" : "System closed");
     }
     if (actions.usePressed) this.tryUse();
     if (actions.sprintPressed) {
@@ -567,7 +569,7 @@ OTZI.game = {
       OTZI.dialogue.toast("Dodge/Sprint burst");
       OTZI.audio.blip(330, 0.035);
     }
-    if (this.menuOpen || this.welcomeOpen) {
+    if (this.menuOpen || this.inventoryOpen || this.welcomeOpen) {
       actions.moveX = 0;
       actions.moveY = 0;
       actions.sprint = false;
@@ -635,16 +637,24 @@ OTZI.game = {
     OTZI.dom.welcomeOkBtn.addEventListener("click", () => {
       OTZI.game.dismissWelcome(true);
     });
-    OTZI.dom.menuCloseBtn.addEventListener("click", () => {
+    OTZI.dom.systemCloseBtn.addEventListener("click", () => {
       OTZI.game.menuOpen = false;
       OTZI.input.clearAll();
-      OTZI.dialogue.toast("Menu closed");
+      OTZI.dialogue.toast("System closed");
+    });
+    OTZI.dom.craftCloseBtn.addEventListener("click", () => {
+      OTZI.game.inventoryOpen = false;
+      OTZI.input.clearAll();
+      OTZI.dialogue.toast("Craft closed");
     });
     OTZI.dom.craftCrudeToolBtn.addEventListener("click", () => {
       OTZI.crafting.craft("crude_cutting_tool");
     });
     OTZI.dom.craftCrudeSpearBtn.addEventListener("click", () => {
       OTZI.crafting.craft("crude_spear");
+    });
+    OTZI.dom.hardenSpearBtn.addEventListener("click", () => {
+      OTZI.crafting.hardenSpearTip();
     });
     OTZI.dom.factCloseBtn.addEventListener("click", () => {
       OTZI.game.closeFact();

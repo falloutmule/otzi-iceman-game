@@ -35,8 +35,9 @@ test("menu row, village hearth, and crude spear progression work on mobile", asy
   }
 
   await expect(page.locator("#popupBar #mapTab")).toBeVisible();
-  await expect(page.locator("#popupBar #menuBtn")).toBeVisible();
-  await expect(page.locator("#popupBar #inventoryBtn")).toBeVisible();
+  await expect(page.locator("#popupBar #craftBtn")).toBeVisible();
+  await expect(page.locator("#popupBar #systemBtn")).toBeVisible();
+  await expect(page.locator("#popupBar")).not.toContainText("PACK");
   await expect(page.locator("#controls #menuBtn")).toHaveCount(0);
 
   await page.evaluate(() => {
@@ -50,21 +51,23 @@ test("menu row, village hearth, and crude spear progression work on mobile", asy
   });
 
   await expect(page.locator("#objectiveTitle")).toContainText("Craft a Crude Spear");
-  await expect(page.locator("#objectiveText")).toContainText("MENU");
-  await page.locator("#menuBtn").tap();
-  await expect(page.locator("#menuPanel")).toBeVisible();
-  await expect(page.locator("#menuCrudeSpear")).toHaveText("0");
+  await expect(page.locator("#objectiveText")).toContainText("CRAFT");
+  await page.locator("#craftBtn").tap();
+  await expect(page.locator("#craftPanel")).toBeVisible();
+  await expect(page.locator("#craftCrudeSpear")).toHaveText("0");
   await page.locator("#craftCrudeSpearBtn").tap();
   await expect(page.locator("#statusLine")).toContainText("Crafted Crude Spear");
-  await expect(page.locator("#menuCrudeSpear")).toHaveText("1");
+  await expect(page.locator("#craftCrudeSpear")).toHaveText("1");
   await page.screenshot({ path: "artifacts/screenshots/fire-spear-menu-craft.png", fullPage: true });
-  await page.locator("#menuCloseBtn").tap();
+  await page.locator("#craftCloseBtn").tap();
 
   await page.evaluate(() => window.__OTZI_TEST__.teleportToVillageHearth());
   await expect(page.locator("#statusLine")).toContainText("USE: harden spear tip");
   await expect(page.locator("#areaCardTitle")).toContainText("Village Camp");
   await page.screenshot({ path: "artifacts/screenshots/fire-spear-village-hearth.png", fullPage: true });
-  await page.locator("#useBtn").tap();
+  await page.locator("#craftBtn").tap();
+  await expect(page.locator("#hardenSpearBtn")).toBeEnabled();
+  await page.locator("#hardenSpearBtn").tap();
   await expect(page.locator("#statusLine")).toContainText("Hardened spear tip");
 
   const snap = await page.evaluate(() => window.__OTZI_TEST__.snapshot());

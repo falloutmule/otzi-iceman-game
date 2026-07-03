@@ -42,8 +42,9 @@ test("screen-grid mobile shell supports transitions, screen-local gather, and Fl
   await expect(page.locator("#aimStrip")).toHaveCount(0);
   await expect(page.locator(".aim-strip")).toHaveCount(0);
   await expect(page.locator("#popupBar #mapTab")).toBeVisible();
-  await expect(page.locator("#popupBar #menuBtn")).toBeVisible();
-  await expect(page.locator("#popupBar #inventoryBtn")).toBeVisible();
+  await expect(page.locator("#popupBar #craftBtn")).toBeVisible();
+  await expect(page.locator("#popupBar #systemBtn")).toBeVisible();
+  await expect(page.locator("#popupBar")).not.toContainText("PACK");
   await expect(page.locator("#controls #moveZone")).toBeVisible();
   await expect(page.locator("#controls #useBtn")).toBeVisible();
   await expect(page.locator("#controls #sprintBtn")).toBeVisible();
@@ -103,12 +104,15 @@ test("screen-grid mobile shell supports transitions, screen-local gather, and Fl
   await page.locator("#mapTab").tap();
   await expect(page.locator("#minimapPanel")).toBeVisible();
   await expect(page.locator("#minimapTitle")).toContainText("OVERWORLD MAP");
+  await page.screenshot({ path: "artifacts/screenshots/map-panel-still-works.png", fullPage: true });
   await page.screenshot({ path: "artifacts/screenshots/hud-map-button-minimap-open.png", fullPage: true });
   await page.screenshot({ path: "artifacts/screenshots/overworld-discovered-minimap.png", fullPage: true });
   await page.screenshot({ path: "artifacts/screenshots/clear-game-viewport-no-controls.png", fullPage: true });
-  await page.locator("#inventoryBtn").tap();
-  await expect(page.locator("#inventoryPanel")).toBeVisible();
+  await page.locator("#craftBtn").tap();
+  await expect(page.locator("#craftPanel")).toBeVisible();
   await expect(page.locator("#minimapPanel")).toBeHidden();
+  await page.locator("#craftCloseBtn").tap();
+  await expect(page.locator("#craftPanel")).toBeHidden();
 
   await page.evaluate(() => window.__OTZI_TEST__.teleportToNearestResource("flint"));
   await page.waitForTimeout(1200);
@@ -131,21 +135,25 @@ test("screen-grid mobile shell supports transitions, screen-local gather, and Fl
   await page.screenshot({ path: "artifacts/screenshots/gather-focused-resource-only.png", fullPage: true });
   await page.screenshot({ path: "artifacts/screenshots/post-transition-resource-gather.png", fullPage: true });
 
-  await page.locator("#inventoryBtn").tap();
-  await expect(page.locator("#inventoryPanel")).toBeVisible();
+  await page.locator("#craftBtn").tap();
+  await expect(page.locator("#craftPanel")).toBeVisible();
   await expect(page.locator("#minimapPanel")).toBeHidden();
-  await expect(page.locator("#invFlint")).toHaveText("1");
-  await page.screenshot({ path: "artifacts/screenshots/mobile-ui-inventory-popup.png", fullPage: true });
+  await expect(page.locator("#craftFlint")).toHaveText("1");
+  await expect(page.locator("#craftCrudeSpearBtn")).toBeVisible();
+  await page.screenshot({ path: "artifacts/screenshots/craft-panel-inventory-recipes.png", fullPage: true });
+  await page.locator("#craftCloseBtn").tap();
+  await expect(page.locator("#craftPanel")).toBeHidden();
 
-  await page.locator("#menuBtn").tap();
-  await expect(page.locator("#menuPanel")).toBeVisible();
+  await page.locator("#systemBtn").tap();
+  await expect(page.locator("#systemPanel")).toBeVisible();
   await expect(page.locator("#fullscreenBtn")).toBeVisible();
   await page.locator("#fullscreenBtn").tap();
   await expect(page.locator("#statusLine")).toContainText(/Fullscreen/);
   await page.locator("#resetSaveBtn").tap();
   await expect(page.locator("#resetSaveBtn")).toHaveText("Confirm Reset Save");
-  await page.locator("#menuCloseBtn").tap();
-  await expect(page.locator("#menuPanel")).toBeHidden();
+  await page.screenshot({ path: "artifacts/screenshots/system-panel-options-build.png", fullPage: true });
+  await page.locator("#systemCloseBtn").tap();
+  await expect(page.locator("#systemPanel")).toBeHidden();
 
   const saved = await page.evaluate(() => window.__OTZI_TEST__.saveNow());
   expect(saved).toBe(true);
@@ -197,8 +205,8 @@ test("screen-grid mobile shell supports transitions, screen-local gather, and Fl
   await expect(page.locator("#minimapTitle")).toContainText("OVERWORLD MAP");
   await page.screenshot({ path: "artifacts/screenshots/flint-scar-enter-exit.png", fullPage: true });
 
-  await page.locator("#menuBtn").tap();
-  await expect(page.locator("#menuPanel")).toBeVisible();
+  await page.locator("#systemBtn").tap();
+  await expect(page.locator("#systemPanel")).toBeVisible();
   await page.locator("#resetSaveBtn").tap();
   await expect(page.locator("#resetSaveBtn")).toHaveText("Confirm Reset Save");
   await page.locator("#resetSaveBtn").tap();
@@ -261,4 +269,6 @@ test("mobile shell uses full width and keeps ordered controls", async ({ page })
   expect(statsBox.y).toBeGreaterThan(controlsBox.y);
   await expect(page.locator("#statsStrip")).not.toContainText("FLINT");
   await page.screenshot({ path: "artifacts/screenshots/mobile-ui-stats-below-controls.png", fullPage: true });
+  await page.screenshot({ path: "artifacts/screenshots/menu-split-top-row.png", fullPage: true });
+  await page.screenshot({ path: "artifacts/screenshots/bottom-controls-action-only.png", fullPage: true });
 });

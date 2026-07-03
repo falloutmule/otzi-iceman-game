@@ -24,21 +24,6 @@ OTZI.dom = {
             <div><span>?</span><span>Unknown</span></div>
           </div>
         </div>
-        <div id="inventoryPanel" class="inventory-panel" hidden aria-label="Pack inventory">
-          <div class="panel-title">PACK</div>
-          <dl>
-            <div><dt>Flint</dt><dd id="invFlint">0</dd></div>
-            <div><dt>Sticks</dt><dd id="invStick">0</dd></div>
-            <div><dt>Stones</dt><dd id="invStone">0</dd></div>
-            <div><dt>Bark</dt><dd id="invBark">0</dd></div>
-            <div><dt>Grass</dt><dd id="invGrass">0</dd></div>
-            <div><dt>Food</dt><dd id="invFood">0</dd></div>
-            <div><dt>Crude tools</dt><dd id="invCrudeTool">0</dd></div>
-            <div><dt>Crude spears</dt><dd id="invCrudeSpear">0</dd></div>
-            <div><dt>Hardened spears</dt><dd id="invHardenedSpear">0</dd></div>
-            <div><dt>Good flint core</dt><dd id="invGoodFlintCore">0</dd></div>
-          </dl>
-        </div>
         <div class="start-panel" id="startPanel">
           <h1>The Legend of &Ouml;tzi the Iceman</h1>
           <p>Explore the Alps, gather supplies, and find Flint Scar.</p>
@@ -59,10 +44,10 @@ OTZI.dom = {
           <span id="objectiveText">Travel east from the village.</span>
         </div>
       </section>
-      <section id="popupBar" class="popup-bar" aria-label="Map menu and inventory buttons">
+      <section id="popupBar" class="popup-bar" aria-label="Map craft and system buttons">
         <button id="mapTab" type="button" aria-label="Trail map">MAP</button>
-        <button id="menuBtn" type="button" aria-label="Open menu">MENU</button>
-        <button id="inventoryBtn" type="button" aria-label="Open inventory">PACK</button>
+        <button id="craftBtn" type="button" aria-label="Open craft">CRAFT</button>
+        <button id="systemBtn" type="button" aria-label="Open system">SYSTEM</button>
       </section>
       <section class="controls" id="controls" aria-label="Touch controls">
         <div class="stick-zone" id="moveZone" aria-label="MOVE joystick">
@@ -83,37 +68,49 @@ OTZI.dom = {
         <button id="debugBtn" type="button" aria-label="Toggle debug">D</button>
       </section>
       <div id="debugPanel" class="debug-panel" hidden></div>
-      <div id="menuPanel" class="menu-panel" hidden role="dialog" aria-modal="false" aria-label="Menu">
-        <div class="panel-title">MENU</div>
-        <p>Crafting, facts, and system tools.</p>
+      <div id="craftPanel" class="menu-panel" hidden role="dialog" aria-modal="false" aria-label="Craft and inventory">
+        <div class="panel-title">CRAFT / PACK</div>
+        <p>Inventory, recipes, and hearth upgrades.</p>
         <dl>
-          <div><dt>Seed</dt><dd id="menuSeed">-</dd></div>
-          <div><dt>Flint</dt><dd id="menuFlint">0</dd></div>
-          <div><dt>Sticks</dt><dd id="menuStick">0</dd></div>
-          <div><dt>Stones</dt><dd id="menuStone">0</dd></div>
-          <div><dt>Bark</dt><dd id="menuBark">0</dd></div>
-          <div><dt>Grass</dt><dd id="menuGrass">0</dd></div>
-          <div><dt>Food</dt><dd id="menuFood">0</dd></div>
-          <div><dt>Crude cutting tools</dt><dd id="menuCrudeTool">0</dd></div>
-          <div><dt>Crude spears</dt><dd id="menuCrudeSpear">0</dd></div>
-          <div><dt>Hardened spears</dt><dd id="menuHardenedSpear">0</dd></div>
-          <div><dt>Good flint core</dt><dd id="menuGoodFlintCore">0</dd></div>
-          <div><dt>Toolmaker</dt><dd id="menuToolmaker">Locked</dd></div>
-          <div><dt>Latest fact</dt><dd id="menuLatestFact">None</dd></div>
-          <div><dt>Stamina</dt><dd id="menuStamina">100</dd></div>
+          <div><dt>Flint</dt><dd id="craftFlint">0</dd></div>
+          <div><dt>Sticks</dt><dd id="craftStick">0</dd></div>
+          <div><dt>Stones</dt><dd id="craftStone">0</dd></div>
+          <div><dt>Bark</dt><dd id="craftBark">0</dd></div>
+          <div><dt>Grass</dt><dd id="craftGrass">0</dd></div>
+          <div><dt>Food</dt><dd id="craftFood">0</dd></div>
+          <div><dt>Crude cutting tools</dt><dd id="craftCrudeTool">0</dd></div>
+          <div><dt>Crude spears</dt><dd id="craftCrudeSpear">0</dd></div>
+          <div><dt>Hardened spears</dt><dd id="craftHardenedSpear">0</dd></div>
+          <div><dt>Good flint core</dt><dd id="craftGoodFlintCore">0</dd></div>
         </dl>
+        <div class="panel-title">RECIPES</div>
         <button id="craftCrudeToolBtn" type="button">Craft Crude Cutting Tool</button>
         <button id="craftCrudeSpearBtn" type="button">Craft Crude Spear</button>
+        <button id="hardenSpearBtn" type="button">Harden Spear Tip</button>
+        <p id="craftHint" class="panel-hint">Return to the village hearth to harden wooden spear points.</p>
+        <button id="craftCloseBtn" type="button">Close</button>
+      </div>
+      <div id="systemPanel" class="menu-panel" hidden role="dialog" aria-modal="false" aria-label="System">
+        <div class="panel-title">SYSTEM</div>
+        <p>Objective help, facts, save controls, and build information.</p>
+        <div class="panel-title">HELP</div>
+        <p class="panel-hint">MOVE with the left pad. USE handles gathering, entrances, and nearby interactions.</p>
         <button id="viewFactBtn" type="button">View Latest Fact</button>
         <button id="showHelpBtn" type="button">Show Objective Help</button>
         <button id="fullscreenBtn" type="button">Fullscreen</button>
         <button id="resetSaveBtn" type="button">Reset Save</button>
+        <dl>
+          <div><dt>Seed</dt><dd id="menuSeed">-</dd></div>
+          <div><dt>Toolmaker</dt><dd id="menuToolmaker">Locked</dd></div>
+          <div><dt>Latest fact</dt><dd id="menuLatestFact">None</dd></div>
+          <div><dt>Stamina</dt><dd id="menuStamina">100</dd></div>
+        </dl>
         <dl class="menu-build-meta">
           <div><dt>Build</dt><dd id="menuBuildVersion">-</dd></div>
           <div><dt>Save</dt><dd id="menuSaveVersion">-</dd></div>
           <div><dt>Worldgen</dt><dd id="menuWorldgenVersion">-</dd></div>
         </dl>
-        <button id="menuCloseBtn" type="button">Close</button>
+        <button id="systemCloseBtn" type="button">Close</button>
       </div>
       <div id="factPanel" class="menu-panel" hidden role="dialog" aria-modal="false" aria-label="Fact log">
         <div class="panel-title">OTZI FACT</div>
@@ -148,34 +145,27 @@ OTZI.dom = {
     this.areaCard = document.getElementById("areaCard");
     this.areaCardTitle = document.getElementById("areaCardTitle");
     this.areaCardText = document.getElementById("areaCardText");
-    this.inventoryPanel = document.getElementById("inventoryPanel");
-    this.invFlint = document.getElementById("invFlint");
-    this.invStick = document.getElementById("invStick");
-    this.invStone = document.getElementById("invStone");
-    this.invBark = document.getElementById("invBark");
-    this.invGrass = document.getElementById("invGrass");
-    this.invFood = document.getElementById("invFood");
-    this.invCrudeTool = document.getElementById("invCrudeTool");
-    this.invCrudeSpear = document.getElementById("invCrudeSpear");
-    this.invHardenedSpear = document.getElementById("invHardenedSpear");
-    this.invGoodFlintCore = document.getElementById("invGoodFlintCore");
-    this.menuPanel = document.getElementById("menuPanel");
+    this.craftPanel = document.getElementById("craftPanel");
+    this.systemPanel = document.getElementById("systemPanel");
     this.menuSeed = document.getElementById("menuSeed");
-    this.menuFlint = document.getElementById("menuFlint");
-    this.menuStick = document.getElementById("menuStick");
-    this.menuStone = document.getElementById("menuStone");
-    this.menuBark = document.getElementById("menuBark");
-    this.menuGrass = document.getElementById("menuGrass");
-    this.menuFood = document.getElementById("menuFood");
-    this.menuCrudeTool = document.getElementById("menuCrudeTool");
-    this.menuCrudeSpear = document.getElementById("menuCrudeSpear");
-    this.menuHardenedSpear = document.getElementById("menuHardenedSpear");
-    this.menuGoodFlintCore = document.getElementById("menuGoodFlintCore");
+    this.craftFlint = document.getElementById("craftFlint");
+    this.craftStick = document.getElementById("craftStick");
+    this.craftStone = document.getElementById("craftStone");
+    this.craftBark = document.getElementById("craftBark");
+    this.craftGrass = document.getElementById("craftGrass");
+    this.craftFood = document.getElementById("craftFood");
+    this.craftCrudeTool = document.getElementById("craftCrudeTool");
+    this.craftCrudeSpear = document.getElementById("craftCrudeSpear");
+    this.craftHardenedSpear = document.getElementById("craftHardenedSpear");
+    this.craftGoodFlintCore = document.getElementById("craftGoodFlintCore");
     this.menuToolmaker = document.getElementById("menuToolmaker");
     this.menuLatestFact = document.getElementById("menuLatestFact");
     this.menuStamina = document.getElementById("menuStamina");
     this.craftCrudeToolBtn = document.getElementById("craftCrudeToolBtn");
     this.craftCrudeSpearBtn = document.getElementById("craftCrudeSpearBtn");
+    this.hardenSpearBtn = document.getElementById("hardenSpearBtn");
+    this.craftHint = document.getElementById("craftHint");
+    this.craftCloseBtn = document.getElementById("craftCloseBtn");
     this.viewFactBtn = document.getElementById("viewFactBtn");
     this.showHelpBtn = document.getElementById("showHelpBtn");
     this.fullscreenBtn = document.getElementById("fullscreenBtn");
@@ -183,7 +173,7 @@ OTZI.dom = {
     this.menuBuildVersion = document.getElementById("menuBuildVersion");
     this.menuSaveVersion = document.getElementById("menuSaveVersion");
     this.menuWorldgenVersion = document.getElementById("menuWorldgenVersion");
-    this.menuCloseBtn = document.getElementById("menuCloseBtn");
+    this.systemCloseBtn = document.getElementById("systemCloseBtn");
     this.factPanel = document.getElementById("factPanel");
     this.factTitle = document.getElementById("factTitle");
     this.factMeta = document.getElementById("factMeta");
@@ -194,8 +184,8 @@ OTZI.dom = {
     this.stickKnob = document.getElementById("stickKnob");
     this.useBtn = document.getElementById("useBtn");
     this.sprintBtn = document.getElementById("sprintBtn");
-    this.menuBtn = document.getElementById("menuBtn");
+    this.systemBtn = document.getElementById("systemBtn");
     this.mapTab = document.getElementById("mapTab");
-    this.inventoryBtn = document.getElementById("inventoryBtn");
+    this.craftBtn = document.getElementById("craftBtn");
   }
 };

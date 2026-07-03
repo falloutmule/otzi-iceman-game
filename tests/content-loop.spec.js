@@ -102,15 +102,15 @@ test("content loop adds screen kinds, small-game catch, Flint Scar core, toolmak
   await page.locator("#factCloseBtn").tap();
   await expect(page.locator("#factPanel")).toBeHidden();
 
-  await page.locator("#menuBtn").tap();
-  await expect(page.locator("#menuPanel")).toBeVisible();
+  await page.locator("#systemBtn").tap();
+  await expect(page.locator("#systemPanel")).toBeVisible();
   await expect(page.locator("#menuToolmaker")).toHaveText("Unlocked");
   await expect(page.locator("#menuLatestFact")).toContainText("Retoucheur");
   await expect(page.locator("#viewFactBtn")).toBeVisible();
   await page.locator("#viewFactBtn").tap();
   await expect(page.locator("#factPanel")).toBeVisible();
   await page.locator("#factCloseBtn").tap();
-  await page.locator("#menuCloseBtn").tap();
+  await page.locator("#systemCloseBtn").tap();
 
   const saved = await page.evaluate(() => window.__OTZI_TEST__.saveNow());
   expect(saved).toBe(true);
@@ -126,8 +126,8 @@ test("content loop adds screen kinds, small-game catch, Flint Scar core, toolmak
   expect(afterReload.dungeons.flint_scar.completed).toBe(true);
   expect(afterReload.world.currentScreenKind).toBe("village_home");
 
-  await page.locator("#menuBtn").tap();
-  await expect(page.locator("#menuPanel")).toBeVisible();
+  await page.locator("#systemBtn").tap();
+  await expect(page.locator("#systemPanel")).toBeVisible();
   await page.locator("#resetSaveBtn").tap();
   await page.locator("#resetSaveBtn").tap();
   const afterReset = await page.evaluate(() => window.__OTZI_TEST__.snapshot());

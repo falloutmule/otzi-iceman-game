@@ -13,11 +13,12 @@ OTZI.input = {
       if (ev.code === "KeyD") this.pressed.debug = true;
       if (ev.code === "KeyE" || ev.code === "Space") this.pressed.use = true;
       if (ev.code === "KeyM") this.pressed.map = true;
-      if (ev.code === "KeyI") this.pressed.inventory = true;
-      if (ev.code === "Escape" && OTZI.game.menuOpen) {
+      if (ev.code === "KeyI" || ev.code === "KeyC") this.pressed.inventory = true;
+      if (ev.code === "Escape" && (OTZI.game.menuOpen || OTZI.game.inventoryOpen)) {
         OTZI.game.menuOpen = false;
+        OTZI.game.inventoryOpen = false;
         this.clearAll();
-        OTZI.dialogue.toast("Menu closed");
+        OTZI.dialogue.toast("Panels closed");
       }
       if (ev.code === "KeyR") OTZI.game.setSeed("otzi-" + Date.now().toString(36));
     });
@@ -30,10 +31,10 @@ OTZI.input = {
     this.bindMoveZone();
     this.bindButton(OTZI.dom.useBtn, "use");
     this.bindButton(OTZI.dom.sprintBtn, "sprint");
-    this.bindButton(OTZI.dom.menuBtn, "menu");
+    this.bindButton(OTZI.dom.systemBtn, "menu");
     this.bindButton(OTZI.dom.debugBtn, "debug");
     this.bindButton(OTZI.dom.mapTab, "map");
-    this.bindButton(OTZI.dom.inventoryBtn, "inventory");
+    this.bindButton(OTZI.dom.craftBtn, "inventory");
   },
   bindButton(el, name) {
     el.addEventListener("pointerdown", (ev) => {
