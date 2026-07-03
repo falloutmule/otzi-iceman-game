@@ -193,20 +193,13 @@ OTZI.installTestHooks = function installTestHooks() {
       return { ...node };
     },
     teleportToFlintScarEntrance() {
-      OTZI.game.enterOverworldScreen(OTZI.game.world.flintScarX, OTZI.game.world.flintScarY);
+      OTZI.game.teleportToFlintScarEntrance();
       const entry = OTZI.game.entrances[0];
       if (!entry) return null;
-      OTZI.game.player.x = entry.x - OTZI.CFG.tileSize * 0.8;
-      OTZI.game.player.y = entry.y;
-      OTZI.camera.update();
-      OTZI.game.updateFocusState();
       return { ...entry };
     },
     teleportToAnimalClearing() {
-      const screen = OTZI.worldGrid.findScreenByKind(OTZI.game.world, OTZI.game.seed, "animal_clearing");
-      if (!screen) return null;
-      OTZI.game.enterOverworldScreen(screen.gridX, screen.gridY);
-      OTZI.game.updateFocusState();
+      if (!OTZI.game.teleportToAnimalClearing()) return null;
       return this.snapshot();
     },
     triggerHareFlee() {
@@ -243,15 +236,13 @@ OTZI.installTestHooks = function installTestHooks() {
       return { ...animal };
     },
     teleportToVillageHearth() {
-      this.teleportToVillage();
+      OTZI.game.teleportToVillageHearth();
       const hearth = (OTZI.game.entrances || []).find((entry) => entry.kind === "hearth");
       if (!hearth) return null;
-      OTZI.game.player.x = hearth.x - OTZI.CFG.tileSize * 0.75;
-      OTZI.game.player.y = hearth.y;
-      OTZI.camera.update();
-      OTZI.game.updateFocusState();
       return { ...hearth };
     },
+    giveSpearMaterials() { return OTZI.game.grantSpearMaterials(); },
+    unlockToolmakerForQa() { return OTZI.game.unlockToolmakerForQa(); },
     inspectFlintScarEntranceLane() {
       OTZI.game.ensureDungeon("flint_scar");
       OTZI.game.enterDungeonRoom(0, 1, { entrySide: "w" });

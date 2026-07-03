@@ -28,21 +28,21 @@ OTZI.objectives = {
       return {
         id: "craft_crude_spear",
         title: "Craft a Crude Spear",
-        text: "Open CRAFT and shape a spear from stick, stone, and bark."
+        text: `Open CRAFT. ${OTZI.crafting.requirementText("crude_spear")}`
       };
     }
     if ((game.inventory.crudeSpear || 0) > 0 && (game.inventory.hardenedSpear || 0) < 1) {
       return {
         id: "harden_spear_tip",
         title: "Harden the Spear Tip",
-        text: "Return to the village hearth and use the fire."
+        text: "Need 1 crude spear. Return to the village hearth and use the fire."
       };
     }
     if ((game.inventory.hardenedSpear || 0) > 0 && (game.progress?.smallGameHunts || 0) < 1) {
       return {
         id: "hunt_small_game",
         title: "Hunt Small Game",
-        text: "Search animal clearings and test the hardened spear."
+        text: "Equip the hardened spear and search animal clearings."
       };
     }
     return {

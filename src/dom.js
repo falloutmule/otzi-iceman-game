@@ -86,9 +86,27 @@ OTZI.dom = {
           <div><dt>Good flint core</dt><dd id="craftGoodFlintCore">0</dd></div>
         </dl>
         <div class="panel-title">RECIPES</div>
-        <button id="craftCrudeToolBtn" type="button">Craft Crude Cutting Tool</button>
-        <button id="craftCrudeSpearBtn" type="button">Craft Crude Spear</button>
-        <button id="hardenSpearBtn" type="button">Harden Spear Tip</button>
+        <div id="recipeCrudeToolCard" class="recipe-card" data-recipe-id="crude_cutting_tool">
+          <div class="recipe-card-head"><strong>Crude Cutting Tool</strong><span id="recipeCrudeToolState" class="recipe-state">Missing</span></div>
+          <p id="recipeCrudeToolNeeds" class="recipe-line">Needs: 1 Stick, 1 Flint, 1 Grass</p>
+          <p id="recipeCrudeToolHave" class="recipe-line recipe-have">Have: Stick 0 / Flint 0 / Grass 0</p>
+          <p id="recipeCrudeToolMissing" class="recipe-line recipe-missing">Missing: 1 Stick, 1 Flint, 1 Grass</p>
+          <button id="craftCrudeToolBtn" type="button">Craft Crude Cutting Tool</button>
+        </div>
+        <div id="recipeCrudeSpearCard" class="recipe-card" data-recipe-id="crude_spear">
+          <div class="recipe-card-head"><strong>Crude Spear</strong><span id="recipeCrudeSpearState" class="recipe-state">Missing</span></div>
+          <p id="recipeCrudeSpearNeeds" class="recipe-line">Needs: 1 Stick, 1 Stone, 1 Bark</p>
+          <p id="recipeCrudeSpearHave" class="recipe-line recipe-have">Have: Stick 0 / Stone 0 / Bark 0</p>
+          <p id="recipeCrudeSpearMissing" class="recipe-line recipe-missing">Missing: 1 Stick, 1 Stone, 1 Bark</p>
+          <button id="craftCrudeSpearBtn" type="button">Craft Crude Spear</button>
+        </div>
+        <div id="recipeHardenSpearCard" class="recipe-card recipe-card-hearth" data-recipe-id="harden_spear">
+          <div class="recipe-card-head"><strong>Harden Spear Tip</strong><span id="recipeHardenSpearState" class="recipe-state">Need Hearth</span></div>
+          <p id="recipeHardenSpearNeeds" class="recipe-line">Needs: 1 Crude Spear + Village Hearth</p>
+          <p id="recipeHardenSpearHave" class="recipe-line recipe-have">Have: Crude Spear 0 / 1</p>
+          <p id="recipeHardenSpearMissing" class="recipe-line recipe-missing">Status: Return to the village hearth</p>
+          <button id="hardenSpearBtn" type="button">Harden Spear Tip</button>
+        </div>
         <div class="panel-title">EQUIP</div>
         <button id="equipCrudeSpearBtn" type="button">Equip Crude Spear</button>
         <button id="equipHardenedSpearBtn" type="button">Equip Hardened Spear</button>
@@ -108,6 +126,15 @@ OTZI.dom = {
         <button id="exportSaveBtn" type="button">Export Save</button>
         <button id="importSaveBtn" type="button">Import Save</button>
         <textarea id="saveDataBox" class="save-data-box" spellcheck="false" aria-label="Save data"></textarea>
+        <div class="panel-title">TEST TOOLS</div>
+        <p class="panel-hint">For phone QA only.</p>
+        <div class="test-tool-grid">
+          <button id="giveSpearMaterialsBtn" type="button">Give Spear Materials</button>
+          <button id="goVillageHearthBtn" type="button">Go to Village Hearth</button>
+          <button id="goAnimalClearingBtn" type="button">Go to Animal Clearing</button>
+          <button id="goFlintScarBtn" type="button">Go to Flint Scar</button>
+          <button id="unlockToolmakerBtn" type="button">Unlock Toolmaker</button>
+        </div>
         <button id="fullscreenBtn" type="button">Fullscreen</button>
         <button id="resetSaveBtn" type="button">Reset Save</button>
         <dl>
@@ -172,6 +199,21 @@ OTZI.dom = {
     this.menuToolmaker = document.getElementById("menuToolmaker");
     this.menuLatestFact = document.getElementById("menuLatestFact");
     this.menuStamina = document.getElementById("menuStamina");
+    this.recipeCrudeToolCard = document.getElementById("recipeCrudeToolCard");
+    this.recipeCrudeToolState = document.getElementById("recipeCrudeToolState");
+    this.recipeCrudeToolNeeds = document.getElementById("recipeCrudeToolNeeds");
+    this.recipeCrudeToolHave = document.getElementById("recipeCrudeToolHave");
+    this.recipeCrudeToolMissing = document.getElementById("recipeCrudeToolMissing");
+    this.recipeCrudeSpearCard = document.getElementById("recipeCrudeSpearCard");
+    this.recipeCrudeSpearState = document.getElementById("recipeCrudeSpearState");
+    this.recipeCrudeSpearNeeds = document.getElementById("recipeCrudeSpearNeeds");
+    this.recipeCrudeSpearHave = document.getElementById("recipeCrudeSpearHave");
+    this.recipeCrudeSpearMissing = document.getElementById("recipeCrudeSpearMissing");
+    this.recipeHardenSpearCard = document.getElementById("recipeHardenSpearCard");
+    this.recipeHardenSpearState = document.getElementById("recipeHardenSpearState");
+    this.recipeHardenSpearNeeds = document.getElementById("recipeHardenSpearNeeds");
+    this.recipeHardenSpearHave = document.getElementById("recipeHardenSpearHave");
+    this.recipeHardenSpearMissing = document.getElementById("recipeHardenSpearMissing");
     this.craftCrudeToolBtn = document.getElementById("craftCrudeToolBtn");
     this.craftCrudeSpearBtn = document.getElementById("craftCrudeSpearBtn");
     this.hardenSpearBtn = document.getElementById("hardenSpearBtn");
@@ -186,6 +228,11 @@ OTZI.dom = {
     this.exportSaveBtn = document.getElementById("exportSaveBtn");
     this.importSaveBtn = document.getElementById("importSaveBtn");
     this.saveDataBox = document.getElementById("saveDataBox");
+    this.giveSpearMaterialsBtn = document.getElementById("giveSpearMaterialsBtn");
+    this.goVillageHearthBtn = document.getElementById("goVillageHearthBtn");
+    this.goAnimalClearingBtn = document.getElementById("goAnimalClearingBtn");
+    this.goFlintScarBtn = document.getElementById("goFlintScarBtn");
+    this.unlockToolmakerBtn = document.getElementById("unlockToolmakerBtn");
     this.fullscreenBtn = document.getElementById("fullscreenBtn");
     this.resetSaveBtn = document.getElementById("resetSaveBtn");
     this.menuBuildVersion = document.getElementById("menuBuildVersion");

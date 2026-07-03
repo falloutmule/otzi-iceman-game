@@ -394,6 +394,63 @@ OTZI.game = {
       durability
     };
   },
+  grantSpearMaterials() {
+    OTZI.inventory.add("stick", 1);
+    OTZI.inventory.add("stone", 1);
+    OTZI.inventory.add("bark", 1);
+    OTZI.inventory.add("flint", 1);
+    OTZI.inventory.add("grass", 1);
+    OTZI.dialogue.toast("Test tools: spear materials added");
+    this.updateFocusState();
+    return true;
+  },
+  teleportToVillageHearth() {
+    this.enterOverworldScreen(this.world.homeX, this.world.homeY);
+    const hearth = (this.entrances || []).find((entry) => entry.kind === "hearth");
+    if (!hearth) {
+      OTZI.dialogue.toast("No village hearth found");
+      return false;
+    }
+    this.player.x = hearth.x - OTZI.CFG.tileSize * 0.75;
+    this.player.y = hearth.y;
+    this.transitionCooldown = 0;
+    OTZI.camera.update();
+    this.updateFocusState();
+    return true;
+  },
+  teleportToAnimalClearing() {
+    const screen = OTZI.worldGrid.findScreenByKind(this.world, this.seed, "animal_clearing");
+    if (!screen) {
+      OTZI.dialogue.toast("No animal clearing found");
+      return false;
+    }
+    this.enterOverworldScreen(screen.gridX, screen.gridY);
+    this.transitionCooldown = 0;
+    OTZI.camera.update();
+    this.updateFocusState();
+    return true;
+  },
+  teleportToFlintScarEntrance() {
+    this.enterOverworldScreen(this.world.flintScarX, this.world.flintScarY);
+    const entry = (this.entrances || []).find((item) => item.targetScene === "dungeon");
+    if (entry) {
+      this.player.x = entry.x - OTZI.CFG.tileSize * 0.8;
+      this.player.y = entry.y;
+    }
+    this.transitionCooldown = 0;
+    OTZI.camera.update();
+    this.updateFocusState();
+    return true;
+  },
+  unlockToolmakerForQa() {
+    this.dungeons.flint_scar.completed = true;
+    this.dungeons.flint_scar.coreCollected = true;
+    OTZI.village.unlock("toolmaker");
+    this.village.toolmakerReady = true;
+    OTZI.facts.discover("retoucheur_tool");
+    OTZI.dialogue.toast("Toolmaker unlocked for test");
+    return true;
+  },
   panelBlocksGameplay() {
     return !!(this.inventoryOpen || this.menuOpen || this.welcomeOpen || this.factOpen);
   },
@@ -771,11 +828,23 @@ OTZI.game = {
     OTZI.dom.craftCrudeToolBtn.addEventListener("click", () => {
       OTZI.crafting.craft("crude_cutting_tool");
     });
+    OTZI.dom.recipeCrudeToolCard.addEventListener("click", (ev) => {
+      if (ev.target === OTZI.dom.craftCrudeToolBtn) return;
+      if (!OTZI.crafting.canCraft("crude_cutting_tool")) OTZI.crafting.craft("crude_cutting_tool");
+    });
     OTZI.dom.craftCrudeSpearBtn.addEventListener("click", () => {
       OTZI.crafting.craft("crude_spear");
     });
+    OTZI.dom.recipeCrudeSpearCard.addEventListener("click", (ev) => {
+      if (ev.target === OTZI.dom.craftCrudeSpearBtn) return;
+      if (!OTZI.crafting.canCraft("crude_spear")) OTZI.crafting.craft("crude_spear");
+    });
     OTZI.dom.hardenSpearBtn.addEventListener("click", () => {
       OTZI.crafting.hardenSpearTip();
+    });
+    OTZI.dom.recipeHardenSpearCard.addEventListener("click", (ev) => {
+      if (ev.target === OTZI.dom.hardenSpearBtn) return;
+      if (!OTZI.crafting.canHardenAtHearth()) OTZI.crafting.hardenSpearTip();
     });
     OTZI.dom.equipCrudeSpearBtn.addEventListener("click", () => {
       OTZI.game.equipSpear("crudeSpear");
@@ -815,6 +884,21 @@ OTZI.game = {
       } catch (_) {
         OTZI.dialogue.toast("Import failed");
       }
+    });
+    OTZI.dom.giveSpearMaterialsBtn.addEventListener("click", () => {
+      OTZI.game.grantSpearMaterials();
+    });
+    OTZI.dom.goVillageHearthBtn.addEventListener("click", () => {
+      OTZI.game.teleportToVillageHearth();
+    });
+    OTZI.dom.goAnimalClearingBtn.addEventListener("click", () => {
+      OTZI.game.teleportToAnimalClearing();
+    });
+    OTZI.dom.goFlintScarBtn.addEventListener("click", () => {
+      OTZI.game.teleportToFlintScarEntrance();
+    });
+    OTZI.dom.unlockToolmakerBtn.addEventListener("click", () => {
+      OTZI.game.unlockToolmakerForQa();
     });
     OTZI.dom.resetSaveBtn.addEventListener("click", () => {
       if (!OTZI.game.resetConfirm) {

@@ -46,7 +46,7 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 .inventory-panel dt { color:var(--muted); }
 .inventory-panel dd { margin:0; font-weight:900; }
 .panel-title { margin:0 0 5px; color:#e7bd6c; font-size:11px; font-weight:900; letter-spacing:.06em; }
-.menu-panel { position:fixed; left:50%; top:45%; transform:translate(-50%,-50%); width:min(340px,calc(100vw - 28px)); max-height:min(560px,calc(100dvh - 56px)); overflow:auto; padding:14px; border:1px solid rgba(231,189,108,.5); border-radius:8px; background:rgba(12,15,13,.94); box-shadow:0 20px 70px rgba(0,0,0,.55); pointer-events:auto; z-index:10; }
+.menu-panel { position:fixed; left:50%; top:45%; transform:translate(-50%,-50%); width:min(340px,calc(100vw - 28px)); padding:14px; border:1px solid rgba(231,189,108,.5); border-radius:8px; background:rgba(12,15,13,.94); box-shadow:0 20px 70px rgba(0,0,0,.55); pointer-events:auto; z-index:10; }
 .menu-panel[hidden] { display:none; }
 .welcome-panel { top:40%; }
 .menu-panel p { margin:4px 0 12px; color:var(--ink); }
@@ -58,13 +58,6 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 .menu-panel button { width:100%; background:#513d1e; border-color:#a88345; }
 .menu-panel button:disabled { opacity:.65; background:#2e2c25; border-color:#5a564b; color:#d4c7ad; }
 .menu-panel button + button { margin-top:8px; }
-.recipe-card { margin:0 0 10px; padding:10px; border:1px solid rgba(243,234,215,.12); border-radius:8px; background:rgba(15,20,17,.82); }
-.recipe-card-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:4px; }
-.recipe-state { color:#e7bd6c; font-size:11px; font-weight:900; letter-spacing:.04em; }
-.recipe-line { margin:4px 0; font-size:12px; color:var(--ink); }
-.recipe-have { color:#c7d2c4; }
-.recipe-missing { color:#e4b895; }
-.test-tool-grid { display:grid; gap:8px; margin:8px 0 12px; }
 .save-data-box { width:100%; min-height:88px; resize:vertical; margin:8px 0 12px; padding:8px; border:1px solid rgba(143,192,169,.35); border-radius:8px; background:#0a110d; color:var(--ink); font:11px/1.35 ui-monospace,Consolas,monospace; }
 .controls { grid-area:controls; position:relative; width:100%; min-width:0; max-width:100%; min-height:172px; height:min(28dvh,224px); padding:12px 10px; border-top:1px solid rgba(243,234,215,.16); background:linear-gradient(180deg,#111812,#070a08); pointer-events:none; }
 .stick-zone { position:absolute; left:16px; top:26px; width:132px; height:132px; pointer-events:auto; touch-action:none; }
@@ -116,7 +109,7 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 var OTZI = window.OTZI || (window.OTZI = {});
 
 OTZI.CFG = {
-  engineVersion: "otzi-fire-spear-0.5.1",
+  engineVersion: "otzi-fire-spear-0.5.0",
   saveVersion: 7,
   worldgenVersion: 3,
   saveKey: "otzi_content_loop_save_v6",
@@ -233,27 +226,9 @@ OTZI.dom = {
           <div><dt>Good flint core</dt><dd id="craftGoodFlintCore">0</dd></div>
         </dl>
         <div class="panel-title">RECIPES</div>
-        <div id="recipeCrudeToolCard" class="recipe-card" data-recipe-id="crude_cutting_tool">
-          <div class="recipe-card-head"><strong>Crude Cutting Tool</strong><span id="recipeCrudeToolState" class="recipe-state">Missing</span></div>
-          <p id="recipeCrudeToolNeeds" class="recipe-line">Needs: 1 Stick, 1 Flint, 1 Grass</p>
-          <p id="recipeCrudeToolHave" class="recipe-line recipe-have">Have: Stick 0 / Flint 0 / Grass 0</p>
-          <p id="recipeCrudeToolMissing" class="recipe-line recipe-missing">Missing: 1 Stick, 1 Flint, 1 Grass</p>
-          <button id="craftCrudeToolBtn" type="button">Craft Crude Cutting Tool</button>
-        </div>
-        <div id="recipeCrudeSpearCard" class="recipe-card" data-recipe-id="crude_spear">
-          <div class="recipe-card-head"><strong>Crude Spear</strong><span id="recipeCrudeSpearState" class="recipe-state">Missing</span></div>
-          <p id="recipeCrudeSpearNeeds" class="recipe-line">Needs: 1 Stick, 1 Stone, 1 Bark</p>
-          <p id="recipeCrudeSpearHave" class="recipe-line recipe-have">Have: Stick 0 / Stone 0 / Bark 0</p>
-          <p id="recipeCrudeSpearMissing" class="recipe-line recipe-missing">Missing: 1 Stick, 1 Stone, 1 Bark</p>
-          <button id="craftCrudeSpearBtn" type="button">Craft Crude Spear</button>
-        </div>
-        <div id="recipeHardenSpearCard" class="recipe-card recipe-card-hearth" data-recipe-id="harden_spear">
-          <div class="recipe-card-head"><strong>Harden Spear Tip</strong><span id="recipeHardenSpearState" class="recipe-state">Need Hearth</span></div>
-          <p id="recipeHardenSpearNeeds" class="recipe-line">Needs: 1 Crude Spear + Village Hearth</p>
-          <p id="recipeHardenSpearHave" class="recipe-line recipe-have">Have: Crude Spear 0 / 1</p>
-          <p id="recipeHardenSpearMissing" class="recipe-line recipe-missing">Status: Return to the village hearth</p>
-          <button id="hardenSpearBtn" type="button">Harden Spear Tip</button>
-        </div>
+        <button id="craftCrudeToolBtn" type="button">Craft Crude Cutting Tool</button>
+        <button id="craftCrudeSpearBtn" type="button">Craft Crude Spear</button>
+        <button id="hardenSpearBtn" type="button">Harden Spear Tip</button>
         <div class="panel-title">EQUIP</div>
         <button id="equipCrudeSpearBtn" type="button">Equip Crude Spear</button>
         <button id="equipHardenedSpearBtn" type="button">Equip Hardened Spear</button>
@@ -273,15 +248,6 @@ OTZI.dom = {
         <button id="exportSaveBtn" type="button">Export Save</button>
         <button id="importSaveBtn" type="button">Import Save</button>
         <textarea id="saveDataBox" class="save-data-box" spellcheck="false" aria-label="Save data"></textarea>
-        <div class="panel-title">TEST TOOLS</div>
-        <p class="panel-hint">For phone QA only.</p>
-        <div class="test-tool-grid">
-          <button id="giveSpearMaterialsBtn" type="button">Give Spear Materials</button>
-          <button id="goVillageHearthBtn" type="button">Go to Village Hearth</button>
-          <button id="goAnimalClearingBtn" type="button">Go to Animal Clearing</button>
-          <button id="goFlintScarBtn" type="button">Go to Flint Scar</button>
-          <button id="unlockToolmakerBtn" type="button">Unlock Toolmaker</button>
-        </div>
         <button id="fullscreenBtn" type="button">Fullscreen</button>
         <button id="resetSaveBtn" type="button">Reset Save</button>
         <dl>
@@ -346,21 +312,6 @@ OTZI.dom = {
     this.menuToolmaker = document.getElementById("menuToolmaker");
     this.menuLatestFact = document.getElementById("menuLatestFact");
     this.menuStamina = document.getElementById("menuStamina");
-    this.recipeCrudeToolCard = document.getElementById("recipeCrudeToolCard");
-    this.recipeCrudeToolState = document.getElementById("recipeCrudeToolState");
-    this.recipeCrudeToolNeeds = document.getElementById("recipeCrudeToolNeeds");
-    this.recipeCrudeToolHave = document.getElementById("recipeCrudeToolHave");
-    this.recipeCrudeToolMissing = document.getElementById("recipeCrudeToolMissing");
-    this.recipeCrudeSpearCard = document.getElementById("recipeCrudeSpearCard");
-    this.recipeCrudeSpearState = document.getElementById("recipeCrudeSpearState");
-    this.recipeCrudeSpearNeeds = document.getElementById("recipeCrudeSpearNeeds");
-    this.recipeCrudeSpearHave = document.getElementById("recipeCrudeSpearHave");
-    this.recipeCrudeSpearMissing = document.getElementById("recipeCrudeSpearMissing");
-    this.recipeHardenSpearCard = document.getElementById("recipeHardenSpearCard");
-    this.recipeHardenSpearState = document.getElementById("recipeHardenSpearState");
-    this.recipeHardenSpearNeeds = document.getElementById("recipeHardenSpearNeeds");
-    this.recipeHardenSpearHave = document.getElementById("recipeHardenSpearHave");
-    this.recipeHardenSpearMissing = document.getElementById("recipeHardenSpearMissing");
     this.craftCrudeToolBtn = document.getElementById("craftCrudeToolBtn");
     this.craftCrudeSpearBtn = document.getElementById("craftCrudeSpearBtn");
     this.hardenSpearBtn = document.getElementById("hardenSpearBtn");
@@ -375,11 +326,6 @@ OTZI.dom = {
     this.exportSaveBtn = document.getElementById("exportSaveBtn");
     this.importSaveBtn = document.getElementById("importSaveBtn");
     this.saveDataBox = document.getElementById("saveDataBox");
-    this.giveSpearMaterialsBtn = document.getElementById("giveSpearMaterialsBtn");
-    this.goVillageHearthBtn = document.getElementById("goVillageHearthBtn");
-    this.goAnimalClearingBtn = document.getElementById("goAnimalClearingBtn");
-    this.goFlintScarBtn = document.getElementById("goFlintScarBtn");
-    this.unlockToolmakerBtn = document.getElementById("unlockToolmakerBtn");
     this.fullscreenBtn = document.getElementById("fullscreenBtn");
     this.resetSaveBtn = document.getElementById("resetSaveBtn");
     this.menuBuildVersion = document.getElementById("menuBuildVersion");
@@ -1587,18 +1533,6 @@ OTZI.inventory = {
 /* FUTURE MODULE: CRAFTING */
 var OTZI = window.OTZI || (window.OTZI = {});
 OTZI.crafting = {
-  itemLabels: {
-    flint: "Flint",
-    stick: "Stick",
-    stone: "Stone",
-    bark: "Bark",
-    grass: "Grass",
-    food: "Food",
-    crudeTool: "Crude Cutting Tool",
-    crudeSpear: "Crude Spear",
-    hardenedSpear: "Hardened Spear",
-    goodFlintCore: "Good Flint Core"
-  },
   recipes: [
     {
       id: "crude_cutting_tool",
@@ -1616,70 +1550,13 @@ OTZI.crafting = {
   getRecipe(id) {
     return this.recipes.find((recipe) => recipe.id === id) || null;
   },
-  label(item) {
-    return this.itemLabels[item] || item;
-  },
-  formatCount(item, count) {
-    const label = this.label(item);
-    return `${count} ${label}${count === 1 ? "" : "s"}`;
-  },
-  joinParts(parts) {
-    if (!parts.length) return "";
-    if (parts.length === 1) return parts[0];
-    if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
-    return `${parts.slice(0, -1).join(", ")}, and ${parts[parts.length - 1]}`;
-  },
-  describeRecipe(id, inventory = OTZI.game.inventory) {
-    const recipe = this.getRecipe(id);
-    if (!recipe) return null;
-    const parts = Object.entries(recipe.inputs).map(([item, count]) => {
-      const have = inventory[item] || 0;
-      return {
-        item,
-        need: count,
-        have,
-        missing: Math.max(0, count - have)
-      };
-    });
-    return {
-      id: recipe.id,
-      name: recipe.name,
-      output: { ...recipe.output },
-      parts,
-      canCraft: parts.every((part) => part.missing === 0)
-    };
-  },
-  missingInputs(id, inventory = OTZI.game.inventory) {
-    const recipe = this.describeRecipe(id, inventory);
-    if (!recipe) return [];
-    return recipe.parts
-      .filter((part) => part.missing > 0)
-      .map((part) => this.formatCount(part.item, part.missing));
-  },
-  requirementText(id) {
-    const recipe = this.describeRecipe(id, {});
-    if (!recipe) return "";
-    const parts = recipe.parts.map((part) => this.formatCount(part.item, part.need).toLowerCase());
-    return `Need ${this.joinParts(parts)}.`;
-  },
   canCraft(id, inventory = OTZI.game.inventory) {
-    const recipe = this.describeRecipe(id, inventory);
-    return !!recipe && recipe.canCraft;
+    const recipe = this.getRecipe(id);
+    if (!recipe) return false;
+    return Object.entries(recipe.inputs).every(([item, count]) => (inventory[item] || 0) >= count);
   },
   canHardenAtHearth(game = OTZI.game) {
     return !!game.focusedEntrance && game.focusedEntrance.kind === "hearth" && (game.inventory.crudeSpear || 0) > 0;
-  },
-  describeHardening(game = OTZI.game) {
-    const haveSpear = game.inventory.crudeSpear || 0;
-    const atHearth = !!game.focusedEntrance && game.focusedEntrance.kind === "hearth";
-    return {
-      canHarden: !!(haveSpear > 0 && atHearth),
-      haveSpear,
-      atHearth,
-      needsText: "Needs: 1 Crude Spear + Village Hearth",
-      haveText: `Have: Crude Spear ${haveSpear} / 1`,
-      statusText: haveSpear < 1 ? "Missing: 1 Crude Spear" : atHearth ? "Status: Hearth ready" : "Status: Return to the village hearth"
-    };
   },
   hardenSpearTip() {
     if ((OTZI.game.inventory.crudeSpear || 0) < 1) {
@@ -1701,8 +1578,7 @@ OTZI.crafting = {
       return false;
     }
     if (!this.canCraft(id)) {
-      const missing = this.missingInputs(id);
-      OTZI.dialogue.toast(`Need ${missing.join(", ")}`);
+      OTZI.dialogue.toast("Missing resources");
       OTZI.audio.blip(220, 0.035);
       return false;
     }
@@ -1805,21 +1681,21 @@ OTZI.objectives = {
       return {
         id: "craft_crude_spear",
         title: "Craft a Crude Spear",
-        text: `Open CRAFT. ${OTZI.crafting.requirementText("crude_spear")}`
+        text: "Open CRAFT and shape a spear from stick, stone, and bark."
       };
     }
     if ((game.inventory.crudeSpear || 0) > 0 && (game.inventory.hardenedSpear || 0) < 1) {
       return {
         id: "harden_spear_tip",
         title: "Harden the Spear Tip",
-        text: "Need 1 crude spear. Return to the village hearth and use the fire."
+        text: "Return to the village hearth and use the fire."
       };
     }
     if ((game.inventory.hardenedSpear || 0) > 0 && (game.progress?.smallGameHunts || 0) < 1) {
       return {
         id: "hunt_small_game",
         title: "Hunt Small Game",
-        text: "Equip the hardened spear and search animal clearings."
+        text: "Search animal clearings and test the hardened spear."
       };
     }
     return {
@@ -2389,16 +2265,6 @@ OTZI.renderWorld = {
 var OTZI = window.OTZI || (window.OTZI = {});
 
 OTZI.renderUi = {
-  syncRecipeCard(stateNode, needsNode, haveNode, missingNode, buttonNode, recipe) {
-    stateNode.textContent = recipe.canCraft ? "Ready" : "Missing";
-    needsNode.textContent = `Needs: ${recipe.parts.map((part) => OTZI.crafting.formatCount(part.item, part.need)).join(", ")}`;
-    haveNode.textContent = `Have: ${recipe.parts.map((part) => `${OTZI.crafting.label(part.item)} ${part.have} / ${part.need}`).join(" | ")}`;
-    const missing = recipe.parts.filter((part) => part.missing > 0);
-    missingNode.textContent = missing.length
-      ? `Missing: ${missing.map((part) => OTZI.crafting.formatCount(part.item, part.missing)).join(", ")}`
-      : "Missing: none";
-    buttonNode.disabled = !recipe.canCraft;
-  },
   sync() {
     const game = OTZI.game;
     OTZI.dom.healthChip.textContent = `HP ${Math.round(game.player.health)}`;
@@ -2456,31 +2322,10 @@ OTZI.renderUi = {
       OTZI.dom.craftCrudeSpear.textContent = String(game.inventory.crudeSpear || 0);
       OTZI.dom.craftHardenedSpear.textContent = String(game.inventory.hardenedSpear || 0);
       OTZI.dom.craftGoodFlintCore.textContent = String(game.inventory.goodFlintCore || 0);
-      const crudeToolRecipe = OTZI.crafting.describeRecipe("crude_cutting_tool", game.inventory);
-      const crudeSpearRecipe = OTZI.crafting.describeRecipe("crude_spear", game.inventory);
-      const harden = OTZI.crafting.describeHardening(game);
-      this.syncRecipeCard(
-        OTZI.dom.recipeCrudeToolState,
-        OTZI.dom.recipeCrudeToolNeeds,
-        OTZI.dom.recipeCrudeToolHave,
-        OTZI.dom.recipeCrudeToolMissing,
-        OTZI.dom.craftCrudeToolBtn,
-        crudeToolRecipe
-      );
-      this.syncRecipeCard(
-        OTZI.dom.recipeCrudeSpearState,
-        OTZI.dom.recipeCrudeSpearNeeds,
-        OTZI.dom.recipeCrudeSpearHave,
-        OTZI.dom.recipeCrudeSpearMissing,
-        OTZI.dom.craftCrudeSpearBtn,
-        crudeSpearRecipe
-      );
-      OTZI.dom.recipeHardenSpearState.textContent = harden.canHarden ? "Ready" : harden.haveSpear > 0 ? "Need Hearth" : "Need Spear";
-      OTZI.dom.recipeHardenSpearNeeds.textContent = harden.needsText;
-      OTZI.dom.recipeHardenSpearHave.textContent = harden.haveText;
-      OTZI.dom.recipeHardenSpearMissing.textContent = harden.statusText;
-      OTZI.dom.hardenSpearBtn.disabled = !harden.canHarden;
-      OTZI.dom.hardenSpearBtn.textContent = "Harden Spear Tip";
+      const canHarden = OTZI.crafting.canHardenAtHearth(game);
+      OTZI.dom.hardenSpearBtn.disabled = !canHarden;
+      OTZI.dom.hardenSpearBtn.textContent = canHarden ? "Harden Spear Tip" :
+        (game.inventory.crudeSpear || 0) > 0 ? "Harden Spear Tip (Need Hearth)" : "Harden Spear Tip (Need Crude Spear)";
       OTZI.dom.equipCrudeSpearBtn.disabled = (game.inventory.crudeSpear || 0) < 1;
       OTZI.dom.equipHardenedSpearBtn.disabled = (game.inventory.hardenedSpear || 0) < 1;
       OTZI.dom.equipCrudeSpearBtn.textContent = game.equipment.spear === "crudeSpear" ? "Crude Spear Equipped" : "Equip Crude Spear";
@@ -2488,7 +2333,7 @@ OTZI.renderUi = {
       OTZI.dom.equipHint.textContent = !spear.kind ? "No spear equipped." :
         spear.kind === "hardenedSpear" ? `Hardened spear equipped. Durability ${spear.durability}.` :
         "Crude spear equipped. The next throw will lose it.";
-      OTZI.dom.craftHint.textContent = harden.canHarden ? "The village hearth is ready for hardening." :
+      OTZI.dom.craftHint.textContent = canHarden ? "The village hearth is ready for hardening." :
         (game.inventory.crudeSpear || 0) > 0 ? "Return to the village hearth to harden the spear tip." :
         "Collect materials and craft tools or spears here.";
     }
@@ -2998,13 +2843,20 @@ OTZI.installTestHooks = function installTestHooks() {
       return { ...node };
     },
     teleportToFlintScarEntrance() {
-      OTZI.game.teleportToFlintScarEntrance();
+      OTZI.game.enterOverworldScreen(OTZI.game.world.flintScarX, OTZI.game.world.flintScarY);
       const entry = OTZI.game.entrances[0];
       if (!entry) return null;
+      OTZI.game.player.x = entry.x - OTZI.CFG.tileSize * 0.8;
+      OTZI.game.player.y = entry.y;
+      OTZI.camera.update();
+      OTZI.game.updateFocusState();
       return { ...entry };
     },
     teleportToAnimalClearing() {
-      if (!OTZI.game.teleportToAnimalClearing()) return null;
+      const screen = OTZI.worldGrid.findScreenByKind(OTZI.game.world, OTZI.game.seed, "animal_clearing");
+      if (!screen) return null;
+      OTZI.game.enterOverworldScreen(screen.gridX, screen.gridY);
+      OTZI.game.updateFocusState();
       return this.snapshot();
     },
     triggerHareFlee() {
@@ -3041,13 +2893,15 @@ OTZI.installTestHooks = function installTestHooks() {
       return { ...animal };
     },
     teleportToVillageHearth() {
-      OTZI.game.teleportToVillageHearth();
+      this.teleportToVillage();
       const hearth = (OTZI.game.entrances || []).find((entry) => entry.kind === "hearth");
       if (!hearth) return null;
+      OTZI.game.player.x = hearth.x - OTZI.CFG.tileSize * 0.75;
+      OTZI.game.player.y = hearth.y;
+      OTZI.camera.update();
+      OTZI.game.updateFocusState();
       return { ...hearth };
     },
-    giveSpearMaterials() { return OTZI.game.grantSpearMaterials(); },
-    unlockToolmakerForQa() { return OTZI.game.unlockToolmakerForQa(); },
     inspectFlintScarEntranceLane() {
       OTZI.game.ensureDungeon("flint_scar");
       OTZI.game.enterDungeonRoom(0, 1, { entrySide: "w" });
@@ -3575,63 +3429,6 @@ OTZI.game = {
       durability
     };
   },
-  grantSpearMaterials() {
-    OTZI.inventory.add("stick", 1);
-    OTZI.inventory.add("stone", 1);
-    OTZI.inventory.add("bark", 1);
-    OTZI.inventory.add("flint", 1);
-    OTZI.inventory.add("grass", 1);
-    OTZI.dialogue.toast("Test tools: spear materials added");
-    this.updateFocusState();
-    return true;
-  },
-  teleportToVillageHearth() {
-    this.enterOverworldScreen(this.world.homeX, this.world.homeY);
-    const hearth = (this.entrances || []).find((entry) => entry.kind === "hearth");
-    if (!hearth) {
-      OTZI.dialogue.toast("No village hearth found");
-      return false;
-    }
-    this.player.x = hearth.x - OTZI.CFG.tileSize * 0.75;
-    this.player.y = hearth.y;
-    this.transitionCooldown = 0;
-    OTZI.camera.update();
-    this.updateFocusState();
-    return true;
-  },
-  teleportToAnimalClearing() {
-    const screen = OTZI.worldGrid.findScreenByKind(this.world, this.seed, "animal_clearing");
-    if (!screen) {
-      OTZI.dialogue.toast("No animal clearing found");
-      return false;
-    }
-    this.enterOverworldScreen(screen.gridX, screen.gridY);
-    this.transitionCooldown = 0;
-    OTZI.camera.update();
-    this.updateFocusState();
-    return true;
-  },
-  teleportToFlintScarEntrance() {
-    this.enterOverworldScreen(this.world.flintScarX, this.world.flintScarY);
-    const entry = (this.entrances || []).find((item) => item.targetScene === "dungeon");
-    if (entry) {
-      this.player.x = entry.x - OTZI.CFG.tileSize * 0.8;
-      this.player.y = entry.y;
-    }
-    this.transitionCooldown = 0;
-    OTZI.camera.update();
-    this.updateFocusState();
-    return true;
-  },
-  unlockToolmakerForQa() {
-    this.dungeons.flint_scar.completed = true;
-    this.dungeons.flint_scar.coreCollected = true;
-    OTZI.village.unlock("toolmaker");
-    this.village.toolmakerReady = true;
-    OTZI.facts.discover("retoucheur_tool");
-    OTZI.dialogue.toast("Toolmaker unlocked for test");
-    return true;
-  },
   panelBlocksGameplay() {
     return !!(this.inventoryOpen || this.menuOpen || this.welcomeOpen || this.factOpen);
   },
@@ -4009,23 +3806,11 @@ OTZI.game = {
     OTZI.dom.craftCrudeToolBtn.addEventListener("click", () => {
       OTZI.crafting.craft("crude_cutting_tool");
     });
-    OTZI.dom.recipeCrudeToolCard.addEventListener("click", (ev) => {
-      if (ev.target === OTZI.dom.craftCrudeToolBtn) return;
-      if (!OTZI.crafting.canCraft("crude_cutting_tool")) OTZI.crafting.craft("crude_cutting_tool");
-    });
     OTZI.dom.craftCrudeSpearBtn.addEventListener("click", () => {
       OTZI.crafting.craft("crude_spear");
     });
-    OTZI.dom.recipeCrudeSpearCard.addEventListener("click", (ev) => {
-      if (ev.target === OTZI.dom.craftCrudeSpearBtn) return;
-      if (!OTZI.crafting.canCraft("crude_spear")) OTZI.crafting.craft("crude_spear");
-    });
     OTZI.dom.hardenSpearBtn.addEventListener("click", () => {
       OTZI.crafting.hardenSpearTip();
-    });
-    OTZI.dom.recipeHardenSpearCard.addEventListener("click", (ev) => {
-      if (ev.target === OTZI.dom.hardenSpearBtn) return;
-      if (!OTZI.crafting.canHardenAtHearth()) OTZI.crafting.hardenSpearTip();
     });
     OTZI.dom.equipCrudeSpearBtn.addEventListener("click", () => {
       OTZI.game.equipSpear("crudeSpear");
@@ -4066,21 +3851,6 @@ OTZI.game = {
         OTZI.dialogue.toast("Import failed");
       }
     });
-    OTZI.dom.giveSpearMaterialsBtn.addEventListener("click", () => {
-      OTZI.game.grantSpearMaterials();
-    });
-    OTZI.dom.goVillageHearthBtn.addEventListener("click", () => {
-      OTZI.game.teleportToVillageHearth();
-    });
-    OTZI.dom.goAnimalClearingBtn.addEventListener("click", () => {
-      OTZI.game.teleportToAnimalClearing();
-    });
-    OTZI.dom.goFlintScarBtn.addEventListener("click", () => {
-      OTZI.game.teleportToFlintScarEntrance();
-    });
-    OTZI.dom.unlockToolmakerBtn.addEventListener("click", () => {
-      OTZI.game.unlockToolmakerForQa();
-    });
     OTZI.dom.resetSaveBtn.addEventListener("click", () => {
       if (!OTZI.game.resetConfirm) {
         OTZI.game.resetConfirm = true;
@@ -4105,6 +3875,6 @@ OTZI.game = {
 })();
 
   </script>
-  <!-- build: 2026-07-03T16:32:15.370Z modules:30 -->
+  <!-- build: 2026-07-03T12:11:41.227Z modules:30 -->
 </body>
 </html>

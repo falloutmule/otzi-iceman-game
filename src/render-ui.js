@@ -2,6 +2,16 @@
 var OTZI = window.OTZI || (window.OTZI = {});
 
 OTZI.renderUi = {
+  syncRecipeCard(stateNode, needsNode, haveNode, missingNode, buttonNode, recipe) {
+    stateNode.textContent = recipe.canCraft ? "Ready" : "Missing";
+    needsNode.textContent = `Needs: ${recipe.parts.map((part) => OTZI.crafting.formatCount(part.item, part.need)).join(", ")}`;
+    haveNode.textContent = `Have: ${recipe.parts.map((part) => `${OTZI.crafting.label(part.item)} ${part.have} / ${part.need}`).join(" | ")}`;
+    const missing = recipe.parts.filter((part) => part.missing > 0);
+    missingNode.textContent = missing.length
+      ? `Missing: ${missing.map((part) => OTZI.crafting.formatCount(part.item, part.missing)).join(", ")}`
+      : "Missing: none";
+    buttonNode.disabled = !recipe.canCraft;
+  },
   sync() {
     const game = OTZI.game;
     OTZI.dom.healthChip.textContent = `HP ${Math.round(game.player.health)}`;
@@ -59,10 +69,31 @@ OTZI.renderUi = {
       OTZI.dom.craftCrudeSpear.textContent = String(game.inventory.crudeSpear || 0);
       OTZI.dom.craftHardenedSpear.textContent = String(game.inventory.hardenedSpear || 0);
       OTZI.dom.craftGoodFlintCore.textContent = String(game.inventory.goodFlintCore || 0);
-      const canHarden = OTZI.crafting.canHardenAtHearth(game);
-      OTZI.dom.hardenSpearBtn.disabled = !canHarden;
-      OTZI.dom.hardenSpearBtn.textContent = canHarden ? "Harden Spear Tip" :
-        (game.inventory.crudeSpear || 0) > 0 ? "Harden Spear Tip (Need Hearth)" : "Harden Spear Tip (Need Crude Spear)";
+      const crudeToolRecipe = OTZI.crafting.describeRecipe("crude_cutting_tool", game.inventory);
+      const crudeSpearRecipe = OTZI.crafting.describeRecipe("crude_spear", game.inventory);
+      const harden = OTZI.crafting.describeHardening(game);
+      this.syncRecipeCard(
+        OTZI.dom.recipeCrudeToolState,
+        OTZI.dom.recipeCrudeToolNeeds,
+        OTZI.dom.recipeCrudeToolHave,
+        OTZI.dom.recipeCrudeToolMissing,
+        OTZI.dom.craftCrudeToolBtn,
+        crudeToolRecipe
+      );
+      this.syncRecipeCard(
+        OTZI.dom.recipeCrudeSpearState,
+        OTZI.dom.recipeCrudeSpearNeeds,
+        OTZI.dom.recipeCrudeSpearHave,
+        OTZI.dom.recipeCrudeSpearMissing,
+        OTZI.dom.craftCrudeSpearBtn,
+        crudeSpearRecipe
+      );
+      OTZI.dom.recipeHardenSpearState.textContent = harden.canHarden ? "Ready" : harden.haveSpear > 0 ? "Need Hearth" : "Need Spear";
+      OTZI.dom.recipeHardenSpearNeeds.textContent = harden.needsText;
+      OTZI.dom.recipeHardenSpearHave.textContent = harden.haveText;
+      OTZI.dom.recipeHardenSpearMissing.textContent = harden.statusText;
+      OTZI.dom.hardenSpearBtn.disabled = !harden.canHarden;
+      OTZI.dom.hardenSpearBtn.textContent = "Harden Spear Tip";
       OTZI.dom.equipCrudeSpearBtn.disabled = (game.inventory.crudeSpear || 0) < 1;
       OTZI.dom.equipHardenedSpearBtn.disabled = (game.inventory.hardenedSpear || 0) < 1;
       OTZI.dom.equipCrudeSpearBtn.textContent = game.equipment.spear === "crudeSpear" ? "Crude Spear Equipped" : "Equip Crude Spear";
@@ -70,7 +101,7 @@ OTZI.renderUi = {
       OTZI.dom.equipHint.textContent = !spear.kind ? "No spear equipped." :
         spear.kind === "hardenedSpear" ? `Hardened spear equipped. Durability ${spear.durability}.` :
         "Crude spear equipped. The next throw will lose it.";
-      OTZI.dom.craftHint.textContent = canHarden ? "The village hearth is ready for hardening." :
+      OTZI.dom.craftHint.textContent = harden.canHarden ? "The village hearth is ready for hardening." :
         (game.inventory.crudeSpear || 0) > 0 ? "Return to the village hearth to harden the spear tip." :
         "Collect materials and craft tools or spears here.";
     }

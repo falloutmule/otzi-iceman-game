@@ -41,21 +41,41 @@ test("menu row, hearth mission, and spear throw loop work on mobile", async ({ p
   await expect(page.locator("#controls #menuBtn")).toHaveCount(0);
   await expect(page.locator("#controls #toolBtn")).toBeVisible();
 
-  await page.evaluate(() => {
-    OTZI.game.dungeons.flint_scar.completed = true;
-    OTZI.village.unlock("toolmaker");
-    OTZI.inventory.add("stick", 1);
-    OTZI.inventory.add("stone", 1);
-    OTZI.inventory.add("bark", 1);
-    OTZI.game.enterOverworldScreen(OTZI.game.world.homeX, OTZI.game.world.homeY);
-    OTZI.game.updateFocusState();
-  });
+  await page.locator("#systemBtn").tap();
+  await expect(page.locator("#systemPanel")).toBeVisible();
+  await expect(page.locator("#giveSpearMaterialsBtn")).toBeVisible();
+  await expect(page.locator("#goVillageHearthBtn")).toBeVisible();
+  await expect(page.locator("#goAnimalClearingBtn")).toBeVisible();
+  await expect(page.locator("#goFlintScarBtn")).toBeVisible();
+  await expect(page.locator("#unlockToolmakerBtn")).toBeVisible();
+  await page.screenshot({ path: "artifacts/screenshots/system-test-tools.png", fullPage: true });
+  await page.locator("#unlockToolmakerBtn").tap();
+  await expect(page.locator("#statusLine")).toContainText("Toolmaker unlocked for test");
+  await page.locator("#systemCloseBtn").tap();
 
   await expect(page.locator("#objectiveTitle")).toContainText("Craft a Crude Spear");
-  await expect(page.locator("#objectiveText")).toContainText("CRAFT");
+  await expect(page.locator("#objectiveText")).toContainText("1 stick, 1 stone, and 1 bark");
   await page.locator("#craftBtn").tap();
   await expect(page.locator("#craftPanel")).toBeVisible();
+  await expect(page.locator("#recipeCrudeSpearNeeds")).toContainText("1 Stick, 1 Stone, 1 Bark");
+  await expect(page.locator("#recipeCrudeSpearHave")).toContainText("Stick 0 / 1");
+  await expect(page.locator("#recipeCrudeSpearMissing")).toContainText("1 Stick, 1 Stone, 1 Bark");
+  await expect(page.locator("#craftCrudeSpearBtn")).toBeDisabled();
+  await page.locator("#recipeCrudeSpearCard").tap();
+  await expect(page.locator("#statusLine")).toContainText("Need 1 Stick, 1 Stone, 1 Bark");
+  await expect(page.locator("#recipeHardenSpearNeeds")).toContainText("1 Crude Spear + Village Hearth");
+  await page.screenshot({ path: "artifacts/screenshots/recipe-cards-visible.png", fullPage: true });
+  await page.locator("#craftCloseBtn").tap();
+
+  await page.locator("#systemBtn").tap();
+  await page.locator("#giveSpearMaterialsBtn").tap();
+  await expect(page.locator("#statusLine")).toContainText("spear materials added");
+  await page.locator("#systemCloseBtn").tap();
+
+  await page.locator("#craftBtn").tap();
   await expect(page.locator("#craftCrudeSpear")).toHaveText("0");
+  await expect(page.locator("#craftCrudeSpearBtn")).toBeEnabled();
+  await page.screenshot({ path: "artifacts/screenshots/crude-spear-craftable.png", fullPage: true });
   await page.locator("#craftCrudeSpearBtn").tap();
   await expect(page.locator("#statusLine")).toContainText("Crafted Crude Spear");
   await expect(page.locator("#craftCrudeSpear")).toHaveText("1");
@@ -67,7 +87,9 @@ test("menu row, hearth mission, and spear throw loop work on mobile", async ({ p
   await page.screenshot({ path: "artifacts/screenshots/fire-spear-menu-craft.png", fullPage: true });
   await page.locator("#craftCloseBtn").tap();
 
-  await page.evaluate(() => window.__OTZI_TEST__.teleportToVillageHearth());
+  await page.locator("#systemBtn").tap();
+  await page.locator("#goVillageHearthBtn").tap();
+  await page.locator("#systemCloseBtn").tap();
   await expect(page.locator("#statusLine")).toContainText("USE: harden spear tip");
   await expect(page.locator("#areaCardTitle")).toContainText("Village Camp");
   await page.screenshot({ path: "artifacts/screenshots/fire-spear-village-hearth.png", fullPage: true });
@@ -76,6 +98,7 @@ test("menu row, hearth mission, and spear throw loop work on mobile", async ({ p
   await page.locator("#hardenSpearBtn").tap();
   await expect(page.locator("#statusLine")).toContainText("Hardened spear tip");
   await expect(page.locator("#equipHint")).toContainText("Hardened spear equipped");
+  await page.screenshot({ path: "artifacts/screenshots/hardened-spear-equipped.png", fullPage: true });
   await page.locator("#craftCloseBtn").tap();
   await expect(page.locator("#craftPanel")).toBeHidden();
 
@@ -86,6 +109,9 @@ test("menu row, hearth mission, and spear throw loop work on mobile", async ({ p
   expect(snap.objective.title).toBe("Hunt Small Game");
   await page.screenshot({ path: "artifacts/screenshots/fire-spear-hardened-objective.png", fullPage: true });
 
+  await page.locator("#systemBtn").tap();
+  await page.locator("#goAnimalClearingBtn").tap();
+  await page.locator("#systemCloseBtn").tap();
   await page.evaluate(() => window.__OTZI_TEST__.teleportNearHare());
   await expect(page.locator("#statusLine")).toContainText("THROW: hunt");
   await page.locator("#systemBtn").tap();

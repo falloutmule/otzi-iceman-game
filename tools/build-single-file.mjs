@@ -81,7 +81,7 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 .inventory-panel dt { color:var(--muted); }
 .inventory-panel dd { margin:0; font-weight:900; }
 .panel-title { margin:0 0 5px; color:#e7bd6c; font-size:11px; font-weight:900; letter-spacing:.06em; }
-.menu-panel { position:fixed; left:50%; top:45%; transform:translate(-50%,-50%); width:min(340px,calc(100vw - 28px)); padding:14px; border:1px solid rgba(231,189,108,.5); border-radius:8px; background:rgba(12,15,13,.94); box-shadow:0 20px 70px rgba(0,0,0,.55); pointer-events:auto; z-index:10; }
+.menu-panel { position:fixed; left:50%; top:45%; transform:translate(-50%,-50%); width:min(340px,calc(100vw - 28px)); max-height:min(560px,calc(100dvh - 56px)); overflow:auto; padding:14px; border:1px solid rgba(231,189,108,.5); border-radius:8px; background:rgba(12,15,13,.94); box-shadow:0 20px 70px rgba(0,0,0,.55); pointer-events:auto; z-index:10; }
 .menu-panel[hidden] { display:none; }
 .welcome-panel { top:40%; }
 .menu-panel p { margin:4px 0 12px; color:var(--ink); }
@@ -93,6 +93,13 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 .menu-panel button { width:100%; background:#513d1e; border-color:#a88345; }
 .menu-panel button:disabled { opacity:.65; background:#2e2c25; border-color:#5a564b; color:#d4c7ad; }
 .menu-panel button + button { margin-top:8px; }
+.recipe-card { margin:0 0 10px; padding:10px; border:1px solid rgba(243,234,215,.12); border-radius:8px; background:rgba(15,20,17,.82); }
+.recipe-card-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:4px; }
+.recipe-state { color:#e7bd6c; font-size:11px; font-weight:900; letter-spacing:.04em; }
+.recipe-line { margin:4px 0; font-size:12px; color:var(--ink); }
+.recipe-have { color:#c7d2c4; }
+.recipe-missing { color:#e4b895; }
+.test-tool-grid { display:grid; gap:8px; margin:8px 0 12px; }
 .save-data-box { width:100%; min-height:88px; resize:vertical; margin:8px 0 12px; padding:8px; border:1px solid rgba(143,192,169,.35); border-radius:8px; background:#0a110d; color:var(--ink); font:11px/1.35 ui-monospace,Consolas,monospace; }
 .controls { grid-area:controls; position:relative; width:100%; min-width:0; max-width:100%; min-height:172px; height:min(28dvh,224px); padding:12px 10px; border-top:1px solid rgba(243,234,215,.16); background:linear-gradient(180deg,#111812,#070a08); pointer-events:none; }
 .stick-zone { position:absolute; left:16px; top:26px; width:132px; height:132px; pointer-events:auto; touch-action:none; }
