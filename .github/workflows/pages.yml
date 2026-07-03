@@ -6,7 +6,9 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
   group: pages
@@ -14,10 +16,14 @@ concurrency:
 
 jobs:
   deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
       - name: Verify dist artifact
         run: |
           test -f dist/index.html
@@ -26,10 +32,18 @@ jobs:
           grep -q "welcomePanel" dist/index.html
           grep -q "minimapLegend" dist/index.html
           grep -q "menuBuildVersion" dist/index.html
-      - name: Publish dist to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
+          grep -q "saveNowBtn" dist/index.html
+          grep -q "exportSaveBtn" dist/index.html
+          grep -q "importSaveBtn" dist/index.html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload dist artifact
+        uses: actions/upload-pages-artifact@v5
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          publish_branch: gh-pages
-          force_orphan: true
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
