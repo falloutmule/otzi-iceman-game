@@ -10,7 +10,8 @@ OTZI.renderUi = {
     missingNode.textContent = missing.length
       ? `Missing: ${missing.map((part) => OTZI.crafting.formatCount(part.item, part.missing)).join(", ")}`
       : "Missing: none";
-    buttonNode.disabled = !recipe.canCraft;
+    buttonNode.disabled = false;
+    buttonNode.setAttribute("data-craftable", recipe.canCraft ? "true" : "false");
   },
   sync() {
     const game = OTZI.game;
@@ -92,7 +93,8 @@ OTZI.renderUi = {
       OTZI.dom.recipeHardenSpearNeeds.textContent = harden.needsText;
       OTZI.dom.recipeHardenSpearHave.textContent = harden.haveText;
       OTZI.dom.recipeHardenSpearMissing.textContent = harden.statusText;
-      OTZI.dom.hardenSpearBtn.disabled = !harden.canHarden;
+      OTZI.dom.hardenSpearBtn.disabled = false;
+      OTZI.dom.hardenSpearBtn.setAttribute("data-craftable", harden.canHarden ? "true" : "false");
       OTZI.dom.hardenSpearBtn.textContent = "Harden Spear Tip";
       OTZI.dom.equipCrudeSpearBtn.disabled = (game.inventory.crudeSpear || 0) < 1;
       OTZI.dom.equipHardenedSpearBtn.disabled = (game.inventory.hardenedSpear || 0) < 1;

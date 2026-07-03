@@ -92,6 +92,7 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 .menu-panel dd { margin:0; font-weight:800; }
 .menu-panel button { width:100%; background:#513d1e; border-color:#a88345; }
 .menu-panel button:disabled { opacity:.65; background:#2e2c25; border-color:#5a564b; color:#d4c7ad; }
+.menu-panel button[data-craftable="false"] { opacity:.78; background:#2e2c25; border-color:#5a564b; color:#e2d7c0; }
 .menu-panel button + button { margin-top:8px; }
 .recipe-card { margin:0 0 10px; padding:10px; border:1px solid rgba(243,234,215,.12); border-radius:8px; background:rgba(15,20,17,.82); }
 .recipe-card-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:4px; }

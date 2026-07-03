@@ -60,10 +60,13 @@ test("menu row, hearth mission, and spear throw loop work on mobile", async ({ p
   await expect(page.locator("#recipeCrudeSpearNeeds")).toContainText("1 Stick, 1 Stone, 1 Bark");
   await expect(page.locator("#recipeCrudeSpearHave")).toContainText("Stick 0 / 1");
   await expect(page.locator("#recipeCrudeSpearMissing")).toContainText("1 Stick, 1 Stone, 1 Bark");
-  await expect(page.locator("#craftCrudeSpearBtn")).toBeDisabled();
-  await page.locator("#recipeCrudeSpearCard").tap();
+  await expect(page.locator("#craftCrudeSpearBtn")).toBeEnabled();
+  await page.locator("#craftCrudeSpearBtn").tap();
   await expect(page.locator("#statusLine")).toContainText("Need 1 Stick, 1 Stone, 1 Bark");
   await expect(page.locator("#recipeHardenSpearNeeds")).toContainText("1 Crude Spear + Village Hearth");
+  await expect(page.locator("#hardenSpearBtn")).toBeEnabled();
+  await page.locator("#hardenSpearBtn").tap();
+  await expect(page.locator("#statusLine")).toContainText("Craft a crude spear first");
   await page.screenshot({ path: "artifacts/screenshots/recipe-cards-visible.png", fullPage: true });
   await page.locator("#craftCloseBtn").tap();
 
