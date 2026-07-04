@@ -18,6 +18,8 @@ Build the next content pass after the hunt/cook loop: bark bundle support, a cle
 - `tests/content-pack.spec.js` now covers bark bundle crafting and Birch Grove / Wolf Signs.
 - `tests/fire-spear.spec.js` now matches the High Pass-aware objective ladder.
 - The new build marker is present in the generated artifact.
+- GitHub Pages workflow run `28704769714` succeeded.
+- Public HTML at `https://falloutmule.github.io/otzi-iceman-game/?v=b0b28f8` contains `otzi-content-0.7.0`, `craftBarkBundleBtn`, `High Pass`, and `Start Game`.
 
 ## What failed
 - Samsung Galaxy S21 Ultra retest has not been run for this pass yet.
@@ -26,14 +28,14 @@ Build the next content pass after the hunt/cook loop: bark bundle support, a cle
 ## Current exact state
 - Local source and generated `dist/index.html` are updated to `otzi-content-0.7.0`.
 - The new content pass is green in local Playwright.
-- High Pass guidance is present in code, but the next live/device verification step is still pending.
+- The public GitHub Pages URL is serving the updated build markers.
+- High Pass guidance is present in code, but Samsung device retest is still pending.
 
 ## Remaining blockers
 - Samsung phone confirmation for the current build.
-- Public Pages refresh verification after push.
 
 ## Next actionable step
-Commit and push the current branch, then verify the GitHub Pages deployment and retest the updated build on Samsung Galaxy S21 Ultra Chrome.
+Retest the updated build on Samsung Galaxy S21 Ultra Chrome and confirm the new Bark Bundle / High Pass content on the live URL.
 
 ## Evidence
 - `src/config.js`
@@ -52,6 +54,7 @@ Commit and push the current branch, then verify the GitHub Pages deployment and 
 
 ## Live URLs
 - `https://falloutmule.github.io/otzi-iceman-game/`
+- `https://falloutmule.github.io/otzi-iceman-game/?v=b0b28f8`
 
 ## Samsung Galaxy S21 Ultra status
 - Untested for this pass.
