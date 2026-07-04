@@ -569,6 +569,7 @@ OTZI.game = {
     if (entity.kind === "hare" || entity.kind === "grouse") {
       if (entity.state === "downed" && !entity.harvested) {
         OTZI.inventory.add("rawMeat", 1);
+        entity.downed = false;
         entity.harvested = true;
         entity.state = "harvested";
         entity.outcome = "harvested";

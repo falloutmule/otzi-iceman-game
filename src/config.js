@@ -2,7 +2,7 @@
 var OTZI = window.OTZI || (window.OTZI = {});
 
 OTZI.CFG = {
-  engineVersion: "otzi-fire-spear-0.5.3",
+  engineVersion: "otzi-fire-spear-0.5.4",
   saveVersion: 7,
   worldgenVersion: 3,
   saveKey: "otzi_content_loop_save_v6",

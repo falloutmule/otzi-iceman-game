@@ -75,6 +75,10 @@ test("content loop adds screen kinds, small-game catch, Flint Scar core, toolmak
   await expect(page.locator("#statusLine")).toContainText("Harvested hare +1 raw meat");
   const afterHarvest = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(afterHarvest.inventory.rawMeat).toBe((beforeCatch.inventory.rawMeat || 0) + 1);
+  const harvestState = await page.evaluate(() => window.__OTZI_TEST__.stepHareOutcome(1));
+  expect(harvestState?.state).toBe("harvested");
+  expect(harvestState?.downed).toBe(false);
+  expect(harvestState?.harvested).toBe(true);
   await page.evaluate(() => window.__OTZI_TEST__.teleportToVillageHearth());
   await expect(page.locator("#statusLine")).toContainText("USE: cook raw meat");
   await page.locator("#useBtn").tap();

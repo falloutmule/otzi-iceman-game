@@ -142,6 +142,10 @@ test("menu row, hearth mission, and spear throw loop work on mobile", async ({ p
   await expect(page.locator("#statusLine")).toContainText("Harvested hare +1 raw meat");
   const afterHarvest = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(afterHarvest.inventory.rawMeat).toBe((beforeThrow.inventory.rawMeat || 0) + 1);
+  const harvestState = await page.evaluate(() => window.__OTZI_TEST__.stepHareOutcome(1));
+  expect(harvestState?.state).toBe("harvested");
+  expect(harvestState?.downed).toBe(false);
+  expect(harvestState?.harvested).toBe(true);
   expect(afterHarvest.objective.title).toBe("Cook Raw Meat");
   await expect(page.locator("#objectiveTitle")).toContainText("Cook Raw Meat");
   await page.evaluate(() => window.__OTZI_TEST__.teleportToVillageHearth());

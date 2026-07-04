@@ -370,12 +370,12 @@ OTZI.renderWorld = {
   drawEntity(ctx, e, color, camera, offsetX = 0, offsetY = 0, highlighted = false) {
     const p = this.project(camera, e.x, e.y, offsetX, offsetY);
     if (e.kind === "hare" || e.kind === "grouse") {
-      if (e.downed) {
-        this.drawCarcass(ctx, e, p, highlighted, offsetX, offsetY);
-        return;
-      }
       if (e.harvested) {
         this.drawHarvestedCarcass(ctx, e, p, highlighted);
+        return;
+      }
+      if (e.downed) {
+        this.drawCarcass(ctx, e, p, highlighted, offsetX, offsetY);
         return;
       }
       if ((e.caught || e.escaped) && (e.resolveTimer || 0) <= 0) return;

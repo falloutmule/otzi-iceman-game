@@ -117,7 +117,7 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 var OTZI = window.OTZI || (window.OTZI = {});
 
 OTZI.CFG = {
-  engineVersion: "otzi-fire-spear-0.5.3",
+  engineVersion: "otzi-fire-spear-0.5.4",
   saveVersion: 7,
   worldgenVersion: 3,
   saveKey: "otzi_content_loop_save_v6",
@@ -2361,12 +2361,12 @@ OTZI.renderWorld = {
   drawEntity(ctx, e, color, camera, offsetX = 0, offsetY = 0, highlighted = false) {
     const p = this.project(camera, e.x, e.y, offsetX, offsetY);
     if (e.kind === "hare" || e.kind === "grouse") {
-      if (e.downed) {
-        this.drawCarcass(ctx, e, p, highlighted, offsetX, offsetY);
-        return;
-      }
       if (e.harvested) {
         this.drawHarvestedCarcass(ctx, e, p, highlighted);
+        return;
+      }
+      if (e.downed) {
+        this.drawCarcass(ctx, e, p, highlighted, offsetX, offsetY);
         return;
       }
       if ((e.caught || e.escaped) && (e.resolveTimer || 0) <= 0) return;
@@ -3897,6 +3897,7 @@ OTZI.game = {
     if (entity.kind === "hare" || entity.kind === "grouse") {
       if (entity.state === "downed" && !entity.harvested) {
         OTZI.inventory.add("rawMeat", 1);
+        entity.downed = false;
         entity.harvested = true;
         entity.state = "harvested";
         entity.outcome = "harvested";
@@ -4274,6 +4275,6 @@ OTZI.game = {
 })();
 
   </script>
-  <!-- build: 2026-07-04T02:30:56.272Z modules:30 -->
+  <!-- build: 2026-07-04T09:58:09.491Z modules:30 -->
 </body>
 </html>
