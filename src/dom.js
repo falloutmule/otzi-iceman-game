@@ -80,6 +80,7 @@ OTZI.dom = {
           <div><dt>Bark</dt><dd id="craftBark">0</dd></div>
           <div><dt>Grass</dt><dd id="craftGrass">0</dd></div>
           <div><dt>Food</dt><dd id="craftFood">0</dd></div>
+          <div><dt>Raw meat</dt><dd id="craftRawMeat">0</dd></div>
           <div><dt>Crude cutting tools</dt><dd id="craftCrudeTool">0</dd></div>
           <div><dt>Crude spears</dt><dd id="craftCrudeSpear">0</dd></div>
           <div><dt>Hardened spears</dt><dd id="craftHardenedSpear">0</dd></div>
@@ -106,6 +107,13 @@ OTZI.dom = {
           <p id="recipeHardenSpearHave" class="recipe-line recipe-have">Have: Crude Spear 0 / 1</p>
           <p id="recipeHardenSpearMissing" class="recipe-line recipe-missing">Status: Return to the village hearth</p>
           <button id="hardenSpearBtn" type="button">Harden Spear Tip</button>
+        </div>
+        <div id="recipeCookMeatCard" class="recipe-card recipe-card-hearth" data-recipe-id="cook_meat">
+          <div class="recipe-card-head"><strong>Cook Meat</strong><span id="recipeCookMeatState" class="recipe-state">Need Hearth</span></div>
+          <p id="recipeCookMeatNeeds" class="recipe-line">Needs: 1 Raw Meat + Village Hearth</p>
+          <p id="recipeCookMeatHave" class="recipe-line recipe-have">Have: Raw Meat 0 / 1</p>
+          <p id="recipeCookMeatMissing" class="recipe-line recipe-missing">Status: Return to the village hearth</p>
+          <button id="cookMeatBtn" type="button">Cook Meat</button>
         </div>
         <div class="panel-title">EQUIP</div>
         <button id="equipCrudeSpearBtn" type="button">Equip Crude Spear</button>
@@ -192,6 +200,7 @@ OTZI.dom = {
     this.craftBark = document.getElementById("craftBark");
     this.craftGrass = document.getElementById("craftGrass");
     this.craftFood = document.getElementById("craftFood");
+    this.craftRawMeat = document.getElementById("craftRawMeat");
     this.craftCrudeTool = document.getElementById("craftCrudeTool");
     this.craftCrudeSpear = document.getElementById("craftCrudeSpear");
     this.craftHardenedSpear = document.getElementById("craftHardenedSpear");
@@ -214,9 +223,15 @@ OTZI.dom = {
     this.recipeHardenSpearNeeds = document.getElementById("recipeHardenSpearNeeds");
     this.recipeHardenSpearHave = document.getElementById("recipeHardenSpearHave");
     this.recipeHardenSpearMissing = document.getElementById("recipeHardenSpearMissing");
+    this.recipeCookMeatCard = document.getElementById("recipeCookMeatCard");
+    this.recipeCookMeatState = document.getElementById("recipeCookMeatState");
+    this.recipeCookMeatNeeds = document.getElementById("recipeCookMeatNeeds");
+    this.recipeCookMeatHave = document.getElementById("recipeCookMeatHave");
+    this.recipeCookMeatMissing = document.getElementById("recipeCookMeatMissing");
     this.craftCrudeToolBtn = document.getElementById("craftCrudeToolBtn");
     this.craftCrudeSpearBtn = document.getElementById("craftCrudeSpearBtn");
     this.hardenSpearBtn = document.getElementById("hardenSpearBtn");
+    this.cookMeatBtn = document.getElementById("cookMeatBtn");
     this.equipCrudeSpearBtn = document.getElementById("equipCrudeSpearBtn");
     this.equipHardenedSpearBtn = document.getElementById("equipHardenedSpearBtn");
     this.equipHint = document.getElementById("equipHint");

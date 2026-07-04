@@ -39,12 +39,15 @@ OTZI.renderUi = {
       "THROW<br>TOOL";
     if (!OTZI.dialogue.hasActiveToast()) {
       OTZI.dialogue.message = game.transition.active ? `Traveling ${game.transition.direction}` :
-        game.focusedEntity?.kind === "hare" && game.focusedEntity?.interactMode === "throw" ? `THROW: hunt hare with ${spear.label}` :
-        game.focusedEntity?.kind === "grouse" && game.focusedEntity?.interactMode === "throw" ? `THROW: hunt grouse with ${spear.label}` :
-        game.focusedEntity?.kind === "hare" ? "USE: catch hare" :
-        game.focusedEntity?.kind === "grouse" ? "USE: catch grouse" :
-        game.focusedEntity?.kind === "good_flint_core" ? "USE: take good flint core" :
-        game.focusedEntrance?.kind === "hearth" ? "USE: harden spear tip" :
+      game.focusedEntity?.kind === "hare" && game.focusedEntity?.interactMode === "throw" ? `THROW: hunt hare with ${spear.label}` :
+      game.focusedEntity?.kind === "grouse" && game.focusedEntity?.interactMode === "throw" ? `THROW: hunt grouse with ${spear.label}` :
+      game.focusedEntity?.state === "downed" && game.focusedEntity?.kind === "hare" ? "Animal downed - USE to harvest hare" :
+      game.focusedEntity?.state === "downed" && game.focusedEntity?.kind === "grouse" ? "Animal downed - USE to harvest grouse" :
+      game.focusedEntity?.kind === "hare" ? "USE: catch hare" :
+      game.focusedEntity?.kind === "grouse" ? "USE: catch grouse" :
+      game.focusedEntity?.kind === "good_flint_core" ? "USE: take good flint core" :
+      game.focusedEntrance?.kind === "hearth" && (game.inventory.rawMeat || 0) > 0 ? "USE: cook raw meat" :
+      game.focusedEntrance?.kind === "hearth" ? "USE: harden spear tip" :
         game.focusedEntrance ? `USE: enter ${game.focusedEntrance.label}` :
         game.focusedResource ? `USE: gather ${game.focusedResource.resource}` :
         spear.kind ? `THROW: ${spear.label} ready` : "No resource nearby";
@@ -66,6 +69,7 @@ OTZI.renderUi = {
       OTZI.dom.craftBark.textContent = String(game.inventory.bark || 0);
       OTZI.dom.craftGrass.textContent = String(game.inventory.grass || 0);
       OTZI.dom.craftFood.textContent = String(game.inventory.food || 0);
+      OTZI.dom.craftRawMeat.textContent = String(game.inventory.rawMeat || 0);
       OTZI.dom.craftCrudeTool.textContent = String(game.inventory.crudeTool || 0);
       OTZI.dom.craftCrudeSpear.textContent = String(game.inventory.crudeSpear || 0);
       OTZI.dom.craftHardenedSpear.textContent = String(game.inventory.hardenedSpear || 0);
@@ -73,6 +77,7 @@ OTZI.renderUi = {
       const crudeToolRecipe = OTZI.crafting.describeRecipe("crude_cutting_tool", game.inventory);
       const crudeSpearRecipe = OTZI.crafting.describeRecipe("crude_spear", game.inventory);
       const harden = OTZI.crafting.describeHardening(game);
+      const cook = OTZI.crafting.describeCooking(game);
       this.syncRecipeCard(
         OTZI.dom.recipeCrudeToolState,
         OTZI.dom.recipeCrudeToolNeeds,
@@ -96,6 +101,13 @@ OTZI.renderUi = {
       OTZI.dom.hardenSpearBtn.disabled = false;
       OTZI.dom.hardenSpearBtn.setAttribute("data-craftable", harden.canHarden ? "true" : "false");
       OTZI.dom.hardenSpearBtn.textContent = "Harden Spear Tip";
+      OTZI.dom.recipeCookMeatState.textContent = cook.canCook ? "Ready" : "Need Hearth";
+      OTZI.dom.recipeCookMeatNeeds.textContent = cook.needsText;
+      OTZI.dom.recipeCookMeatHave.textContent = cook.haveText;
+      OTZI.dom.recipeCookMeatMissing.textContent = cook.statusText;
+      OTZI.dom.cookMeatBtn.disabled = false;
+      OTZI.dom.cookMeatBtn.setAttribute("data-craftable", cook.canCook ? "true" : "false");
+      OTZI.dom.cookMeatBtn.textContent = "Cook Meat";
       OTZI.dom.equipCrudeSpearBtn.disabled = (game.inventory.crudeSpear || 0) < 1;
       OTZI.dom.equipHardenedSpearBtn.disabled = (game.inventory.hardenedSpear || 0) < 1;
       OTZI.dom.equipCrudeSpearBtn.textContent = game.equipment.spear === "crudeSpear" ? "Crude Spear Equipped" : "Equip Crude Spear";
@@ -103,7 +115,9 @@ OTZI.renderUi = {
       OTZI.dom.equipHint.textContent = !spear.kind ? "No spear equipped." :
         spear.kind === "hardenedSpear" ? `Hardened spear equipped. Durability ${spear.durability}.` :
         "Crude spear equipped. The next throw will lose it.";
-      OTZI.dom.craftHint.textContent = harden.canHarden ? "The village hearth is ready for hardening." :
+      OTZI.dom.craftHint.textContent = cook.canCook ? "The village hearth is ready for cooking." :
+        harden.canHarden ? "The village hearth is ready for hardening." :
+        (game.inventory.rawMeat || 0) > 0 ? "Return to the village hearth to cook raw meat." :
         (game.inventory.crudeSpear || 0) > 0 ? "Return to the village hearth to harden the spear tip." :
         "Collect materials and craft tools or spears here.";
     }

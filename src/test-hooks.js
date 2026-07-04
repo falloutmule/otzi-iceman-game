@@ -98,6 +98,8 @@ OTZI.installTestHooks = function installTestHooks() {
           id: g.focusedEntity.id,
           kind: g.focusedEntity.kind,
           state: g.focusedEntity.state || null,
+          downed: !!g.focusedEntity.downed,
+          harvested: !!g.focusedEntity.harvested,
           outcome: g.focusedEntity.outcome || null,
           dist: g.focusedEntity.dist,
           interactMode: g.focusedEntity.interactMode || null
@@ -204,7 +206,7 @@ OTZI.installTestHooks = function installTestHooks() {
     },
     triggerHareFlee() {
       if (OTZI.game.currentScreen?.kind !== "animal_clearing") this.teleportToAnimalClearing();
-      const hare = (OTZI.game.entities || []).find((entity) => (entity.kind === "hare" || entity.kind === "grouse") && !entity.caught && !entity.escaped);
+      const hare = (OTZI.game.entities || []).find((entity) => (entity.kind === "hare" || entity.kind === "grouse") && !entity.caught && !entity.escaped && !entity.downed && !entity.harvested);
       if (!hare) return null;
       OTZI.game.player.x = hare.x - 10;
       OTZI.game.player.y = hare.y;
@@ -221,13 +223,19 @@ OTZI.installTestHooks = function installTestHooks() {
         state: animal.state,
         caught: !!animal.caught,
         escaped: !!animal.escaped,
+        downed: !!animal.downed,
+        harvested: !!animal.harvested,
         outcome: animal.outcome || null,
         resolveTimer: animal.resolveTimer || 0
       } : null;
     },
+    harvestFocusedAnimal() {
+      if (!OTZI.game.focusedEntity || !OTZI.game.focusedEntity.downed) return false;
+      return OTZI.game.tryEntityUse();
+    },
     teleportNearHare() {
       if (OTZI.game.currentScreen?.kind !== "animal_clearing") this.teleportToAnimalClearing();
-      const animal = (OTZI.game.entities || []).find((entity) => (entity.kind === "hare" || entity.kind === "grouse") && !entity.caught && !entity.escaped);
+      const animal = (OTZI.game.entities || []).find((entity) => (entity.kind === "hare" || entity.kind === "grouse") && !entity.caught && !entity.escaped && !entity.downed && !entity.harvested);
       if (!animal) return null;
       OTZI.game.player.x = animal.x - OTZI.CFG.tileSize * 0.9;
       OTZI.game.player.y = animal.y;

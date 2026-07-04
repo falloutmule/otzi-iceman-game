@@ -38,6 +38,13 @@ OTZI.objectives = {
         text: "Need 1 crude spear. Return to the village hearth and use the fire."
       };
     }
+    if ((game.inventory.rawMeat || 0) > 0) {
+      return {
+        id: "cook_raw_meat",
+        title: "Cook Raw Meat",
+        text: "Need 1 raw meat. Return to the village hearth and use the fire."
+      };
+    }
     if ((game.inventory.hardenedSpear || 0) > 0 && (game.progress?.smallGameHunts || 0) < 1) {
       return {
         id: "hunt_small_game",

@@ -117,7 +117,7 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 var OTZI = window.OTZI || (window.OTZI = {});
 
 OTZI.CFG = {
-  engineVersion: "otzi-fire-spear-0.5.2",
+  engineVersion: "otzi-fire-spear-0.5.3",
   saveVersion: 7,
   worldgenVersion: 3,
   saveKey: "otzi_content_loop_save_v6",
@@ -228,6 +228,7 @@ OTZI.dom = {
           <div><dt>Bark</dt><dd id="craftBark">0</dd></div>
           <div><dt>Grass</dt><dd id="craftGrass">0</dd></div>
           <div><dt>Food</dt><dd id="craftFood">0</dd></div>
+          <div><dt>Raw meat</dt><dd id="craftRawMeat">0</dd></div>
           <div><dt>Crude cutting tools</dt><dd id="craftCrudeTool">0</dd></div>
           <div><dt>Crude spears</dt><dd id="craftCrudeSpear">0</dd></div>
           <div><dt>Hardened spears</dt><dd id="craftHardenedSpear">0</dd></div>
@@ -254,6 +255,13 @@ OTZI.dom = {
           <p id="recipeHardenSpearHave" class="recipe-line recipe-have">Have: Crude Spear 0 / 1</p>
           <p id="recipeHardenSpearMissing" class="recipe-line recipe-missing">Status: Return to the village hearth</p>
           <button id="hardenSpearBtn" type="button">Harden Spear Tip</button>
+        </div>
+        <div id="recipeCookMeatCard" class="recipe-card recipe-card-hearth" data-recipe-id="cook_meat">
+          <div class="recipe-card-head"><strong>Cook Meat</strong><span id="recipeCookMeatState" class="recipe-state">Need Hearth</span></div>
+          <p id="recipeCookMeatNeeds" class="recipe-line">Needs: 1 Raw Meat + Village Hearth</p>
+          <p id="recipeCookMeatHave" class="recipe-line recipe-have">Have: Raw Meat 0 / 1</p>
+          <p id="recipeCookMeatMissing" class="recipe-line recipe-missing">Status: Return to the village hearth</p>
+          <button id="cookMeatBtn" type="button">Cook Meat</button>
         </div>
         <div class="panel-title">EQUIP</div>
         <button id="equipCrudeSpearBtn" type="button">Equip Crude Spear</button>
@@ -340,6 +348,7 @@ OTZI.dom = {
     this.craftBark = document.getElementById("craftBark");
     this.craftGrass = document.getElementById("craftGrass");
     this.craftFood = document.getElementById("craftFood");
+    this.craftRawMeat = document.getElementById("craftRawMeat");
     this.craftCrudeTool = document.getElementById("craftCrudeTool");
     this.craftCrudeSpear = document.getElementById("craftCrudeSpear");
     this.craftHardenedSpear = document.getElementById("craftHardenedSpear");
@@ -362,9 +371,15 @@ OTZI.dom = {
     this.recipeHardenSpearNeeds = document.getElementById("recipeHardenSpearNeeds");
     this.recipeHardenSpearHave = document.getElementById("recipeHardenSpearHave");
     this.recipeHardenSpearMissing = document.getElementById("recipeHardenSpearMissing");
+    this.recipeCookMeatCard = document.getElementById("recipeCookMeatCard");
+    this.recipeCookMeatState = document.getElementById("recipeCookMeatState");
+    this.recipeCookMeatNeeds = document.getElementById("recipeCookMeatNeeds");
+    this.recipeCookMeatHave = document.getElementById("recipeCookMeatHave");
+    this.recipeCookMeatMissing = document.getElementById("recipeCookMeatMissing");
     this.craftCrudeToolBtn = document.getElementById("craftCrudeToolBtn");
     this.craftCrudeSpearBtn = document.getElementById("craftCrudeSpearBtn");
     this.hardenSpearBtn = document.getElementById("hardenSpearBtn");
+    this.cookMeatBtn = document.getElementById("cookMeatBtn");
     this.equipCrudeSpearBtn = document.getElementById("equipCrudeSpearBtn");
     this.equipHardenedSpearBtn = document.getElementById("equipHardenedSpearBtn");
     this.equipHint = document.getElementById("equipHint");
@@ -1147,6 +1162,8 @@ OTZI.entities = {
       fleeTimer: 0,
       caught: false,
       escaped: false,
+      downed: false,
+      harvested: false,
       resolveTimer: 0,
       outcome: null,
       phase: 0,
@@ -1164,6 +1181,8 @@ OTZI.entities = {
       fleeTimer: 0,
       caught: false,
       escaped: false,
+      downed: false,
+      harvested: false,
       resolveTimer: 0,
       outcome: null,
       phase: 0,
@@ -1190,6 +1209,8 @@ OTZI.entities = {
       fleeTimer: entity.fleeTimer || 0,
       caught: !!entity.caught,
       escaped: !!entity.escaped,
+      downed: !!entity.downed,
+      harvested: !!entity.harvested,
       resolveTimer: entity.resolveTimer || 0,
       outcome: entity.outcome || null,
       collected: !!entity.collected,
@@ -1207,6 +1228,8 @@ OTZI.entities = {
       if ("fleeTimer" in entity) entity.fleeTimer = state.fleeTimer || 0;
       if ("caught" in entity) entity.caught = !!state.caught;
       if ("escaped" in entity) entity.escaped = !!state.escaped;
+      if ("downed" in entity) entity.downed = !!state.downed;
+      if ("harvested" in entity) entity.harvested = !!state.harvested;
       if ("resolveTimer" in entity) entity.resolveTimer = state.resolveTimer || 0;
       if ("outcome" in entity) entity.outcome = state.outcome || null;
       if ("collected" in entity) entity.collected = !!state.collected;
@@ -1244,6 +1267,11 @@ OTZI.entities = {
     }
   },
   updateHare(e, dt) {
+    if (e.harvested) {
+      e.resolveTimer = Math.max(0, (e.resolveTimer || 0) - dt);
+      return;
+    }
+    if (e.downed) return;
     if (e.caught || e.escaped) {
       e.resolveTimer = Math.max(0, (e.resolveTimer || 0) - dt);
       return;
@@ -1285,6 +1313,14 @@ OTZI.entities = {
     let best = null;
     const activeSpear = OTZI.game?.activeSpearStatus?.() || { kind: null };
     for (const entity of list) {
+      if ((entity.kind === "hare" || entity.kind === "grouse") && entity.downed && entity.harvested) continue;
+      if ((entity.kind === "hare" || entity.kind === "grouse") && entity.downed && !entity.harvested) {
+        const radius = Math.max(OTZI.CFG.interactRadius, OTZI.CFG.throwRecoverRadius);
+        const dist = Math.hypot(entity.x - player.x, entity.y - player.y);
+        if (dist > radius) continue;
+        if (!best || dist < best.dist) best = { ...entity, dist, interactMode: "harvest" };
+        continue;
+      }
       if ((entity.kind === "hare" || entity.kind === "grouse") && (entity.caught || entity.escaped || entity.state === "fleeing")) continue;
       if (entity.kind === "good_flint_core" && entity.collected) continue;
       if (entity.kind !== "hare" && entity.kind !== "grouse" && entity.kind !== "good_flint_core") continue;
@@ -1572,6 +1608,7 @@ OTZI.inventory = {
       bark: 0,
       grass: 0,
       food: 0,
+      rawMeat: 0,
       crudeTool: 0,
       crudeSpear: 0,
       hardenedSpear: 0,
@@ -1595,6 +1632,7 @@ OTZI.crafting = {
     bark: "Bark",
     grass: "Grass",
     food: "Food",
+    rawMeat: "Raw Meat",
     crudeTool: "Crude Cutting Tool",
     crudeSpear: "Crude Spear",
     hardenedSpear: "Hardened Spear",
@@ -1670,6 +1708,9 @@ OTZI.crafting = {
   canHardenAtHearth(game = OTZI.game) {
     return !!game.focusedEntrance && game.focusedEntrance.kind === "hearth" && (game.inventory.crudeSpear || 0) > 0;
   },
+  canCookAtHearth(game = OTZI.game) {
+    return !!game.focusedEntrance && game.focusedEntrance.kind === "hearth" && (game.inventory.rawMeat || 0) > 0;
+  },
   describeHardening(game = OTZI.game) {
     const haveSpear = game.inventory.crudeSpear || 0;
     const atHearth = !!game.focusedEntrance && game.focusedEntrance.kind === "hearth";
@@ -1680,6 +1721,18 @@ OTZI.crafting = {
       needsText: "Needs: 1 Crude Spear + Village Hearth",
       haveText: `Have: Crude Spear ${haveSpear} / 1`,
       statusText: haveSpear < 1 ? "Missing: 1 Crude Spear" : atHearth ? "Status: Hearth ready" : "Status: Return to the village hearth"
+    };
+  },
+  describeCooking(game = OTZI.game) {
+    const haveMeat = game.inventory.rawMeat || 0;
+    const atHearth = !!game.focusedEntrance && game.focusedEntrance.kind === "hearth";
+    return {
+      canCook: !!(haveMeat > 0 && atHearth),
+      haveMeat,
+      atHearth,
+      needsText: "Needs: 1 Raw Meat + Village Hearth",
+      haveText: `Have: Raw Meat ${haveMeat} / 1`,
+      statusText: haveMeat < 1 ? "Missing: 1 Raw Meat" : atHearth ? "Status: Hearth ready" : "Status: Return to the village hearth"
     };
   },
   hardenSpearTip() {
@@ -1694,6 +1747,23 @@ OTZI.crafting = {
       return false;
     }
     return OTZI.game.useVillageHearth();
+  },
+  cookMeat() {
+    if ((OTZI.game.inventory.rawMeat || 0) < 1) {
+      OTZI.dialogue.toast("Harvest meat first");
+      OTZI.audio.blip(220, 0.035);
+      return false;
+    }
+    if (!this.canCookAtHearth()) {
+      OTZI.dialogue.toast("Return to the village hearth");
+      OTZI.audio.blip(220, 0.035);
+      return false;
+    }
+    OTZI.inventory.add("rawMeat", -1);
+    OTZI.inventory.add("food", 1);
+    OTZI.dialogue.toast("Cooked raw meat +1 food");
+    OTZI.audio.blip(700, 0.045);
+    return true;
   },
   craft(id) {
     const recipe = this.getRecipe(id);
@@ -1814,6 +1884,13 @@ OTZI.objectives = {
         id: "harden_spear_tip",
         title: "Harden the Spear Tip",
         text: "Need 1 crude spear. Return to the village hearth and use the fire."
+      };
+    }
+    if ((game.inventory.rawMeat || 0) > 0) {
+      return {
+        id: "cook_raw_meat",
+        title: "Cook Raw Meat",
+        text: "Need 1 raw meat. Return to the village hearth and use the fire."
       };
     }
     if ((game.inventory.hardenedSpear || 0) > 0 && (game.progress?.smallGameHunts || 0) < 1) {
@@ -2284,6 +2361,14 @@ OTZI.renderWorld = {
   drawEntity(ctx, e, color, camera, offsetX = 0, offsetY = 0, highlighted = false) {
     const p = this.project(camera, e.x, e.y, offsetX, offsetY);
     if (e.kind === "hare" || e.kind === "grouse") {
+      if (e.downed) {
+        this.drawCarcass(ctx, e, p, highlighted, offsetX, offsetY);
+        return;
+      }
+      if (e.harvested) {
+        this.drawHarvestedCarcass(ctx, e, p, highlighted);
+        return;
+      }
       if ((e.caught || e.escaped) && (e.resolveTimer || 0) <= 0) return;
       ctx.save();
       const outcome = e.outcome || null;
@@ -2363,6 +2448,43 @@ OTZI.renderWorld = {
     ctx.fillStyle = "rgba(0,0,0,.25)";
     ctx.fillRect(p.x - e.radius, p.y + e.radius + 2, e.radius * 2, 3);
   },
+  drawCarcass(ctx, e, p, highlighted) {
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,.34)";
+    ctx.fillRect(p.x - 13, p.y + 9, 26, 4);
+    ctx.fillStyle = e.kind === "grouse" ? "#6b462f" : "#4b3a2d";
+    ctx.strokeStyle = "#24150f";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(p.x, p.y + 1, e.kind === "grouse" ? 11 : 12, e.kind === "grouse" ? 7 : 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = e.kind === "grouse" ? "#7c5234" : "#5b4030";
+    ctx.beginPath();
+    ctx.arc(p.x + 7, p.y - 5, e.kind === "grouse" ? 4 : 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#2b1810";
+    ctx.fillRect(p.x - 3, p.y + 5, 2, 6);
+    ctx.fillRect(p.x + 1, p.y + 5, 2, 6);
+    if (e.kind === "hare") {
+      ctx.fillRect(p.x - 8, p.y - 4, 3, 10);
+      ctx.fillRect(p.x - 12, p.y - 10, 3, 10);
+    } else {
+      ctx.fillRect(p.x - 10, p.y - 7, 4, 8);
+    }
+    if (highlighted) this.drawResourceFocus(ctx, `${e.kind.toUpperCase()} CARCASS`, Math.floor(p.x), Math.floor(p.y - 2));
+    ctx.restore();
+  },
+  drawHarvestedCarcass(ctx, e, p) {
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,.22)";
+    ctx.fillRect(p.x - 11, p.y + 10, 22, 3);
+    ctx.fillStyle = "#4f4034";
+    ctx.fillRect(p.x - 8, p.y - 2, 16, 5);
+    ctx.fillStyle = "#2b1810";
+    ctx.fillRect(p.x - 2, p.y + 1, 4, 2);
+    ctx.restore();
+  },
   drawHazard(ctx, hazard, camera, offsetX = 0, offsetY = 0) {
     const p = this.project(camera, hazard.x, hazard.y, offsetX, offsetY);
     ctx.save();
@@ -2427,12 +2549,15 @@ OTZI.renderUi = {
       "THROW<br>TOOL";
     if (!OTZI.dialogue.hasActiveToast()) {
       OTZI.dialogue.message = game.transition.active ? `Traveling ${game.transition.direction}` :
-        game.focusedEntity?.kind === "hare" && game.focusedEntity?.interactMode === "throw" ? `THROW: hunt hare with ${spear.label}` :
-        game.focusedEntity?.kind === "grouse" && game.focusedEntity?.interactMode === "throw" ? `THROW: hunt grouse with ${spear.label}` :
-        game.focusedEntity?.kind === "hare" ? "USE: catch hare" :
-        game.focusedEntity?.kind === "grouse" ? "USE: catch grouse" :
-        game.focusedEntity?.kind === "good_flint_core" ? "USE: take good flint core" :
-        game.focusedEntrance?.kind === "hearth" ? "USE: harden spear tip" :
+      game.focusedEntity?.kind === "hare" && game.focusedEntity?.interactMode === "throw" ? `THROW: hunt hare with ${spear.label}` :
+      game.focusedEntity?.kind === "grouse" && game.focusedEntity?.interactMode === "throw" ? `THROW: hunt grouse with ${spear.label}` :
+      game.focusedEntity?.state === "downed" && game.focusedEntity?.kind === "hare" ? "Animal downed - USE to harvest hare" :
+      game.focusedEntity?.state === "downed" && game.focusedEntity?.kind === "grouse" ? "Animal downed - USE to harvest grouse" :
+      game.focusedEntity?.kind === "hare" ? "USE: catch hare" :
+      game.focusedEntity?.kind === "grouse" ? "USE: catch grouse" :
+      game.focusedEntity?.kind === "good_flint_core" ? "USE: take good flint core" :
+      game.focusedEntrance?.kind === "hearth" && (game.inventory.rawMeat || 0) > 0 ? "USE: cook raw meat" :
+      game.focusedEntrance?.kind === "hearth" ? "USE: harden spear tip" :
         game.focusedEntrance ? `USE: enter ${game.focusedEntrance.label}` :
         game.focusedResource ? `USE: gather ${game.focusedResource.resource}` :
         spear.kind ? `THROW: ${spear.label} ready` : "No resource nearby";
@@ -2454,6 +2579,7 @@ OTZI.renderUi = {
       OTZI.dom.craftBark.textContent = String(game.inventory.bark || 0);
       OTZI.dom.craftGrass.textContent = String(game.inventory.grass || 0);
       OTZI.dom.craftFood.textContent = String(game.inventory.food || 0);
+      OTZI.dom.craftRawMeat.textContent = String(game.inventory.rawMeat || 0);
       OTZI.dom.craftCrudeTool.textContent = String(game.inventory.crudeTool || 0);
       OTZI.dom.craftCrudeSpear.textContent = String(game.inventory.crudeSpear || 0);
       OTZI.dom.craftHardenedSpear.textContent = String(game.inventory.hardenedSpear || 0);
@@ -2461,6 +2587,7 @@ OTZI.renderUi = {
       const crudeToolRecipe = OTZI.crafting.describeRecipe("crude_cutting_tool", game.inventory);
       const crudeSpearRecipe = OTZI.crafting.describeRecipe("crude_spear", game.inventory);
       const harden = OTZI.crafting.describeHardening(game);
+      const cook = OTZI.crafting.describeCooking(game);
       this.syncRecipeCard(
         OTZI.dom.recipeCrudeToolState,
         OTZI.dom.recipeCrudeToolNeeds,
@@ -2484,6 +2611,13 @@ OTZI.renderUi = {
       OTZI.dom.hardenSpearBtn.disabled = false;
       OTZI.dom.hardenSpearBtn.setAttribute("data-craftable", harden.canHarden ? "true" : "false");
       OTZI.dom.hardenSpearBtn.textContent = "Harden Spear Tip";
+      OTZI.dom.recipeCookMeatState.textContent = cook.canCook ? "Ready" : "Need Hearth";
+      OTZI.dom.recipeCookMeatNeeds.textContent = cook.needsText;
+      OTZI.dom.recipeCookMeatHave.textContent = cook.haveText;
+      OTZI.dom.recipeCookMeatMissing.textContent = cook.statusText;
+      OTZI.dom.cookMeatBtn.disabled = false;
+      OTZI.dom.cookMeatBtn.setAttribute("data-craftable", cook.canCook ? "true" : "false");
+      OTZI.dom.cookMeatBtn.textContent = "Cook Meat";
       OTZI.dom.equipCrudeSpearBtn.disabled = (game.inventory.crudeSpear || 0) < 1;
       OTZI.dom.equipHardenedSpearBtn.disabled = (game.inventory.hardenedSpear || 0) < 1;
       OTZI.dom.equipCrudeSpearBtn.textContent = game.equipment.spear === "crudeSpear" ? "Crude Spear Equipped" : "Equip Crude Spear";
@@ -2491,7 +2625,9 @@ OTZI.renderUi = {
       OTZI.dom.equipHint.textContent = !spear.kind ? "No spear equipped." :
         spear.kind === "hardenedSpear" ? `Hardened spear equipped. Durability ${spear.durability}.` :
         "Crude spear equipped. The next throw will lose it.";
-      OTZI.dom.craftHint.textContent = harden.canHarden ? "The village hearth is ready for hardening." :
+      OTZI.dom.craftHint.textContent = cook.canCook ? "The village hearth is ready for cooking." :
+        harden.canHarden ? "The village hearth is ready for hardening." :
+        (game.inventory.rawMeat || 0) > 0 ? "Return to the village hearth to cook raw meat." :
         (game.inventory.crudeSpear || 0) > 0 ? "Return to the village hearth to harden the spear tip." :
         "Collect materials and craft tools or spears here.";
     }
@@ -2906,6 +3042,8 @@ OTZI.installTestHooks = function installTestHooks() {
           id: g.focusedEntity.id,
           kind: g.focusedEntity.kind,
           state: g.focusedEntity.state || null,
+          downed: !!g.focusedEntity.downed,
+          harvested: !!g.focusedEntity.harvested,
           outcome: g.focusedEntity.outcome || null,
           dist: g.focusedEntity.dist,
           interactMode: g.focusedEntity.interactMode || null
@@ -3012,7 +3150,7 @@ OTZI.installTestHooks = function installTestHooks() {
     },
     triggerHareFlee() {
       if (OTZI.game.currentScreen?.kind !== "animal_clearing") this.teleportToAnimalClearing();
-      const hare = (OTZI.game.entities || []).find((entity) => (entity.kind === "hare" || entity.kind === "grouse") && !entity.caught && !entity.escaped);
+      const hare = (OTZI.game.entities || []).find((entity) => (entity.kind === "hare" || entity.kind === "grouse") && !entity.caught && !entity.escaped && !entity.downed && !entity.harvested);
       if (!hare) return null;
       OTZI.game.player.x = hare.x - 10;
       OTZI.game.player.y = hare.y;
@@ -3029,13 +3167,19 @@ OTZI.installTestHooks = function installTestHooks() {
         state: animal.state,
         caught: !!animal.caught,
         escaped: !!animal.escaped,
+        downed: !!animal.downed,
+        harvested: !!animal.harvested,
         outcome: animal.outcome || null,
         resolveTimer: animal.resolveTimer || 0
       } : null;
     },
+    harvestFocusedAnimal() {
+      if (!OTZI.game.focusedEntity || !OTZI.game.focusedEntity.downed) return false;
+      return OTZI.game.tryEntityUse();
+    },
     teleportNearHare() {
       if (OTZI.game.currentScreen?.kind !== "animal_clearing") this.teleportToAnimalClearing();
-      const animal = (OTZI.game.entities || []).find((entity) => (entity.kind === "hare" || entity.kind === "grouse") && !entity.caught && !entity.escaped);
+      const animal = (OTZI.game.entities || []).find((entity) => (entity.kind === "hare" || entity.kind === "grouse") && !entity.caught && !entity.escaped && !entity.downed && !entity.harvested);
       if (!animal) return null;
       OTZI.game.player.x = animal.x - OTZI.CFG.tileSize * 0.9;
       OTZI.game.player.y = animal.y;
@@ -3689,16 +3833,17 @@ OTZI.game = {
     return this.resolveSpearThrowHit(entity, spear);
   },
   resolveSpearThrowHit(entity, spear) {
-    entity.state = "caught";
-    entity.caught = true;
-    entity.outcome = "caught";
-    entity.resolveTimer = 1.1;
-    OTZI.inventory.add("food", entity.kind === "grouse" ? 2 : 1);
+    entity.state = "downed";
+    entity.downed = true;
+    entity.harvested = false;
+    entity.caught = false;
+    entity.escaped = false;
+    entity.outcome = "downed";
+    entity.resolveTimer = 0;
     this.progress.smallGameHunts += 1;
     this.progress.lastSmallGame = entity.kind;
     const survived = this.consumeEquippedSpear(true);
-    const foodGain = entity.kind === "grouse" ? 2 : 1;
-    OTZI.dialogue.toast(`${entity.kind === "grouse" ? "Grouse" : "Hare"} caught +${foodGain} food ${survived ? "- spear recovered" : "- spear lost"}`);
+    OTZI.dialogue.toast(`${entity.kind === "grouse" ? "Grouse" : "Hare"} downed - USE to harvest ${survived ? "- spear recovered" : "- spear lost"}`);
     OTZI.audio.blip(760, 0.05);
     this.updateFocusState();
     return true;
@@ -3727,6 +3872,9 @@ OTZI.game = {
     return true;
   },
   useVillageHearth() {
+    if ((this.inventory.rawMeat || 0) > 0) {
+      return OTZI.crafting.cookMeat();
+    }
     if ((this.inventory.crudeSpear || 0) < 1) {
       OTZI.dialogue.toast("Craft a crude spear first");
       OTZI.audio.blip(220, 0.035);
@@ -3747,6 +3895,17 @@ OTZI.game = {
     const entity = (this.entities || []).find((item) => item.id === this.focusedEntityId);
     if (!entity) return false;
     if (entity.kind === "hare" || entity.kind === "grouse") {
+      if (entity.state === "downed" && !entity.harvested) {
+        OTZI.inventory.add("rawMeat", 1);
+        entity.harvested = true;
+        entity.state = "harvested";
+        entity.outcome = "harvested";
+        entity.resolveTimer = 0.8;
+        OTZI.dialogue.toast(`Harvested ${entity.kind} +1 raw meat`);
+        OTZI.audio.blip(600, 0.05);
+        this.updateFocusState();
+        return true;
+      }
       if (entity.interactMode === "throw") {
         OTZI.dialogue.toast("Too far away - throw the spear");
         return false;
@@ -3755,14 +3914,14 @@ OTZI.game = {
         OTZI.dialogue.toast("The animal is already escaping");
         return false;
       }
-      entity.state = "caught";
-      entity.caught = true;
-      entity.outcome = "caught";
-      entity.resolveTimer = 0.9;
-      OTZI.inventory.add("food", 1);
+      entity.state = "downed";
+      entity.downed = true;
+      entity.harvested = false;
+      entity.outcome = "downed";
+      entity.resolveTimer = 0;
       this.progress.smallGameHunts += 1;
       this.progress.lastSmallGame = entity.kind;
-      OTZI.dialogue.toast(`Caught ${entity.kind} +1 food`);
+      OTZI.dialogue.toast(`${entity.kind === "grouse" ? "Grouse" : "Hare"} downed - USE to harvest`);
       OTZI.audio.blip(600, 0.05);
       this.updateFocusState();
       return true;
@@ -4030,6 +4189,13 @@ OTZI.game = {
       if (ev.target === OTZI.dom.hardenSpearBtn) return;
       if (!OTZI.crafting.canHardenAtHearth()) OTZI.crafting.hardenSpearTip();
     });
+    OTZI.dom.cookMeatBtn.addEventListener("click", () => {
+      OTZI.crafting.cookMeat();
+    });
+    OTZI.dom.recipeCookMeatCard.addEventListener("click", (ev) => {
+      if (ev.target === OTZI.dom.cookMeatBtn) return;
+      if (!OTZI.crafting.canCookAtHearth()) OTZI.crafting.cookMeat();
+    });
     OTZI.dom.equipCrudeSpearBtn.addEventListener("click", () => {
       OTZI.game.equipSpear("crudeSpear");
     });
@@ -4108,6 +4274,6 @@ OTZI.game = {
 })();
 
   </script>
-  <!-- build: 2026-07-03T16:45:22.702Z modules:30 -->
+  <!-- build: 2026-07-04T02:30:56.272Z modules:30 -->
 </body>
 </html>

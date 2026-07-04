@@ -66,11 +66,23 @@ test("content loop adds screen kinds, small-game catch, Flint Scar core, toolmak
   await expect(page.locator("#statusLine")).toContainText("USE: catch");
   const beforeCatch = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   await page.locator("#useBtn").tap();
-  await expect(page.locator("#statusLine")).toContainText("Caught");
-  const afterCatch = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
-  expect(afterCatch.inventory.food).toBe((beforeCatch.inventory.food || 0) + 1);
-  expect(afterCatch.focusedEntity).toBeNull();
-  await page.screenshot({ path: "artifacts/screenshots/content-hare-caught.png", fullPage: true });
+  await expect(page.locator("#statusLine")).toContainText("downed");
+  const afterDown = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
+  expect(afterDown.inventory.rawMeat || 0).toBe(beforeCatch.inventory.rawMeat || 0);
+  expect(afterDown.focusedEntity?.state).toBe("downed");
+  await page.screenshot({ path: "artifacts/screenshots/content-hare-carcass.png", fullPage: true });
+  await page.locator("#useBtn").tap();
+  await expect(page.locator("#statusLine")).toContainText("Harvested hare +1 raw meat");
+  const afterHarvest = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
+  expect(afterHarvest.inventory.rawMeat).toBe((beforeCatch.inventory.rawMeat || 0) + 1);
+  await page.evaluate(() => window.__OTZI_TEST__.teleportToVillageHearth());
+  await expect(page.locator("#statusLine")).toContainText("USE: cook raw meat");
+  await page.locator("#useBtn").tap();
+  await expect(page.locator("#statusLine")).toContainText("Cooked raw meat +1 food");
+  const afterCook = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
+  expect(afterCook.inventory.rawMeat).toBe(0);
+  expect(afterCook.inventory.food).toBe((beforeCatch.inventory.food || 0) + 1);
+  await page.screenshot({ path: "artifacts/screenshots/content-hare-harvested.png", fullPage: true });
 
   await page.evaluate(() => window.__OTZI_TEST__.teleportToFlintScarEntrance());
   await expect(page.locator("#statusLine")).toContainText("USE: enter Flint Scar");

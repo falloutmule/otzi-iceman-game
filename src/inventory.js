@@ -9,6 +9,7 @@ OTZI.inventory = {
       bark: 0,
       grass: 0,
       food: 0,
+      rawMeat: 0,
       crudeTool: 0,
       crudeSpear: 0,
       hardenedSpear: 0,

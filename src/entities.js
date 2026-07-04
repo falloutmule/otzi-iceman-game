@@ -28,6 +28,8 @@ OTZI.entities = {
       fleeTimer: 0,
       caught: false,
       escaped: false,
+      downed: false,
+      harvested: false,
       resolveTimer: 0,
       outcome: null,
       phase: 0,
@@ -45,6 +47,8 @@ OTZI.entities = {
       fleeTimer: 0,
       caught: false,
       escaped: false,
+      downed: false,
+      harvested: false,
       resolveTimer: 0,
       outcome: null,
       phase: 0,
@@ -71,6 +75,8 @@ OTZI.entities = {
       fleeTimer: entity.fleeTimer || 0,
       caught: !!entity.caught,
       escaped: !!entity.escaped,
+      downed: !!entity.downed,
+      harvested: !!entity.harvested,
       resolveTimer: entity.resolveTimer || 0,
       outcome: entity.outcome || null,
       collected: !!entity.collected,
@@ -88,6 +94,8 @@ OTZI.entities = {
       if ("fleeTimer" in entity) entity.fleeTimer = state.fleeTimer || 0;
       if ("caught" in entity) entity.caught = !!state.caught;
       if ("escaped" in entity) entity.escaped = !!state.escaped;
+      if ("downed" in entity) entity.downed = !!state.downed;
+      if ("harvested" in entity) entity.harvested = !!state.harvested;
       if ("resolveTimer" in entity) entity.resolveTimer = state.resolveTimer || 0;
       if ("outcome" in entity) entity.outcome = state.outcome || null;
       if ("collected" in entity) entity.collected = !!state.collected;
@@ -125,6 +133,11 @@ OTZI.entities = {
     }
   },
   updateHare(e, dt) {
+    if (e.harvested) {
+      e.resolveTimer = Math.max(0, (e.resolveTimer || 0) - dt);
+      return;
+    }
+    if (e.downed) return;
     if (e.caught || e.escaped) {
       e.resolveTimer = Math.max(0, (e.resolveTimer || 0) - dt);
       return;
@@ -166,6 +179,14 @@ OTZI.entities = {
     let best = null;
     const activeSpear = OTZI.game?.activeSpearStatus?.() || { kind: null };
     for (const entity of list) {
+      if ((entity.kind === "hare" || entity.kind === "grouse") && entity.downed && entity.harvested) continue;
+      if ((entity.kind === "hare" || entity.kind === "grouse") && entity.downed && !entity.harvested) {
+        const radius = Math.max(OTZI.CFG.interactRadius, OTZI.CFG.throwRecoverRadius);
+        const dist = Math.hypot(entity.x - player.x, entity.y - player.y);
+        if (dist > radius) continue;
+        if (!best || dist < best.dist) best = { ...entity, dist, interactMode: "harvest" };
+        continue;
+      }
       if ((entity.kind === "hare" || entity.kind === "grouse") && (entity.caught || entity.escaped || entity.state === "fleeing")) continue;
       if (entity.kind === "good_flint_core" && entity.collected) continue;
       if (entity.kind !== "hare" && entity.kind !== "grouse" && entity.kind !== "good_flint_core") continue;

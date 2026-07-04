@@ -370,6 +370,14 @@ OTZI.renderWorld = {
   drawEntity(ctx, e, color, camera, offsetX = 0, offsetY = 0, highlighted = false) {
     const p = this.project(camera, e.x, e.y, offsetX, offsetY);
     if (e.kind === "hare" || e.kind === "grouse") {
+      if (e.downed) {
+        this.drawCarcass(ctx, e, p, highlighted, offsetX, offsetY);
+        return;
+      }
+      if (e.harvested) {
+        this.drawHarvestedCarcass(ctx, e, p, highlighted);
+        return;
+      }
       if ((e.caught || e.escaped) && (e.resolveTimer || 0) <= 0) return;
       ctx.save();
       const outcome = e.outcome || null;
@@ -448,6 +456,43 @@ OTZI.renderWorld = {
     ctx.fill();
     ctx.fillStyle = "rgba(0,0,0,.25)";
     ctx.fillRect(p.x - e.radius, p.y + e.radius + 2, e.radius * 2, 3);
+  },
+  drawCarcass(ctx, e, p, highlighted) {
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,.34)";
+    ctx.fillRect(p.x - 13, p.y + 9, 26, 4);
+    ctx.fillStyle = e.kind === "grouse" ? "#6b462f" : "#4b3a2d";
+    ctx.strokeStyle = "#24150f";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(p.x, p.y + 1, e.kind === "grouse" ? 11 : 12, e.kind === "grouse" ? 7 : 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = e.kind === "grouse" ? "#7c5234" : "#5b4030";
+    ctx.beginPath();
+    ctx.arc(p.x + 7, p.y - 5, e.kind === "grouse" ? 4 : 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#2b1810";
+    ctx.fillRect(p.x - 3, p.y + 5, 2, 6);
+    ctx.fillRect(p.x + 1, p.y + 5, 2, 6);
+    if (e.kind === "hare") {
+      ctx.fillRect(p.x - 8, p.y - 4, 3, 10);
+      ctx.fillRect(p.x - 12, p.y - 10, 3, 10);
+    } else {
+      ctx.fillRect(p.x - 10, p.y - 7, 4, 8);
+    }
+    if (highlighted) this.drawResourceFocus(ctx, `${e.kind.toUpperCase()} CARCASS`, Math.floor(p.x), Math.floor(p.y - 2));
+    ctx.restore();
+  },
+  drawHarvestedCarcass(ctx, e, p) {
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,.22)";
+    ctx.fillRect(p.x - 11, p.y + 10, 22, 3);
+    ctx.fillStyle = "#4f4034";
+    ctx.fillRect(p.x - 8, p.y - 2, 16, 5);
+    ctx.fillStyle = "#2b1810";
+    ctx.fillRect(p.x - 2, p.y + 1, 4, 2);
+    ctx.restore();
   },
   drawHazard(ctx, hazard, camera, offsetX = 0, offsetY = 0) {
     const p = this.project(camera, hazard.x, hazard.y, offsetX, offsetY);

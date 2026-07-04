@@ -8,6 +8,7 @@ OTZI.crafting = {
     bark: "Bark",
     grass: "Grass",
     food: "Food",
+    rawMeat: "Raw Meat",
     crudeTool: "Crude Cutting Tool",
     crudeSpear: "Crude Spear",
     hardenedSpear: "Hardened Spear",
@@ -83,6 +84,9 @@ OTZI.crafting = {
   canHardenAtHearth(game = OTZI.game) {
     return !!game.focusedEntrance && game.focusedEntrance.kind === "hearth" && (game.inventory.crudeSpear || 0) > 0;
   },
+  canCookAtHearth(game = OTZI.game) {
+    return !!game.focusedEntrance && game.focusedEntrance.kind === "hearth" && (game.inventory.rawMeat || 0) > 0;
+  },
   describeHardening(game = OTZI.game) {
     const haveSpear = game.inventory.crudeSpear || 0;
     const atHearth = !!game.focusedEntrance && game.focusedEntrance.kind === "hearth";
@@ -93,6 +97,18 @@ OTZI.crafting = {
       needsText: "Needs: 1 Crude Spear + Village Hearth",
       haveText: `Have: Crude Spear ${haveSpear} / 1`,
       statusText: haveSpear < 1 ? "Missing: 1 Crude Spear" : atHearth ? "Status: Hearth ready" : "Status: Return to the village hearth"
+    };
+  },
+  describeCooking(game = OTZI.game) {
+    const haveMeat = game.inventory.rawMeat || 0;
+    const atHearth = !!game.focusedEntrance && game.focusedEntrance.kind === "hearth";
+    return {
+      canCook: !!(haveMeat > 0 && atHearth),
+      haveMeat,
+      atHearth,
+      needsText: "Needs: 1 Raw Meat + Village Hearth",
+      haveText: `Have: Raw Meat ${haveMeat} / 1`,
+      statusText: haveMeat < 1 ? "Missing: 1 Raw Meat" : atHearth ? "Status: Hearth ready" : "Status: Return to the village hearth"
     };
   },
   hardenSpearTip() {
@@ -107,6 +123,23 @@ OTZI.crafting = {
       return false;
     }
     return OTZI.game.useVillageHearth();
+  },
+  cookMeat() {
+    if ((OTZI.game.inventory.rawMeat || 0) < 1) {
+      OTZI.dialogue.toast("Harvest meat first");
+      OTZI.audio.blip(220, 0.035);
+      return false;
+    }
+    if (!this.canCookAtHearth()) {
+      OTZI.dialogue.toast("Return to the village hearth");
+      OTZI.audio.blip(220, 0.035);
+      return false;
+    }
+    OTZI.inventory.add("rawMeat", -1);
+    OTZI.inventory.add("food", 1);
+    OTZI.dialogue.toast("Cooked raw meat +1 food");
+    OTZI.audio.blip(700, 0.045);
+    return true;
   },
   craft(id) {
     const recipe = this.getRecipe(id);

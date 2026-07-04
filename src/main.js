@@ -505,16 +505,17 @@ OTZI.game = {
     return this.resolveSpearThrowHit(entity, spear);
   },
   resolveSpearThrowHit(entity, spear) {
-    entity.state = "caught";
-    entity.caught = true;
-    entity.outcome = "caught";
-    entity.resolveTimer = 1.1;
-    OTZI.inventory.add("food", entity.kind === "grouse" ? 2 : 1);
+    entity.state = "downed";
+    entity.downed = true;
+    entity.harvested = false;
+    entity.caught = false;
+    entity.escaped = false;
+    entity.outcome = "downed";
+    entity.resolveTimer = 0;
     this.progress.smallGameHunts += 1;
     this.progress.lastSmallGame = entity.kind;
     const survived = this.consumeEquippedSpear(true);
-    const foodGain = entity.kind === "grouse" ? 2 : 1;
-    OTZI.dialogue.toast(`${entity.kind === "grouse" ? "Grouse" : "Hare"} caught +${foodGain} food ${survived ? "- spear recovered" : "- spear lost"}`);
+    OTZI.dialogue.toast(`${entity.kind === "grouse" ? "Grouse" : "Hare"} downed - USE to harvest ${survived ? "- spear recovered" : "- spear lost"}`);
     OTZI.audio.blip(760, 0.05);
     this.updateFocusState();
     return true;
@@ -543,6 +544,9 @@ OTZI.game = {
     return true;
   },
   useVillageHearth() {
+    if ((this.inventory.rawMeat || 0) > 0) {
+      return OTZI.crafting.cookMeat();
+    }
     if ((this.inventory.crudeSpear || 0) < 1) {
       OTZI.dialogue.toast("Craft a crude spear first");
       OTZI.audio.blip(220, 0.035);
@@ -563,6 +567,17 @@ OTZI.game = {
     const entity = (this.entities || []).find((item) => item.id === this.focusedEntityId);
     if (!entity) return false;
     if (entity.kind === "hare" || entity.kind === "grouse") {
+      if (entity.state === "downed" && !entity.harvested) {
+        OTZI.inventory.add("rawMeat", 1);
+        entity.harvested = true;
+        entity.state = "harvested";
+        entity.outcome = "harvested";
+        entity.resolveTimer = 0.8;
+        OTZI.dialogue.toast(`Harvested ${entity.kind} +1 raw meat`);
+        OTZI.audio.blip(600, 0.05);
+        this.updateFocusState();
+        return true;
+      }
       if (entity.interactMode === "throw") {
         OTZI.dialogue.toast("Too far away - throw the spear");
         return false;
@@ -571,14 +586,14 @@ OTZI.game = {
         OTZI.dialogue.toast("The animal is already escaping");
         return false;
       }
-      entity.state = "caught";
-      entity.caught = true;
-      entity.outcome = "caught";
-      entity.resolveTimer = 0.9;
-      OTZI.inventory.add("food", 1);
+      entity.state = "downed";
+      entity.downed = true;
+      entity.harvested = false;
+      entity.outcome = "downed";
+      entity.resolveTimer = 0;
       this.progress.smallGameHunts += 1;
       this.progress.lastSmallGame = entity.kind;
-      OTZI.dialogue.toast(`Caught ${entity.kind} +1 food`);
+      OTZI.dialogue.toast(`${entity.kind === "grouse" ? "Grouse" : "Hare"} downed - USE to harvest`);
       OTZI.audio.blip(600, 0.05);
       this.updateFocusState();
       return true;
@@ -845,6 +860,13 @@ OTZI.game = {
     OTZI.dom.recipeHardenSpearCard.addEventListener("click", (ev) => {
       if (ev.target === OTZI.dom.hardenSpearBtn) return;
       if (!OTZI.crafting.canHardenAtHearth()) OTZI.crafting.hardenSpearTip();
+    });
+    OTZI.dom.cookMeatBtn.addEventListener("click", () => {
+      OTZI.crafting.cookMeat();
+    });
+    OTZI.dom.recipeCookMeatCard.addEventListener("click", (ev) => {
+      if (ev.target === OTZI.dom.cookMeatBtn) return;
+      if (!OTZI.crafting.canCookAtHearth()) OTZI.crafting.cookMeat();
     });
     OTZI.dom.equipCrudeSpearBtn.addEventListener("click", () => {
       OTZI.game.equipSpear("crudeSpear");
