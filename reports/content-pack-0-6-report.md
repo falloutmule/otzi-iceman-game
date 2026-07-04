@@ -21,19 +21,20 @@ Add usable food, a repeatable small-game content pack, Birch Grove, and Wolf Sig
 
 ## What failed
 - Samsung Galaxy S21 Ultra retest has not been completed in this turn.
-- Public Pages verification was not re-checked in this turn after the new build.
 
 ## Current exact state
 - Local `main` has the content pack changes and a passing test suite.
 - `dist/index.html` has been regenerated with `otzi-content-0.6.0`.
 - The new content is in source and test-covered.
+- GitHub Pages workflow run `28704085384` succeeded.
+- Public cache-busted HTML contains `otzi-content-0.6.0`, `Eat Food`, `Birch Grove`, `Wolf Signs`, and `menuBuildVersion`.
 
 ## Remaining blockers
 - Samsung Galaxy S21 Ultra confirmation still needs to happen.
-- Public GitHub Pages verification still needs a fresh cache-busted check.
+- Samsung phone retest is still useful for final device confirmation, but it is not blocking the build.
 
 ## Next actionable step
-Commit and push the content pack changes, then verify the live Pages URL on Samsung Galaxy S21 Ultra Chrome.
+Open the live Pages URL on Samsung Galaxy S21 Ultra Chrome and confirm `Eat Food`, Birch Grove, and Wolf Signs on device.
 
 ## Evidence
 - `artifacts/screenshots/content-eat-food-ready.png`
@@ -46,7 +47,7 @@ Commit and push the content pack changes, then verify the live Pages URL on Sams
 - Live: https://falloutmule.github.io/otzi-iceman-game/
 
 ## Samsung Galaxy S21 Ultra status
-- verified: not yet for this content pack turn
-- inferred: the local build is ready for the next phone check
-- proposed: retest `Eat Food`, Birch Grove, and Wolf Signs on device
-- untested: live public Pages marker after this build
+- verified: local build, tests, workflow, and public HTML markers
+- inferred: device retest should still pass with the deployed artifact
+- proposed: retest `Eat Food`, Birch Grove, and Wolf Signs on Samsung
+- untested: Samsung device confirmation for this specific content pack turn
