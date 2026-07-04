@@ -13,6 +13,12 @@ OTZI.worldGrid = {
       gridH: cfg.overworldGridH,
       homeX,
       homeY,
+      birchGroveX: Math.max(1, homeX - 1),
+      birchGroveY: homeY,
+      wolfSignsX: homeX,
+      wolfSignsY: Math.max(1, homeY - 1),
+      animalClearingX: homeX,
+      animalClearingY: Math.min(cfg.overworldGridH - 2, homeY + 1),
       flintScarX: Math.min(cfg.overworldGridW - 2, homeX + 1),
       flintScarY: homeY,
       currentX: homeX,
@@ -98,5 +104,8 @@ OTZI.worldGrid = {
       }
     }
     return null;
+  },
+  findScreenByKindHint(world, seed, kind) {
+    return this.findScreenByKind(world, seed, kind);
   }
 };

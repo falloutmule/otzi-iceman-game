@@ -23,6 +23,8 @@ OTZI.worldgen = {
     this.carveExitPaths(map, exits);
     this.placeObstacles(map, rng, kind);
     if (kind === "village_home") this.placeVillageCenter(map, exits);
+    if (kind === "birch_grove") this.placeBirchGroveGround(map);
+    if (kind === "wolf_signs") this.placeWolfSignsGround(map);
     if (kind === "flint_scar_entrance") this.placeFlintScarGround(map);
     this.placeOverworldResources(map, rng, kind, x, y, world.homeX, world.homeY);
 
@@ -164,6 +166,9 @@ OTZI.worldgen = {
   overworldKind(world, x, y) {
     const rng = OTZI.rng.make(`${world.seed}:screen-kind:${x},${y}`);
     if (x === world.homeX && y === world.homeY) return "village_home";
+    if (x === world.birchGroveX && y === world.birchGroveY) return "birch_grove";
+    if (x === world.wolfSignsX && y === world.wolfSignsY) return "wolf_signs";
+    if (x === world.animalClearingX && y === world.animalClearingY) return "animal_clearing";
     if (x === world.flintScarX && y === world.flintScarY) return "flint_scar_entrance";
     if (y === 0 && x >= world.gridW - 2) return "high_pass_locked_placeholder";
     if (x === 0 && y % 2 === 0) return "river_edge_placeholder";
@@ -208,6 +213,25 @@ OTZI.worldgen = {
       }
     }
   },
+  placeBirchGroveGround(map) {
+    const cx = Math.floor(map.w / 2);
+    const cy = Math.floor(map.h / 2);
+    for (let ty = cy - 2; ty <= cy + 2; ty++) {
+      for (let tx = cx - 3; tx <= cx + 3; tx++) {
+        map.setGround(tx, ty, (tx + ty) % 2 === 0 ? OTZI.TILE.BIRCH : OTZI.TILE.GRASS_CLUMP);
+      }
+    }
+  },
+  placeWolfSignsGround(map) {
+    const cx = Math.floor(map.w / 2);
+    const cy = Math.floor(map.h / 2);
+    for (let tx = cx - 3; tx <= cx + 3; tx++) {
+      map.setGround(tx, cy, tx % 2 === 0 ? OTZI.TILE.DARK_GRASS : OTZI.TILE.DEADWOOD);
+    }
+    map.setGround(cx - 1, cy - 1, OTZI.TILE.STONE);
+    map.setGround(cx + 1, cy - 1, OTZI.TILE.STONE);
+    map.setGround(cx, cy + 1, OTZI.TILE.DEADWOOD);
+  },
   placeFlintScarGround(map) {
     const scarX = map.w - 5;
     const scarY = Math.floor(map.h / 2);
@@ -241,13 +265,17 @@ OTZI.worldgen = {
     if (kind === "village_home" || kind === "quiet_empty") return;
     const cx = Math.floor(map.w / 2);
     const cy = Math.floor(map.h / 2);
-    const baseTiles = kind === "easy_gather" ? [OTZI.TILE.DEADWOOD, OTZI.TILE.STONE, OTZI.TILE.GRASS_CLUMP, OTZI.TILE.BERRY] :
+    const baseTiles = kind === "birch_grove" ? [OTZI.TILE.BIRCH, OTZI.TILE.BIRCH, OTZI.TILE.BIRCH, OTZI.TILE.GRASS_CLUMP] :
+      kind === "wolf_signs" ? [OTZI.TILE.DEADWOOD, OTZI.TILE.STONE, OTZI.TILE.GRASS_CLUMP] :
+      kind === "easy_gather" ? [OTZI.TILE.DEADWOOD, OTZI.TILE.STONE, OTZI.TILE.GRASS_CLUMP, OTZI.TILE.BERRY] :
       kind === "animal_clearing" ? [OTZI.TILE.DEADWOOD, OTZI.TILE.GRASS_CLUMP, OTZI.TILE.BERRY] :
       [OTZI.TILE.DEADWOOD, OTZI.TILE.STONE, OTZI.TILE.GRASS_CLUMP];
     if ((gridX + gridY) % 2 === 0 || kind === "flint_scar_entrance") baseTiles.push(OTZI.TILE.ROCK);
     if (gridX % 2 === 0 && kind !== "river_edge_placeholder") baseTiles.push(OTZI.TILE.BIRCH);
     if (gridY % 2 === 1 || kind === "animal_clearing") baseTiles.push(OTZI.TILE.BERRY);
     const count = kind === "flint_scar_entrance" ? 10 :
+      kind === "birch_grove" ? 16 :
+      kind === "wolf_signs" ? 4 :
       kind === "easy_gather" ? 14 :
       kind === "animal_clearing" ? 6 :
       kind === "dense_forest" ? 8 :

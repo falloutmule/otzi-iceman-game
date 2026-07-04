@@ -87,6 +87,9 @@ OTZI.crafting = {
   canCookAtHearth(game = OTZI.game) {
     return !!game.focusedEntrance && game.focusedEntrance.kind === "hearth" && (game.inventory.rawMeat || 0) > 0;
   },
+  canEatFood(game = OTZI.game) {
+    return (game.inventory.food || 0) > 0;
+  },
   describeHardening(game = OTZI.game) {
     const haveSpear = game.inventory.crudeSpear || 0;
     const atHearth = !!game.focusedEntrance && game.focusedEntrance.kind === "hearth";
@@ -109,6 +112,18 @@ OTZI.crafting = {
       needsText: "Needs: 1 Raw Meat + Village Hearth",
       haveText: `Have: Raw Meat ${haveMeat} / 1`,
       statusText: haveMeat < 1 ? "Missing: 1 Raw Meat" : atHearth ? "Status: Hearth ready" : "Status: Return to the village hearth"
+    };
+  },
+  describeEating(game = OTZI.game) {
+    const haveFood = game.inventory.food || 0;
+    const hunger = Math.round(game.player.hunger || 0);
+    return {
+      canEat: haveFood > 0,
+      haveFood,
+      hunger,
+      needsText: "Needs: 1 Food",
+      haveText: `Have: Food ${haveFood} / 1`,
+      statusText: haveFood < 1 ? "Missing: 1 Food" : `Status: Hunger ${hunger} / 100`
     };
   },
   hardenSpearTip() {
@@ -139,6 +154,18 @@ OTZI.crafting = {
     OTZI.inventory.add("food", 1);
     OTZI.dialogue.toast("Cooked raw meat +1 food");
     OTZI.audio.blip(700, 0.045);
+    return true;
+  },
+  eatFood() {
+    if ((OTZI.game.inventory.food || 0) < 1) {
+      OTZI.dialogue.toast("Need food first");
+      OTZI.audio.blip(220, 0.035);
+      return false;
+    }
+    OTZI.inventory.add("food", -1);
+    OTZI.survival.eat(OTZI.game.player, 18);
+    OTZI.dialogue.toast("Ate food - hunger lowered");
+    OTZI.audio.blip(520, 0.04);
     return true;
   },
   craft(id) {

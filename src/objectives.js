@@ -45,6 +45,13 @@ OTZI.objectives = {
         text: "Need 1 raw meat. Return to the village hearth and use the fire."
       };
     }
+    if ((game.inventory.food || 0) > 0 && (game.player.hunger || 0) > 12) {
+      return {
+        id: "eat_food",
+        title: "Eat Food",
+        text: "Open CRAFT and eat food to lower hunger."
+      };
+    }
     if ((game.inventory.hardenedSpear || 0) > 0 && (game.progress?.smallGameHunts || 0) < 1) {
       return {
         id: "hunt_small_game",
@@ -100,9 +107,17 @@ OTZI.objectives = {
         title: "Animal Clearing",
         text: "Small game lives here. Approach slowly and use to catch."
       },
+      birch_grove: {
+        title: "Birch Grove",
+        text: "Good bark for tools and fire."
+      },
       flint_scar_entrance: {
         title: "Flint Scar Entrance",
         text: "The cave mouth is here. Use near the scar to enter."
+      },
+      wolf_signs: {
+        title: "Wolf Signs",
+        text: "Wolf tracks cross the path. Stay alert."
       },
       river_edge_placeholder: {
         title: "River Edge",

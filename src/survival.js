@@ -8,6 +8,9 @@ OTZI.survival = {
   spendStamina(player, amount) {
     player.stamina = this.clamp(player.stamina - amount);
   },
+  eat(player, amount) {
+    player.hunger = this.clamp(player.hunger - amount);
+  },
   update(player, dt, sprinting) {
     player.health = this.clamp(player.health);
     player.stamina = this.clamp(player.stamina + (sprinting ? -22 : 14) * dt);
@@ -32,4 +35,3 @@ OTZI.survival = {
     player.wetness = this.clamp(meters.wetness ?? player.wetness);
   }
 };
-

@@ -115,6 +115,13 @@ OTZI.dom = {
           <p id="recipeCookMeatMissing" class="recipe-line recipe-missing">Status: Return to the village hearth</p>
           <button id="cookMeatBtn" type="button">Cook Meat</button>
         </div>
+        <div id="recipeEatFoodCard" class="recipe-card recipe-card-food" data-recipe-id="eat_food">
+          <div class="recipe-card-head"><strong>Eat Food</strong><span id="recipeEatFoodState" class="recipe-state">Missing</span></div>
+          <p id="recipeEatFoodNeeds" class="recipe-line">Needs: 1 Food</p>
+          <p id="recipeEatFoodHave" class="recipe-line recipe-have">Have: Food 0 / 1</p>
+          <p id="recipeEatFoodMissing" class="recipe-line recipe-missing">Status: Hunger 0 / 100</p>
+          <button id="eatFoodBtn" type="button">Eat Food</button>
+        </div>
         <div class="panel-title">EQUIP</div>
         <button id="equipCrudeSpearBtn" type="button">Equip Crude Spear</button>
         <button id="equipHardenedSpearBtn" type="button">Equip Hardened Spear</button>
@@ -140,8 +147,11 @@ OTZI.dom = {
           <button id="giveSpearMaterialsBtn" type="button">Give Spear Materials</button>
           <button id="goVillageHearthBtn" type="button">Go to Village Hearth</button>
           <button id="goAnimalClearingBtn" type="button">Go to Animal Clearing</button>
+          <button id="goBirchGroveBtn" type="button">Go to Birch Grove</button>
+          <button id="goWolfSignsBtn" type="button">Go to Wolf Signs</button>
           <button id="goFlintScarBtn" type="button">Go to Flint Scar</button>
           <button id="unlockToolmakerBtn" type="button">Unlock Toolmaker</button>
+          <button id="giveFoodBtn" type="button">Give Food</button>
         </div>
         <button id="fullscreenBtn" type="button">Fullscreen</button>
         <button id="resetSaveBtn" type="button">Reset Save</button>
@@ -228,10 +238,16 @@ OTZI.dom = {
     this.recipeCookMeatNeeds = document.getElementById("recipeCookMeatNeeds");
     this.recipeCookMeatHave = document.getElementById("recipeCookMeatHave");
     this.recipeCookMeatMissing = document.getElementById("recipeCookMeatMissing");
+    this.recipeEatFoodCard = document.getElementById("recipeEatFoodCard");
+    this.recipeEatFoodState = document.getElementById("recipeEatFoodState");
+    this.recipeEatFoodNeeds = document.getElementById("recipeEatFoodNeeds");
+    this.recipeEatFoodHave = document.getElementById("recipeEatFoodHave");
+    this.recipeEatFoodMissing = document.getElementById("recipeEatFoodMissing");
     this.craftCrudeToolBtn = document.getElementById("craftCrudeToolBtn");
     this.craftCrudeSpearBtn = document.getElementById("craftCrudeSpearBtn");
     this.hardenSpearBtn = document.getElementById("hardenSpearBtn");
     this.cookMeatBtn = document.getElementById("cookMeatBtn");
+    this.eatFoodBtn = document.getElementById("eatFoodBtn");
     this.equipCrudeSpearBtn = document.getElementById("equipCrudeSpearBtn");
     this.equipHardenedSpearBtn = document.getElementById("equipHardenedSpearBtn");
     this.equipHint = document.getElementById("equipHint");
@@ -246,8 +262,11 @@ OTZI.dom = {
     this.giveSpearMaterialsBtn = document.getElementById("giveSpearMaterialsBtn");
     this.goVillageHearthBtn = document.getElementById("goVillageHearthBtn");
     this.goAnimalClearingBtn = document.getElementById("goAnimalClearingBtn");
+    this.goBirchGroveBtn = document.getElementById("goBirchGroveBtn");
+    this.goWolfSignsBtn = document.getElementById("goWolfSignsBtn");
     this.goFlintScarBtn = document.getElementById("goFlintScarBtn");
     this.unlockToolmakerBtn = document.getElementById("unlockToolmakerBtn");
+    this.giveFoodBtn = document.getElementById("giveFoodBtn");
     this.fullscreenBtn = document.getElementById("fullscreenBtn");
     this.resetSaveBtn = document.getElementById("resetSaveBtn");
     this.menuBuildVersion = document.getElementById("menuBuildVersion");

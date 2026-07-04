@@ -204,6 +204,14 @@ OTZI.installTestHooks = function installTestHooks() {
       if (!OTZI.game.teleportToAnimalClearing()) return null;
       return this.snapshot();
     },
+    teleportToBirchGrove() {
+      if (!OTZI.game.teleportToBirchGrove()) return null;
+      return this.snapshot();
+    },
+    teleportToWolfSigns() {
+      if (!OTZI.game.teleportToWolfSigns()) return null;
+      return this.snapshot();
+    },
     triggerHareFlee() {
       if (OTZI.game.currentScreen?.kind !== "animal_clearing") this.teleportToAnimalClearing();
       const hare = (OTZI.game.entities || []).find((entity) => (entity.kind === "hare" || entity.kind === "grouse") && !entity.caught && !entity.escaped && !entity.downed && !entity.harvested);
@@ -250,6 +258,7 @@ OTZI.installTestHooks = function installTestHooks() {
       return { ...hearth };
     },
     giveSpearMaterials() { return OTZI.game.grantSpearMaterials(); },
+    giveFood() { return OTZI.game.grantFood(); },
     unlockToolmakerForQa() { return OTZI.game.unlockToolmakerForQa(); },
     inspectFlintScarEntranceLane() {
       OTZI.game.ensureDungeon("flint_scar");

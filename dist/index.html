@@ -117,7 +117,7 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 var OTZI = window.OTZI || (window.OTZI = {});
 
 OTZI.CFG = {
-  engineVersion: "otzi-fire-spear-0.5.4",
+  engineVersion: "otzi-content-0.6.0",
   saveVersion: 7,
   worldgenVersion: 3,
   saveKey: "otzi_content_loop_save_v6",
@@ -263,6 +263,13 @@ OTZI.dom = {
           <p id="recipeCookMeatMissing" class="recipe-line recipe-missing">Status: Return to the village hearth</p>
           <button id="cookMeatBtn" type="button">Cook Meat</button>
         </div>
+        <div id="recipeEatFoodCard" class="recipe-card recipe-card-food" data-recipe-id="eat_food">
+          <div class="recipe-card-head"><strong>Eat Food</strong><span id="recipeEatFoodState" class="recipe-state">Missing</span></div>
+          <p id="recipeEatFoodNeeds" class="recipe-line">Needs: 1 Food</p>
+          <p id="recipeEatFoodHave" class="recipe-line recipe-have">Have: Food 0 / 1</p>
+          <p id="recipeEatFoodMissing" class="recipe-line recipe-missing">Status: Hunger 0 / 100</p>
+          <button id="eatFoodBtn" type="button">Eat Food</button>
+        </div>
         <div class="panel-title">EQUIP</div>
         <button id="equipCrudeSpearBtn" type="button">Equip Crude Spear</button>
         <button id="equipHardenedSpearBtn" type="button">Equip Hardened Spear</button>
@@ -288,8 +295,11 @@ OTZI.dom = {
           <button id="giveSpearMaterialsBtn" type="button">Give Spear Materials</button>
           <button id="goVillageHearthBtn" type="button">Go to Village Hearth</button>
           <button id="goAnimalClearingBtn" type="button">Go to Animal Clearing</button>
+          <button id="goBirchGroveBtn" type="button">Go to Birch Grove</button>
+          <button id="goWolfSignsBtn" type="button">Go to Wolf Signs</button>
           <button id="goFlintScarBtn" type="button">Go to Flint Scar</button>
           <button id="unlockToolmakerBtn" type="button">Unlock Toolmaker</button>
+          <button id="giveFoodBtn" type="button">Give Food</button>
         </div>
         <button id="fullscreenBtn" type="button">Fullscreen</button>
         <button id="resetSaveBtn" type="button">Reset Save</button>
@@ -376,10 +386,16 @@ OTZI.dom = {
     this.recipeCookMeatNeeds = document.getElementById("recipeCookMeatNeeds");
     this.recipeCookMeatHave = document.getElementById("recipeCookMeatHave");
     this.recipeCookMeatMissing = document.getElementById("recipeCookMeatMissing");
+    this.recipeEatFoodCard = document.getElementById("recipeEatFoodCard");
+    this.recipeEatFoodState = document.getElementById("recipeEatFoodState");
+    this.recipeEatFoodNeeds = document.getElementById("recipeEatFoodNeeds");
+    this.recipeEatFoodHave = document.getElementById("recipeEatFoodHave");
+    this.recipeEatFoodMissing = document.getElementById("recipeEatFoodMissing");
     this.craftCrudeToolBtn = document.getElementById("craftCrudeToolBtn");
     this.craftCrudeSpearBtn = document.getElementById("craftCrudeSpearBtn");
     this.hardenSpearBtn = document.getElementById("hardenSpearBtn");
     this.cookMeatBtn = document.getElementById("cookMeatBtn");
+    this.eatFoodBtn = document.getElementById("eatFoodBtn");
     this.equipCrudeSpearBtn = document.getElementById("equipCrudeSpearBtn");
     this.equipHardenedSpearBtn = document.getElementById("equipHardenedSpearBtn");
     this.equipHint = document.getElementById("equipHint");
@@ -394,8 +410,11 @@ OTZI.dom = {
     this.giveSpearMaterialsBtn = document.getElementById("giveSpearMaterialsBtn");
     this.goVillageHearthBtn = document.getElementById("goVillageHearthBtn");
     this.goAnimalClearingBtn = document.getElementById("goAnimalClearingBtn");
+    this.goBirchGroveBtn = document.getElementById("goBirchGroveBtn");
+    this.goWolfSignsBtn = document.getElementById("goWolfSignsBtn");
     this.goFlintScarBtn = document.getElementById("goFlintScarBtn");
     this.unlockToolmakerBtn = document.getElementById("unlockToolmakerBtn");
+    this.giveFoodBtn = document.getElementById("giveFoodBtn");
     this.fullscreenBtn = document.getElementById("fullscreenBtn");
     this.resetSaveBtn = document.getElementById("resetSaveBtn");
     this.menuBuildVersion = document.getElementById("menuBuildVersion");
@@ -753,6 +772,12 @@ OTZI.worldGrid = {
       gridH: cfg.overworldGridH,
       homeX,
       homeY,
+      birchGroveX: Math.max(1, homeX - 1),
+      birchGroveY: homeY,
+      wolfSignsX: homeX,
+      wolfSignsY: Math.max(1, homeY - 1),
+      animalClearingX: homeX,
+      animalClearingY: Math.min(cfg.overworldGridH - 2, homeY + 1),
       flintScarX: Math.min(cfg.overworldGridW - 2, homeX + 1),
       flintScarY: homeY,
       currentX: homeX,
@@ -838,6 +863,9 @@ OTZI.worldGrid = {
       }
     }
     return null;
+  },
+  findScreenByKindHint(world, seed, kind) {
+    return this.findScreenByKind(world, seed, kind);
   }
 };
 
@@ -868,6 +896,8 @@ OTZI.worldgen = {
     this.carveExitPaths(map, exits);
     this.placeObstacles(map, rng, kind);
     if (kind === "village_home") this.placeVillageCenter(map, exits);
+    if (kind === "birch_grove") this.placeBirchGroveGround(map);
+    if (kind === "wolf_signs") this.placeWolfSignsGround(map);
     if (kind === "flint_scar_entrance") this.placeFlintScarGround(map);
     this.placeOverworldResources(map, rng, kind, x, y, world.homeX, world.homeY);
 
@@ -1009,6 +1039,9 @@ OTZI.worldgen = {
   overworldKind(world, x, y) {
     const rng = OTZI.rng.make(`${world.seed}:screen-kind:${x},${y}`);
     if (x === world.homeX && y === world.homeY) return "village_home";
+    if (x === world.birchGroveX && y === world.birchGroveY) return "birch_grove";
+    if (x === world.wolfSignsX && y === world.wolfSignsY) return "wolf_signs";
+    if (x === world.animalClearingX && y === world.animalClearingY) return "animal_clearing";
     if (x === world.flintScarX && y === world.flintScarY) return "flint_scar_entrance";
     if (y === 0 && x >= world.gridW - 2) return "high_pass_locked_placeholder";
     if (x === 0 && y % 2 === 0) return "river_edge_placeholder";
@@ -1053,6 +1086,25 @@ OTZI.worldgen = {
       }
     }
   },
+  placeBirchGroveGround(map) {
+    const cx = Math.floor(map.w / 2);
+    const cy = Math.floor(map.h / 2);
+    for (let ty = cy - 2; ty <= cy + 2; ty++) {
+      for (let tx = cx - 3; tx <= cx + 3; tx++) {
+        map.setGround(tx, ty, (tx + ty) % 2 === 0 ? OTZI.TILE.BIRCH : OTZI.TILE.GRASS_CLUMP);
+      }
+    }
+  },
+  placeWolfSignsGround(map) {
+    const cx = Math.floor(map.w / 2);
+    const cy = Math.floor(map.h / 2);
+    for (let tx = cx - 3; tx <= cx + 3; tx++) {
+      map.setGround(tx, cy, tx % 2 === 0 ? OTZI.TILE.DARK_GRASS : OTZI.TILE.DEADWOOD);
+    }
+    map.setGround(cx - 1, cy - 1, OTZI.TILE.STONE);
+    map.setGround(cx + 1, cy - 1, OTZI.TILE.STONE);
+    map.setGround(cx, cy + 1, OTZI.TILE.DEADWOOD);
+  },
   placeFlintScarGround(map) {
     const scarX = map.w - 5;
     const scarY = Math.floor(map.h / 2);
@@ -1086,13 +1138,17 @@ OTZI.worldgen = {
     if (kind === "village_home" || kind === "quiet_empty") return;
     const cx = Math.floor(map.w / 2);
     const cy = Math.floor(map.h / 2);
-    const baseTiles = kind === "easy_gather" ? [OTZI.TILE.DEADWOOD, OTZI.TILE.STONE, OTZI.TILE.GRASS_CLUMP, OTZI.TILE.BERRY] :
+    const baseTiles = kind === "birch_grove" ? [OTZI.TILE.BIRCH, OTZI.TILE.BIRCH, OTZI.TILE.BIRCH, OTZI.TILE.GRASS_CLUMP] :
+      kind === "wolf_signs" ? [OTZI.TILE.DEADWOOD, OTZI.TILE.STONE, OTZI.TILE.GRASS_CLUMP] :
+      kind === "easy_gather" ? [OTZI.TILE.DEADWOOD, OTZI.TILE.STONE, OTZI.TILE.GRASS_CLUMP, OTZI.TILE.BERRY] :
       kind === "animal_clearing" ? [OTZI.TILE.DEADWOOD, OTZI.TILE.GRASS_CLUMP, OTZI.TILE.BERRY] :
       [OTZI.TILE.DEADWOOD, OTZI.TILE.STONE, OTZI.TILE.GRASS_CLUMP];
     if ((gridX + gridY) % 2 === 0 || kind === "flint_scar_entrance") baseTiles.push(OTZI.TILE.ROCK);
     if (gridX % 2 === 0 && kind !== "river_edge_placeholder") baseTiles.push(OTZI.TILE.BIRCH);
     if (gridY % 2 === 1 || kind === "animal_clearing") baseTiles.push(OTZI.TILE.BERRY);
     const count = kind === "flint_scar_entrance" ? 10 :
+      kind === "birch_grove" ? 16 :
+      kind === "wolf_signs" ? 4 :
       kind === "easy_gather" ? 14 :
       kind === "animal_clearing" ? 6 :
       kind === "dense_forest" ? 8 :
@@ -1449,6 +1505,9 @@ OTZI.survival = {
   spendStamina(player, amount) {
     player.stamina = this.clamp(player.stamina - amount);
   },
+  eat(player, amount) {
+    player.hunger = this.clamp(player.hunger - amount);
+  },
   update(player, dt, sprinting) {
     player.health = this.clamp(player.health);
     player.stamina = this.clamp(player.stamina + (sprinting ? -22 : 14) * dt);
@@ -1473,7 +1532,6 @@ OTZI.survival = {
     player.wetness = this.clamp(meters.wetness ?? player.wetness);
   }
 };
-
 
 
 /* MODULE: fullscreen.js */
@@ -1711,6 +1769,9 @@ OTZI.crafting = {
   canCookAtHearth(game = OTZI.game) {
     return !!game.focusedEntrance && game.focusedEntrance.kind === "hearth" && (game.inventory.rawMeat || 0) > 0;
   },
+  canEatFood(game = OTZI.game) {
+    return (game.inventory.food || 0) > 0;
+  },
   describeHardening(game = OTZI.game) {
     const haveSpear = game.inventory.crudeSpear || 0;
     const atHearth = !!game.focusedEntrance && game.focusedEntrance.kind === "hearth";
@@ -1733,6 +1794,18 @@ OTZI.crafting = {
       needsText: "Needs: 1 Raw Meat + Village Hearth",
       haveText: `Have: Raw Meat ${haveMeat} / 1`,
       statusText: haveMeat < 1 ? "Missing: 1 Raw Meat" : atHearth ? "Status: Hearth ready" : "Status: Return to the village hearth"
+    };
+  },
+  describeEating(game = OTZI.game) {
+    const haveFood = game.inventory.food || 0;
+    const hunger = Math.round(game.player.hunger || 0);
+    return {
+      canEat: haveFood > 0,
+      haveFood,
+      hunger,
+      needsText: "Needs: 1 Food",
+      haveText: `Have: Food ${haveFood} / 1`,
+      statusText: haveFood < 1 ? "Missing: 1 Food" : `Status: Hunger ${hunger} / 100`
     };
   },
   hardenSpearTip() {
@@ -1763,6 +1836,18 @@ OTZI.crafting = {
     OTZI.inventory.add("food", 1);
     OTZI.dialogue.toast("Cooked raw meat +1 food");
     OTZI.audio.blip(700, 0.045);
+    return true;
+  },
+  eatFood() {
+    if ((OTZI.game.inventory.food || 0) < 1) {
+      OTZI.dialogue.toast("Need food first");
+      OTZI.audio.blip(220, 0.035);
+      return false;
+    }
+    OTZI.inventory.add("food", -1);
+    OTZI.survival.eat(OTZI.game.player, 18);
+    OTZI.dialogue.toast("Ate food - hunger lowered");
+    OTZI.audio.blip(520, 0.04);
     return true;
   },
   craft(id) {
@@ -1893,6 +1978,13 @@ OTZI.objectives = {
         text: "Need 1 raw meat. Return to the village hearth and use the fire."
       };
     }
+    if ((game.inventory.food || 0) > 0 && (game.player.hunger || 0) > 12) {
+      return {
+        id: "eat_food",
+        title: "Eat Food",
+        text: "Open CRAFT and eat food to lower hunger."
+      };
+    }
     if ((game.inventory.hardenedSpear || 0) > 0 && (game.progress?.smallGameHunts || 0) < 1) {
       return {
         id: "hunt_small_game",
@@ -1948,9 +2040,17 @@ OTZI.objectives = {
         title: "Animal Clearing",
         text: "Small game lives here. Approach slowly and use to catch."
       },
+      birch_grove: {
+        title: "Birch Grove",
+        text: "Good bark for tools and fire."
+      },
       flint_scar_entrance: {
         title: "Flint Scar Entrance",
         text: "The cave mouth is here. Use near the scar to enter."
+      },
+      wolf_signs: {
+        title: "Wolf Signs",
+        text: "Wolf tracks cross the path. Stay alert."
       },
       river_edge_placeholder: {
         title: "River Edge",
@@ -2193,6 +2293,45 @@ OTZI.renderWorld = {
         ctx.fillRect(tp.x - 4, tp.y - 18, 8, 10);
         ctx.restore();
       }
+    }
+    if (area.kind === "birch_grove") {
+      const x = area.map.w * ts * 0.5;
+      const y = area.map.h * ts * 0.5;
+      const grove = this.project(camera, x, y, offsetX, offsetY);
+      ctx.save();
+      ctx.fillStyle = "#28451d";
+      ctx.fillRect(grove.x - 34, grove.y - 12, 68, 26);
+      ctx.fillStyle = "#f1ead0";
+      ctx.fillRect(grove.x - 6, grove.y - 34, 12, 34);
+      ctx.fillStyle = "#332d24";
+      ctx.fillRect(grove.x - 2, grove.y - 16, 4, 6);
+      ctx.fillStyle = "#cfe2a6";
+      ctx.beginPath();
+      ctx.arc(grove.x - 18, grove.y - 16, 12, 0, Math.PI * 2);
+      ctx.arc(grove.x + 14, grove.y - 14, 12, 0, Math.PI * 2);
+      ctx.arc(grove.x, grove.y - 28, 13, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    if (area.kind === "wolf_signs") {
+      const x = area.map.w * ts * 0.5;
+      const y = area.map.h * ts * 0.5;
+      const signs = this.project(camera, x, y, offsetX, offsetY);
+      ctx.save();
+      ctx.strokeStyle = "rgba(212,205,182,.78)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(signs.x - 16, signs.y - 8);
+      ctx.lineTo(signs.x - 1, signs.y + 8);
+      ctx.lineTo(signs.x + 16, signs.y - 10);
+      ctx.stroke();
+      ctx.fillStyle = "#d4cdb6";
+      ctx.fillRect(signs.x - 9, signs.y + 5, 18, 4);
+      ctx.fillStyle = "#f2ddb2";
+      ctx.fillRect(signs.x - 4, signs.y - 20, 8, 8);
+      ctx.fillStyle = "rgba(0,0,0,.42)";
+      ctx.fillRect(signs.x - 18, signs.y + 14, 36, 4);
+      ctx.restore();
     }
     if (area.kind === "flint_scar_entrance") {
       const x = (area.map.w - 4.5) * ts;
@@ -2540,6 +2679,8 @@ OTZI.renderUi = {
       <div><span>V</span><span>Village</span></div>
       <div><span>C</span><span>Flint Scar</span></div>
       <div><span>A</span><span>Animal Clearing</span></div>
+      <div><span>B</span><span>Birch Grove</span></div>
+      <div><span>W</span><span>Wolf Signs</span></div>
       <div><span>@</span><span>You</span></div>
       <div><span>?</span><span>Unknown</span></div>
     `;
@@ -2560,6 +2701,7 @@ OTZI.renderUi = {
       game.focusedEntrance?.kind === "hearth" ? "USE: harden spear tip" :
         game.focusedEntrance ? `USE: enter ${game.focusedEntrance.label}` :
         game.focusedResource ? `USE: gather ${game.focusedResource.resource}` :
+        (game.inventory.food || 0) > 0 ? "CRAFT: eat food to lower hunger" :
         spear.kind ? `THROW: ${spear.label} ready` : "No resource nearby";
       OTZI.dom.statusLine.textContent = OTZI.dialogue.message;
     }
@@ -2618,6 +2760,14 @@ OTZI.renderUi = {
       OTZI.dom.cookMeatBtn.disabled = false;
       OTZI.dom.cookMeatBtn.setAttribute("data-craftable", cook.canCook ? "true" : "false");
       OTZI.dom.cookMeatBtn.textContent = "Cook Meat";
+      const eat = OTZI.crafting.describeEating(game);
+      OTZI.dom.recipeEatFoodState.textContent = eat.canEat ? "Ready" : "Missing";
+      OTZI.dom.recipeEatFoodNeeds.textContent = eat.needsText;
+      OTZI.dom.recipeEatFoodHave.textContent = eat.haveText;
+      OTZI.dom.recipeEatFoodMissing.textContent = eat.statusText;
+      OTZI.dom.eatFoodBtn.disabled = false;
+      OTZI.dom.eatFoodBtn.setAttribute("data-craftable", eat.canEat ? "true" : "false");
+      OTZI.dom.eatFoodBtn.textContent = "Eat Food";
       OTZI.dom.equipCrudeSpearBtn.disabled = (game.inventory.crudeSpear || 0) < 1;
       OTZI.dom.equipHardenedSpearBtn.disabled = (game.inventory.hardenedSpear || 0) < 1;
       OTZI.dom.equipCrudeSpearBtn.textContent = game.equipment.spear === "crudeSpear" ? "Crude Spear Equipped" : "Equip Crude Spear";
@@ -2626,6 +2776,7 @@ OTZI.renderUi = {
         spear.kind === "hardenedSpear" ? `Hardened spear equipped. Durability ${spear.durability}.` :
         "Crude spear equipped. The next throw will lose it.";
       OTZI.dom.craftHint.textContent = cook.canCook ? "The village hearth is ready for cooking." :
+        eat.canEat ? "Eat food to lower hunger." :
         harden.canHarden ? "The village hearth is ready for hardening." :
         (game.inventory.rawMeat || 0) > 0 ? "Return to the village hearth to cook raw meat." :
         (game.inventory.crudeSpear || 0) > 0 ? "Return to the village hearth to harden the spear tip." :
@@ -2735,6 +2886,8 @@ OTZI.renderUi = {
         }
         const screen = OTZI.worldGrid.getOverworldScreen(world, game.seed, x, y);
         ctx.fillStyle = screen.kind === "village_home" ? "#9a784b" :
+          screen.kind === "birch_grove" ? "#9bb57a" :
+          screen.kind === "wolf_signs" ? "#5c5852" :
           screen.kind === "flint_scar_entrance" ? "#c9d0d4" :
           screen.kind === "animal_clearing" ? "#4f6b32" :
           screen.kind === "dense_forest" ? "#29422b" :
@@ -2747,6 +2900,8 @@ OTZI.renderUi = {
         if (screen.kind === "village_home") ctx.fillText("V", x * cellW + cellW / 2, y * cellH + cellH / 2);
         else if (screen.kind === "flint_scar_entrance") ctx.fillText("C", x * cellW + cellW / 2, y * cellH + cellH / 2);
         else if (screen.kind === "animal_clearing") ctx.fillText("A", x * cellW + cellW / 2, y * cellH + cellH / 2);
+        else if (screen.kind === "birch_grove") ctx.fillText("B", x * cellW + cellW / 2, y * cellH + cellH / 2);
+        else if (screen.kind === "wolf_signs") ctx.fillText("W", x * cellW + cellW / 2, y * cellH + cellH / 2);
         else if (screen.kind === "quiet_empty") ctx.fillText(".", x * cellW + cellW / 2, y * cellH + cellH / 2);
       }
     }
@@ -3148,6 +3303,14 @@ OTZI.installTestHooks = function installTestHooks() {
       if (!OTZI.game.teleportToAnimalClearing()) return null;
       return this.snapshot();
     },
+    teleportToBirchGrove() {
+      if (!OTZI.game.teleportToBirchGrove()) return null;
+      return this.snapshot();
+    },
+    teleportToWolfSigns() {
+      if (!OTZI.game.teleportToWolfSigns()) return null;
+      return this.snapshot();
+    },
     triggerHareFlee() {
       if (OTZI.game.currentScreen?.kind !== "animal_clearing") this.teleportToAnimalClearing();
       const hare = (OTZI.game.entities || []).find((entity) => (entity.kind === "hare" || entity.kind === "grouse") && !entity.caught && !entity.escaped && !entity.downed && !entity.harvested);
@@ -3194,6 +3357,7 @@ OTZI.installTestHooks = function installTestHooks() {
       return { ...hearth };
     },
     giveSpearMaterials() { return OTZI.game.grantSpearMaterials(); },
+    giveFood() { return OTZI.game.grantFood(); },
     unlockToolmakerForQa() { return OTZI.game.unlockToolmakerForQa(); },
     inspectFlintScarEntranceLane() {
       OTZI.game.ensureDungeon("flint_scar");
@@ -3732,6 +3896,12 @@ OTZI.game = {
     this.updateFocusState();
     return true;
   },
+  grantFood() {
+    OTZI.inventory.add("food", 1);
+    OTZI.dialogue.toast("Test tools: food added");
+    this.updateFocusState();
+    return true;
+  },
   teleportToVillageHearth() {
     this.enterOverworldScreen(this.world.homeX, this.world.homeY);
     const hearth = (this.entrances || []).find((entry) => entry.kind === "hearth");
@@ -3750,6 +3920,30 @@ OTZI.game = {
     const screen = OTZI.worldGrid.findScreenByKind(this.world, this.seed, "animal_clearing");
     if (!screen) {
       OTZI.dialogue.toast("No animal clearing found");
+      return false;
+    }
+    this.enterOverworldScreen(screen.gridX, screen.gridY);
+    this.transitionCooldown = 0;
+    OTZI.camera.update();
+    this.updateFocusState();
+    return true;
+  },
+  teleportToBirchGrove() {
+    const screen = OTZI.worldGrid.findScreenByKind(this.world, this.seed, "birch_grove");
+    if (!screen) {
+      OTZI.dialogue.toast("No birch grove found");
+      return false;
+    }
+    this.enterOverworldScreen(screen.gridX, screen.gridY);
+    this.transitionCooldown = 0;
+    OTZI.camera.update();
+    this.updateFocusState();
+    return true;
+  },
+  teleportToWolfSigns() {
+    const screen = OTZI.worldGrid.findScreenByKind(this.world, this.seed, "wolf_signs");
+    if (!screen) {
+      OTZI.dialogue.toast("No wolf signs found");
       return false;
     }
     this.enterOverworldScreen(screen.gridX, screen.gridY);
@@ -4197,6 +4391,13 @@ OTZI.game = {
       if (ev.target === OTZI.dom.cookMeatBtn) return;
       if (!OTZI.crafting.canCookAtHearth()) OTZI.crafting.cookMeat();
     });
+    OTZI.dom.eatFoodBtn.addEventListener("click", () => {
+      OTZI.crafting.eatFood();
+    });
+    OTZI.dom.recipeEatFoodCard.addEventListener("click", (ev) => {
+      if (ev.target === OTZI.dom.eatFoodBtn) return;
+      if (!OTZI.crafting.canEatFood()) OTZI.crafting.eatFood();
+    });
     OTZI.dom.equipCrudeSpearBtn.addEventListener("click", () => {
       OTZI.game.equipSpear("crudeSpear");
     });
@@ -4245,11 +4446,20 @@ OTZI.game = {
     OTZI.dom.goAnimalClearingBtn.addEventListener("click", () => {
       OTZI.game.teleportToAnimalClearing();
     });
+    OTZI.dom.goBirchGroveBtn.addEventListener("click", () => {
+      OTZI.game.teleportToBirchGrove();
+    });
+    OTZI.dom.goWolfSignsBtn.addEventListener("click", () => {
+      OTZI.game.teleportToWolfSigns();
+    });
     OTZI.dom.goFlintScarBtn.addEventListener("click", () => {
       OTZI.game.teleportToFlintScarEntrance();
     });
     OTZI.dom.unlockToolmakerBtn.addEventListener("click", () => {
       OTZI.game.unlockToolmakerForQa();
+    });
+    OTZI.dom.giveFoodBtn.addEventListener("click", () => {
+      OTZI.game.grantFood();
     });
     OTZI.dom.resetSaveBtn.addEventListener("click", () => {
       if (!OTZI.game.resetConfirm) {
@@ -4275,6 +4485,6 @@ OTZI.game = {
 })();
 
   </script>
-  <!-- build: 2026-07-04T09:58:09.491Z modules:30 -->
+  <!-- build: 2026-07-04T10:59:10.741Z modules:30 -->
 </body>
 </html>

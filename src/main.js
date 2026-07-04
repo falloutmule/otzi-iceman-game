@@ -404,6 +404,12 @@ OTZI.game = {
     this.updateFocusState();
     return true;
   },
+  grantFood() {
+    OTZI.inventory.add("food", 1);
+    OTZI.dialogue.toast("Test tools: food added");
+    this.updateFocusState();
+    return true;
+  },
   teleportToVillageHearth() {
     this.enterOverworldScreen(this.world.homeX, this.world.homeY);
     const hearth = (this.entrances || []).find((entry) => entry.kind === "hearth");
@@ -422,6 +428,30 @@ OTZI.game = {
     const screen = OTZI.worldGrid.findScreenByKind(this.world, this.seed, "animal_clearing");
     if (!screen) {
       OTZI.dialogue.toast("No animal clearing found");
+      return false;
+    }
+    this.enterOverworldScreen(screen.gridX, screen.gridY);
+    this.transitionCooldown = 0;
+    OTZI.camera.update();
+    this.updateFocusState();
+    return true;
+  },
+  teleportToBirchGrove() {
+    const screen = OTZI.worldGrid.findScreenByKind(this.world, this.seed, "birch_grove");
+    if (!screen) {
+      OTZI.dialogue.toast("No birch grove found");
+      return false;
+    }
+    this.enterOverworldScreen(screen.gridX, screen.gridY);
+    this.transitionCooldown = 0;
+    OTZI.camera.update();
+    this.updateFocusState();
+    return true;
+  },
+  teleportToWolfSigns() {
+    const screen = OTZI.worldGrid.findScreenByKind(this.world, this.seed, "wolf_signs");
+    if (!screen) {
+      OTZI.dialogue.toast("No wolf signs found");
       return false;
     }
     this.enterOverworldScreen(screen.gridX, screen.gridY);
@@ -869,6 +899,13 @@ OTZI.game = {
       if (ev.target === OTZI.dom.cookMeatBtn) return;
       if (!OTZI.crafting.canCookAtHearth()) OTZI.crafting.cookMeat();
     });
+    OTZI.dom.eatFoodBtn.addEventListener("click", () => {
+      OTZI.crafting.eatFood();
+    });
+    OTZI.dom.recipeEatFoodCard.addEventListener("click", (ev) => {
+      if (ev.target === OTZI.dom.eatFoodBtn) return;
+      if (!OTZI.crafting.canEatFood()) OTZI.crafting.eatFood();
+    });
     OTZI.dom.equipCrudeSpearBtn.addEventListener("click", () => {
       OTZI.game.equipSpear("crudeSpear");
     });
@@ -917,11 +954,20 @@ OTZI.game = {
     OTZI.dom.goAnimalClearingBtn.addEventListener("click", () => {
       OTZI.game.teleportToAnimalClearing();
     });
+    OTZI.dom.goBirchGroveBtn.addEventListener("click", () => {
+      OTZI.game.teleportToBirchGrove();
+    });
+    OTZI.dom.goWolfSignsBtn.addEventListener("click", () => {
+      OTZI.game.teleportToWolfSigns();
+    });
     OTZI.dom.goFlintScarBtn.addEventListener("click", () => {
       OTZI.game.teleportToFlintScarEntrance();
     });
     OTZI.dom.unlockToolmakerBtn.addEventListener("click", () => {
       OTZI.game.unlockToolmakerForQa();
+    });
+    OTZI.dom.giveFoodBtn.addEventListener("click", () => {
+      OTZI.game.grantFood();
     });
     OTZI.dom.resetSaveBtn.addEventListener("click", () => {
       if (!OTZI.game.resetConfirm) {

@@ -203,6 +203,45 @@ OTZI.renderWorld = {
         ctx.restore();
       }
     }
+    if (area.kind === "birch_grove") {
+      const x = area.map.w * ts * 0.5;
+      const y = area.map.h * ts * 0.5;
+      const grove = this.project(camera, x, y, offsetX, offsetY);
+      ctx.save();
+      ctx.fillStyle = "#28451d";
+      ctx.fillRect(grove.x - 34, grove.y - 12, 68, 26);
+      ctx.fillStyle = "#f1ead0";
+      ctx.fillRect(grove.x - 6, grove.y - 34, 12, 34);
+      ctx.fillStyle = "#332d24";
+      ctx.fillRect(grove.x - 2, grove.y - 16, 4, 6);
+      ctx.fillStyle = "#cfe2a6";
+      ctx.beginPath();
+      ctx.arc(grove.x - 18, grove.y - 16, 12, 0, Math.PI * 2);
+      ctx.arc(grove.x + 14, grove.y - 14, 12, 0, Math.PI * 2);
+      ctx.arc(grove.x, grove.y - 28, 13, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    if (area.kind === "wolf_signs") {
+      const x = area.map.w * ts * 0.5;
+      const y = area.map.h * ts * 0.5;
+      const signs = this.project(camera, x, y, offsetX, offsetY);
+      ctx.save();
+      ctx.strokeStyle = "rgba(212,205,182,.78)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(signs.x - 16, signs.y - 8);
+      ctx.lineTo(signs.x - 1, signs.y + 8);
+      ctx.lineTo(signs.x + 16, signs.y - 10);
+      ctx.stroke();
+      ctx.fillStyle = "#d4cdb6";
+      ctx.fillRect(signs.x - 9, signs.y + 5, 18, 4);
+      ctx.fillStyle = "#f2ddb2";
+      ctx.fillRect(signs.x - 4, signs.y - 20, 8, 8);
+      ctx.fillStyle = "rgba(0,0,0,.42)";
+      ctx.fillRect(signs.x - 18, signs.y + 14, 36, 4);
+      ctx.restore();
+    }
     if (area.kind === "flint_scar_entrance") {
       const x = (area.map.w - 4.5) * ts;
       const y = Math.floor(area.map.h / 2) * ts + ts * 0.5;

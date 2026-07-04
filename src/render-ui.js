@@ -30,6 +30,8 @@ OTZI.renderUi = {
       <div><span>V</span><span>Village</span></div>
       <div><span>C</span><span>Flint Scar</span></div>
       <div><span>A</span><span>Animal Clearing</span></div>
+      <div><span>B</span><span>Birch Grove</span></div>
+      <div><span>W</span><span>Wolf Signs</span></div>
       <div><span>@</span><span>You</span></div>
       <div><span>?</span><span>Unknown</span></div>
     `;
@@ -50,6 +52,7 @@ OTZI.renderUi = {
       game.focusedEntrance?.kind === "hearth" ? "USE: harden spear tip" :
         game.focusedEntrance ? `USE: enter ${game.focusedEntrance.label}` :
         game.focusedResource ? `USE: gather ${game.focusedResource.resource}` :
+        (game.inventory.food || 0) > 0 ? "CRAFT: eat food to lower hunger" :
         spear.kind ? `THROW: ${spear.label} ready` : "No resource nearby";
       OTZI.dom.statusLine.textContent = OTZI.dialogue.message;
     }
@@ -108,6 +111,14 @@ OTZI.renderUi = {
       OTZI.dom.cookMeatBtn.disabled = false;
       OTZI.dom.cookMeatBtn.setAttribute("data-craftable", cook.canCook ? "true" : "false");
       OTZI.dom.cookMeatBtn.textContent = "Cook Meat";
+      const eat = OTZI.crafting.describeEating(game);
+      OTZI.dom.recipeEatFoodState.textContent = eat.canEat ? "Ready" : "Missing";
+      OTZI.dom.recipeEatFoodNeeds.textContent = eat.needsText;
+      OTZI.dom.recipeEatFoodHave.textContent = eat.haveText;
+      OTZI.dom.recipeEatFoodMissing.textContent = eat.statusText;
+      OTZI.dom.eatFoodBtn.disabled = false;
+      OTZI.dom.eatFoodBtn.setAttribute("data-craftable", eat.canEat ? "true" : "false");
+      OTZI.dom.eatFoodBtn.textContent = "Eat Food";
       OTZI.dom.equipCrudeSpearBtn.disabled = (game.inventory.crudeSpear || 0) < 1;
       OTZI.dom.equipHardenedSpearBtn.disabled = (game.inventory.hardenedSpear || 0) < 1;
       OTZI.dom.equipCrudeSpearBtn.textContent = game.equipment.spear === "crudeSpear" ? "Crude Spear Equipped" : "Equip Crude Spear";
@@ -116,6 +127,7 @@ OTZI.renderUi = {
         spear.kind === "hardenedSpear" ? `Hardened spear equipped. Durability ${spear.durability}.` :
         "Crude spear equipped. The next throw will lose it.";
       OTZI.dom.craftHint.textContent = cook.canCook ? "The village hearth is ready for cooking." :
+        eat.canEat ? "Eat food to lower hunger." :
         harden.canHarden ? "The village hearth is ready for hardening." :
         (game.inventory.rawMeat || 0) > 0 ? "Return to the village hearth to cook raw meat." :
         (game.inventory.crudeSpear || 0) > 0 ? "Return to the village hearth to harden the spear tip." :
@@ -225,6 +237,8 @@ OTZI.renderUi = {
         }
         const screen = OTZI.worldGrid.getOverworldScreen(world, game.seed, x, y);
         ctx.fillStyle = screen.kind === "village_home" ? "#9a784b" :
+          screen.kind === "birch_grove" ? "#9bb57a" :
+          screen.kind === "wolf_signs" ? "#5c5852" :
           screen.kind === "flint_scar_entrance" ? "#c9d0d4" :
           screen.kind === "animal_clearing" ? "#4f6b32" :
           screen.kind === "dense_forest" ? "#29422b" :
@@ -237,6 +251,8 @@ OTZI.renderUi = {
         if (screen.kind === "village_home") ctx.fillText("V", x * cellW + cellW / 2, y * cellH + cellH / 2);
         else if (screen.kind === "flint_scar_entrance") ctx.fillText("C", x * cellW + cellW / 2, y * cellH + cellH / 2);
         else if (screen.kind === "animal_clearing") ctx.fillText("A", x * cellW + cellW / 2, y * cellH + cellH / 2);
+        else if (screen.kind === "birch_grove") ctx.fillText("B", x * cellW + cellW / 2, y * cellH + cellH / 2);
+        else if (screen.kind === "wolf_signs") ctx.fillText("W", x * cellW + cellW / 2, y * cellH + cellH / 2);
         else if (screen.kind === "quiet_empty") ctx.fillText(".", x * cellW + cellW / 2, y * cellH + cellH / 2);
       }
     }
