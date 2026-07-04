@@ -117,7 +117,7 @@ button { pointer-events:auto; border:1px solid rgba(243,234,215,.24); border-rad
 var OTZI = window.OTZI || (window.OTZI = {});
 
 OTZI.CFG = {
-  engineVersion: "otzi-content-0.6.0",
+  engineVersion: "otzi-content-0.7.0",
   saveVersion: 7,
   worldgenVersion: 3,
   saveKey: "otzi_content_loop_save_v6",
@@ -226,6 +226,7 @@ OTZI.dom = {
           <div><dt>Sticks</dt><dd id="craftStick">0</dd></div>
           <div><dt>Stones</dt><dd id="craftStone">0</dd></div>
           <div><dt>Bark</dt><dd id="craftBark">0</dd></div>
+          <div><dt>Bark bundle</dt><dd id="craftBarkBundle">0</dd></div>
           <div><dt>Grass</dt><dd id="craftGrass">0</dd></div>
           <div><dt>Food</dt><dd id="craftFood">0</dd></div>
           <div><dt>Raw meat</dt><dd id="craftRawMeat">0</dd></div>
@@ -248,6 +249,13 @@ OTZI.dom = {
           <p id="recipeCrudeSpearHave" class="recipe-line recipe-have">Have: Stick 0 / Stone 0 / Bark 0</p>
           <p id="recipeCrudeSpearMissing" class="recipe-line recipe-missing">Missing: 1 Stick, 1 Stone, 1 Bark</p>
           <button id="craftCrudeSpearBtn" type="button">Craft Crude Spear</button>
+        </div>
+        <div id="recipeBarkBundleCard" class="recipe-card" data-recipe-id="bark_bundle">
+          <div class="recipe-card-head"><strong>Bark Bundle</strong><span id="recipeBarkBundleState" class="recipe-state">Missing</span></div>
+          <p id="recipeBarkBundleNeeds" class="recipe-line">Needs: 2 Bark</p>
+          <p id="recipeBarkBundleHave" class="recipe-line recipe-have">Have: Bark 0 / 2</p>
+          <p id="recipeBarkBundleMissing" class="recipe-line recipe-missing">Missing: 2 Bark</p>
+          <button id="craftBarkBundleBtn" type="button">Craft Bark Bundle</button>
         </div>
         <div id="recipeHardenSpearCard" class="recipe-card recipe-card-hearth" data-recipe-id="harden_spear">
           <div class="recipe-card-head"><strong>Harden Spear Tip</strong><span id="recipeHardenSpearState" class="recipe-state">Need Hearth</span></div>
@@ -356,6 +364,7 @@ OTZI.dom = {
     this.craftStick = document.getElementById("craftStick");
     this.craftStone = document.getElementById("craftStone");
     this.craftBark = document.getElementById("craftBark");
+    this.craftBarkBundle = document.getElementById("craftBarkBundle");
     this.craftGrass = document.getElementById("craftGrass");
     this.craftFood = document.getElementById("craftFood");
     this.craftRawMeat = document.getElementById("craftRawMeat");
@@ -376,6 +385,11 @@ OTZI.dom = {
     this.recipeCrudeSpearNeeds = document.getElementById("recipeCrudeSpearNeeds");
     this.recipeCrudeSpearHave = document.getElementById("recipeCrudeSpearHave");
     this.recipeCrudeSpearMissing = document.getElementById("recipeCrudeSpearMissing");
+    this.recipeBarkBundleCard = document.getElementById("recipeBarkBundleCard");
+    this.recipeBarkBundleState = document.getElementById("recipeBarkBundleState");
+    this.recipeBarkBundleNeeds = document.getElementById("recipeBarkBundleNeeds");
+    this.recipeBarkBundleHave = document.getElementById("recipeBarkBundleHave");
+    this.recipeBarkBundleMissing = document.getElementById("recipeBarkBundleMissing");
     this.recipeHardenSpearCard = document.getElementById("recipeHardenSpearCard");
     this.recipeHardenSpearState = document.getElementById("recipeHardenSpearState");
     this.recipeHardenSpearNeeds = document.getElementById("recipeHardenSpearNeeds");
@@ -393,6 +407,7 @@ OTZI.dom = {
     this.recipeEatFoodMissing = document.getElementById("recipeEatFoodMissing");
     this.craftCrudeToolBtn = document.getElementById("craftCrudeToolBtn");
     this.craftCrudeSpearBtn = document.getElementById("craftCrudeSpearBtn");
+    this.craftBarkBundleBtn = document.getElementById("craftBarkBundleBtn");
     this.hardenSpearBtn = document.getElementById("hardenSpearBtn");
     this.cookMeatBtn = document.getElementById("cookMeatBtn");
     this.eatFoodBtn = document.getElementById("eatFoodBtn");
@@ -1665,6 +1680,7 @@ OTZI.inventory = {
       stone: 0,
       bark: 0,
       grass: 0,
+      barkBundle: 0,
       food: 0,
       rawMeat: 0,
       crudeTool: 0,
@@ -1688,6 +1704,7 @@ OTZI.crafting = {
     stick: "Stick",
     stone: "Stone",
     bark: "Bark",
+    barkBundle: "Bark Bundle",
     grass: "Grass",
     food: "Food",
     rawMeat: "Raw Meat",
@@ -1708,6 +1725,12 @@ OTZI.crafting = {
       name: "Crude Spear",
       inputs: { stick: 1, stone: 1, bark: 1 },
       output: { item: "crudeSpear", count: 1 }
+    },
+    {
+      id: "bark_bundle",
+      name: "Bark Bundle",
+      inputs: { bark: 2 },
+      output: { item: "barkBundle", count: 1 }
     }
   ],
   getRecipe(id) {
@@ -1834,6 +1857,8 @@ OTZI.crafting = {
     }
     OTZI.inventory.add("rawMeat", -1);
     OTZI.inventory.add("food", 1);
+    OTZI.game.progress.cookedRawMeat = true;
+    OTZI.game.maybeCompleteHighPassPrep?.();
     OTZI.dialogue.toast("Cooked raw meat +1 food");
     OTZI.audio.blip(700, 0.045);
     return true;
@@ -1866,6 +1891,9 @@ OTZI.crafting = {
       OTZI.inventory.add(item, -count);
     }
     OTZI.inventory.add(recipe.output.item, recipe.output.count);
+    if (recipe.output.item === "barkBundle") {
+      OTZI.game.maybeCompleteHighPassPrep?.();
+    }
     OTZI.dialogue.toast(`Crafted ${recipe.name}`);
     OTZI.audio.blip(720, 0.045);
     return true;
@@ -1948,6 +1976,69 @@ OTZI.objectives = {
         id: "find_flint_scar",
         title: "Find Flint Scar",
         text: "Travel east from the village."
+      };
+    }
+    const highPassStarted = !!(
+      game.progress?.visitedBirchGrove ||
+      game.progress?.gatheredBirchBark ||
+      game.progress?.cookedRawMeat ||
+      game.progress?.visitedWolfSigns ||
+      game.progress?.preparedForHighPass
+    );
+    if (highPassStarted) {
+      if (!game.progress?.visitedBirchGrove) {
+        return {
+          id: "visit_birch_grove",
+          title: "Visit Birch Grove",
+          text: "Travel west from the village to the birch grove."
+        };
+      }
+      if (!game.progress?.gatheredBirchBark) {
+        return {
+          id: "gather_bark",
+          title: "Gather Bark",
+          text: "Collect bark in Birch Grove."
+        };
+      }
+      if ((game.inventory.barkBundle || 0) < 1) {
+        return {
+          id: "craft_bark_bundle",
+          title: "Craft a Bark Bundle",
+          text: `Open CRAFT. ${OTZI.crafting.requirementText("bark_bundle")}`
+        };
+      }
+      if (!game.progress?.cookedRawMeat) {
+        return {
+          id: "cook_food",
+          title: "Cook Food",
+          text: "Return to the village hearth and cook raw meat."
+        };
+      }
+      if (!game.progress?.visitedWolfSigns) {
+        return {
+          id: "investigate_wolf_signs",
+          title: "Investigate Wolf Signs",
+          text: "Travel north from the village to the wolf signs."
+        };
+      }
+      if ((game.inventory.hardenedSpear || 0) < 1) {
+        return {
+          id: "harden_spear_for_high_pass",
+          title: "Harden the Spear Tip",
+          text: "Return to the village hearth and harden a spear before the pass."
+        };
+      }
+      if (!game.progress?.preparedForHighPass) {
+        return {
+          id: "return_to_village_for_high_pass",
+          title: "Return to Village",
+          text: "Bring the supplies back to the village."
+        };
+      }
+      return {
+        id: "high_pass_locked",
+        title: "High Pass Locked",
+        text: "Needs cooked food, a bark bundle, a hardened spear, and Wolf Signs investigated."
       };
     }
     if ((game.inventory.goodFlintCore || 0) >= 1 && !OTZI.village.has("toolmaker")) {
@@ -2042,7 +2133,7 @@ OTZI.objectives = {
       },
       birch_grove: {
         title: "Birch Grove",
-        text: "Good bark for tools and fire."
+        text: "Good bark for tools, fire, and bundles."
       },
       flint_scar_entrance: {
         title: "Flint Scar Entrance",
@@ -2062,7 +2153,7 @@ OTZI.objectives = {
       },
       high_pass_locked_placeholder: {
         title: "High Pass Locked",
-        text: "Snow closes the high pass for now."
+        text: "Snow closes the high pass for now. Needs cooked food, a bark bundle, a hardened spear, and Wolf Signs investigated."
       },
       quiet_empty: {
         title: "Quiet Forest",
@@ -2332,6 +2423,9 @@ OTZI.renderWorld = {
       ctx.fillStyle = "rgba(0,0,0,.42)";
       ctx.fillRect(signs.x - 18, signs.y + 14, 36, 4);
       ctx.restore();
+    }
+    if (area.kind === "high_pass_locked_placeholder") {
+      this.drawHighPassLandmark(ctx, area, camera, offsetX, offsetY);
     }
     if (area.kind === "flint_scar_entrance") {
       const x = (area.map.w - 4.5) * ts;
@@ -2637,6 +2731,33 @@ OTZI.renderWorld = {
     ctx.fillRect(p.x - 10, p.y - 10, 20, 20);
     ctx.restore();
   },
+  drawHighPassLandmark(ctx, area, camera, offsetX = 0, offsetY = 0) {
+    const ts = OTZI.CFG.tileSize;
+    const x = area.map.w * ts * 0.5;
+    const y = area.map.h * ts * 0.5;
+    const p = this.project(camera, x, y, offsetX, offsetY);
+    ctx.save();
+    ctx.fillStyle = "#dce6ed";
+    ctx.beginPath();
+    ctx.moveTo(p.x - 36, p.y + 18);
+    ctx.lineTo(p.x - 14, p.y - 12);
+    ctx.lineTo(p.x + 12, p.y - 20);
+    ctx.lineTo(p.x + 38, p.y + 14);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#8fa3b1";
+    ctx.fillRect(p.x - 14, p.y - 10, 28, 20);
+    ctx.fillStyle = "#2d363c";
+    ctx.fillRect(p.x - 4, p.y - 3, 8, 10);
+    ctx.fillStyle = "rgba(0,0,0,.7)";
+    ctx.fillRect(p.x - 30, p.y - 44, 60, 14);
+    ctx.fillStyle = "#f2ddb2";
+    ctx.font = "800 10px ui-monospace,Consolas,monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    ctx.fillText("HIGH PASS", p.x, p.y - 33);
+    ctx.restore();
+  },
   project(camera, x, y, offsetX, offsetY) {
     return {
       x: x - camera.x + offsetX,
@@ -2681,6 +2802,7 @@ OTZI.renderUi = {
       <div><span>A</span><span>Animal Clearing</span></div>
       <div><span>B</span><span>Birch Grove</span></div>
       <div><span>W</span><span>Wolf Signs</span></div>
+      <div><span>H</span><span>High Pass</span></div>
       <div><span>@</span><span>You</span></div>
       <div><span>?</span><span>Unknown</span></div>
     `;
@@ -2719,6 +2841,7 @@ OTZI.renderUi = {
       OTZI.dom.craftStick.textContent = String(game.inventory.stick || 0);
       OTZI.dom.craftStone.textContent = String(game.inventory.stone || 0);
       OTZI.dom.craftBark.textContent = String(game.inventory.bark || 0);
+      OTZI.dom.craftBarkBundle.textContent = String(game.inventory.barkBundle || 0);
       OTZI.dom.craftGrass.textContent = String(game.inventory.grass || 0);
       OTZI.dom.craftFood.textContent = String(game.inventory.food || 0);
       OTZI.dom.craftRawMeat.textContent = String(game.inventory.rawMeat || 0);
@@ -2745,6 +2868,15 @@ OTZI.renderUi = {
         OTZI.dom.recipeCrudeSpearMissing,
         OTZI.dom.craftCrudeSpearBtn,
         crudeSpearRecipe
+      );
+      const barkBundleRecipe = OTZI.crafting.describeRecipe("bark_bundle", game.inventory);
+      this.syncRecipeCard(
+        OTZI.dom.recipeBarkBundleState,
+        OTZI.dom.recipeBarkBundleNeeds,
+        OTZI.dom.recipeBarkBundleHave,
+        OTZI.dom.recipeBarkBundleMissing,
+        OTZI.dom.craftBarkBundleBtn,
+        barkBundleRecipe
       );
       OTZI.dom.recipeHardenSpearState.textContent = harden.canHarden ? "Ready" : harden.haveSpear > 0 ? "Need Hearth" : "Need Spear";
       OTZI.dom.recipeHardenSpearNeeds.textContent = harden.needsText;
@@ -2777,6 +2909,8 @@ OTZI.renderUi = {
         "Crude spear equipped. The next throw will lose it.";
       OTZI.dom.craftHint.textContent = cook.canCook ? "The village hearth is ready for cooking." :
         eat.canEat ? "Eat food to lower hunger." :
+        barkBundleRecipe.canCraft ? "Craft a bark bundle before you head for the high pass." :
+        (game.inventory.bark || 0) > 0 ? "Two bark make a bark bundle for the high pass." :
         harden.canHarden ? "The village hearth is ready for hardening." :
         (game.inventory.rawMeat || 0) > 0 ? "Return to the village hearth to cook raw meat." :
         (game.inventory.crudeSpear || 0) > 0 ? "Return to the village hearth to harden the spear tip." :
@@ -2826,6 +2960,7 @@ OTZI.renderUi = {
       `resources ${game.resourceNodes ? OTZI.resources.count(game.resourceNodes).active : 0}`,
       `spear ${spear.kind || "none"}${spear.kind === "hardenedSpear" ? `:${spear.durability}` : ""}`,
       `hunt ${game.progress.smallGameHunts || 0}`,
+      `highpass ${game.progress.preparedForHighPass ? 1 : 0}`,
       `pointers ${OTZI.input.pointers.size}`,
       `canvas ${OTZI.viewport.internalW}x${OTZI.viewport.internalH}`,
       `flint ${game.inventory.flint || 0}`
@@ -2888,11 +3023,11 @@ OTZI.renderUi = {
         ctx.fillStyle = screen.kind === "village_home" ? "#9a784b" :
           screen.kind === "birch_grove" ? "#9bb57a" :
           screen.kind === "wolf_signs" ? "#5c5852" :
+          screen.kind === "high_pass_locked_placeholder" ? "#cad3da" :
           screen.kind === "flint_scar_entrance" ? "#c9d0d4" :
           screen.kind === "animal_clearing" ? "#4f6b32" :
           screen.kind === "dense_forest" ? "#29422b" :
-          screen.kind === "river_edge_placeholder" ? "#365f6e" :
-          screen.kind === "high_pass_locked_placeholder" ? "#cad3da" : "#315b36";
+          screen.kind === "river_edge_placeholder" ? "#365f6e" : "#315b36";
         ctx.fillRect(x * cellW + 1, y * cellH + 1, cellW - 2, cellH - 2);
         ctx.strokeStyle = "rgba(243,234,215,.14)";
         ctx.strokeRect(x * cellW + 1, y * cellH + 1, cellW - 2, cellH - 2);
@@ -2902,6 +3037,7 @@ OTZI.renderUi = {
         else if (screen.kind === "animal_clearing") ctx.fillText("A", x * cellW + cellW / 2, y * cellH + cellH / 2);
         else if (screen.kind === "birch_grove") ctx.fillText("B", x * cellW + cellW / 2, y * cellH + cellH / 2);
         else if (screen.kind === "wolf_signs") ctx.fillText("W", x * cellW + cellW / 2, y * cellH + cellH / 2);
+        else if (screen.kind === "high_pass_locked_placeholder") ctx.fillText("H", x * cellW + cellW / 2, y * cellH + cellH / 2);
         else if (screen.kind === "quiet_empty") ctx.fillText(".", x * cellW + cellW / 2, y * cellH + cellH / 2);
       }
     }
@@ -3042,7 +3178,12 @@ OTZI.save = {
     };
     g.progress = {
       smallGameHunts: data.progress?.smallGameHunts || 0,
-      lastSmallGame: data.progress?.lastSmallGame || null
+      lastSmallGame: data.progress?.lastSmallGame || null,
+      visitedBirchGrove: !!data.progress?.visitedBirchGrove,
+      gatheredBirchBark: !!data.progress?.gatheredBirchBark,
+      cookedRawMeat: !!data.progress?.cookedRawMeat,
+      visitedWolfSigns: !!data.progress?.visitedWolfSigns,
+      preparedForHighPass: !!data.progress?.preparedForHighPass
     };
     g.guide = {
       welcomeSeenVersion: data.guide?.welcomeSeenVersion || (data.ui?.welcomeSeen ? OTZI.CFG.saveVersion : 0)
@@ -3463,6 +3604,14 @@ OTZI.installTestHooks = function installTestHooks() {
     equipSpear(kind) { return OTZI.game.equipSpear(kind); },
     throwTool() { return OTZI.game.tryToolUse(); },
     setMeters(meters) { OTZI.survival.apply(OTZI.game.player, meters); },
+    setProgress(progress) {
+      OTZI.game.progress = {
+        ...OTZI.game.progress,
+        ...progress
+      };
+      OTZI.game.updateFocusState();
+      return this.snapshot();
+    },
     completeDungeon(id = "flint_scar") {
       if (!OTZI.game.village.unlocked.includes(id)) OTZI.game.village.unlocked.push(id);
     },
@@ -3544,7 +3693,12 @@ OTZI.game = {
   },
   progress: {
     smallGameHunts: 0,
-    lastSmallGame: null
+    lastSmallGame: null,
+    visitedBirchGrove: false,
+    gatheredBirchBark: false,
+    cookedRawMeat: false,
+    visitedWolfSigns: false,
+    preparedForHighPass: false
   },
   get craftOpen() {
     return this.inventoryOpen;
@@ -3587,7 +3741,12 @@ OTZI.game = {
     };
     this.progress = {
       smallGameHunts: 0,
-      lastSmallGame: null
+      lastSmallGame: null,
+      visitedBirchGrove: false,
+      gatheredBirchBark: false,
+      cookedRawMeat: false,
+      visitedWolfSigns: false,
+      preparedForHighPass: false
     };
     this.welcomeOpen = false;
     this.areaCard = null;
@@ -3768,10 +3927,27 @@ OTZI.game = {
   },
   onAreaEntered() {
     this.showAreaCard();
-    if (this.scene === "overworld" && this.currentScreen?.kind === "village_home") {
-      this.village.visitedHome = true;
-      this.tryUnlockToolmaker();
+    if (this.scene === "overworld") {
+      if (this.currentScreen?.kind === "village_home") {
+        this.village.visitedHome = true;
+        this.tryUnlockToolmaker();
+        this.maybeCompleteHighPassPrep();
+      }
+      if (this.currentScreen?.kind === "birch_grove") this.progress.visitedBirchGrove = true;
+      if (this.currentScreen?.kind === "wolf_signs") this.progress.visitedWolfSigns = true;
     }
+  },
+  maybeCompleteHighPassPrep() {
+    if (this.progress.preparedForHighPass) return false;
+    if (!this.progress.visitedBirchGrove) return false;
+    if (!this.progress.gatheredBirchBark) return false;
+    if ((this.inventory.barkBundle || 0) < 1) return false;
+    if (!this.progress.cookedRawMeat) return false;
+    if (!this.progress.visitedWolfSigns) return false;
+    if ((this.inventory.hardenedSpear || 0) < 1) return false;
+    this.progress.preparedForHighPass = true;
+    OTZI.dialogue.toast("Prepared for the High Pass");
+    return true;
   },
   currentObjective() {
     return OTZI.objectives.current(this);
@@ -4067,7 +4243,12 @@ OTZI.game = {
   },
   useVillageHearth() {
     if ((this.inventory.rawMeat || 0) > 0) {
-      return OTZI.crafting.cookMeat();
+      const cooked = OTZI.crafting.cookMeat();
+      if (cooked) {
+        this.progress.cookedRawMeat = true;
+        this.maybeCompleteHighPassPrep();
+      }
+      return cooked;
     }
     if ((this.inventory.crudeSpear || 0) < 1) {
       OTZI.dialogue.toast("Craft a crude spear first");
@@ -4080,6 +4261,7 @@ OTZI.game = {
       this.equipment.spear = "hardenedSpear";
       this.equipment.durability = 2;
     }
+    this.maybeCompleteHighPassPrep();
     OTZI.dialogue.toast("Hardened spear tip");
     OTZI.audio.blip(700, 0.045);
     this.updateFocusState();
@@ -4150,6 +4332,10 @@ OTZI.game = {
     }
     OTZI.inventory.add(node.resource, node.amount);
     OTZI.resources.deplete(node, this.map);
+    if (node.resource === "bark" && this.currentScreen?.kind === "birch_grove") {
+      this.progress.gatheredBirchBark = true;
+      this.maybeCompleteHighPassPrep();
+    }
     this.updateFocusState();
     OTZI.dialogue.toast(`Gathered ${node.resource} +1`);
     OTZI.audio.blip(660, 0.04);
@@ -4377,6 +4563,13 @@ OTZI.game = {
       if (ev.target === OTZI.dom.craftCrudeSpearBtn) return;
       if (!OTZI.crafting.canCraft("crude_spear")) OTZI.crafting.craft("crude_spear");
     });
+    OTZI.dom.craftBarkBundleBtn.addEventListener("click", () => {
+      OTZI.crafting.craft("bark_bundle");
+    });
+    OTZI.dom.recipeBarkBundleCard.addEventListener("click", (ev) => {
+      if (ev.target === OTZI.dom.craftBarkBundleBtn) return;
+      if (!OTZI.crafting.canCraft("bark_bundle")) OTZI.crafting.craft("bark_bundle");
+    });
     OTZI.dom.hardenSpearBtn.addEventListener("click", () => {
       OTZI.crafting.hardenSpearTip();
     });
@@ -4485,6 +4678,6 @@ OTZI.game = {
 })();
 
   </script>
-  <!-- build: 2026-07-04T10:59:10.741Z modules:30 -->
+  <!-- build: 2026-07-04T11:27:30.634Z modules:30 -->
 </body>
 </html>

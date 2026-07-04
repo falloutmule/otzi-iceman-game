@@ -17,6 +17,69 @@ OTZI.objectives = {
         text: "Travel east from the village."
       };
     }
+    const highPassStarted = !!(
+      game.progress?.visitedBirchGrove ||
+      game.progress?.gatheredBirchBark ||
+      game.progress?.cookedRawMeat ||
+      game.progress?.visitedWolfSigns ||
+      game.progress?.preparedForHighPass
+    );
+    if (highPassStarted) {
+      if (!game.progress?.visitedBirchGrove) {
+        return {
+          id: "visit_birch_grove",
+          title: "Visit Birch Grove",
+          text: "Travel west from the village to the birch grove."
+        };
+      }
+      if (!game.progress?.gatheredBirchBark) {
+        return {
+          id: "gather_bark",
+          title: "Gather Bark",
+          text: "Collect bark in Birch Grove."
+        };
+      }
+      if ((game.inventory.barkBundle || 0) < 1) {
+        return {
+          id: "craft_bark_bundle",
+          title: "Craft a Bark Bundle",
+          text: `Open CRAFT. ${OTZI.crafting.requirementText("bark_bundle")}`
+        };
+      }
+      if (!game.progress?.cookedRawMeat) {
+        return {
+          id: "cook_food",
+          title: "Cook Food",
+          text: "Return to the village hearth and cook raw meat."
+        };
+      }
+      if (!game.progress?.visitedWolfSigns) {
+        return {
+          id: "investigate_wolf_signs",
+          title: "Investigate Wolf Signs",
+          text: "Travel north from the village to the wolf signs."
+        };
+      }
+      if ((game.inventory.hardenedSpear || 0) < 1) {
+        return {
+          id: "harden_spear_for_high_pass",
+          title: "Harden the Spear Tip",
+          text: "Return to the village hearth and harden a spear before the pass."
+        };
+      }
+      if (!game.progress?.preparedForHighPass) {
+        return {
+          id: "return_to_village_for_high_pass",
+          title: "Return to Village",
+          text: "Bring the supplies back to the village."
+        };
+      }
+      return {
+        id: "high_pass_locked",
+        title: "High Pass Locked",
+        text: "Needs cooked food, a bark bundle, a hardened spear, and Wolf Signs investigated."
+      };
+    }
     if ((game.inventory.goodFlintCore || 0) >= 1 && !OTZI.village.has("toolmaker")) {
       return {
         id: "return_to_village",
@@ -109,7 +172,7 @@ OTZI.objectives = {
       },
       birch_grove: {
         title: "Birch Grove",
-        text: "Good bark for tools and fire."
+        text: "Good bark for tools, fire, and bundles."
       },
       flint_scar_entrance: {
         title: "Flint Scar Entrance",
@@ -129,7 +192,7 @@ OTZI.objectives = {
       },
       high_pass_locked_placeholder: {
         title: "High Pass Locked",
-        text: "Snow closes the high pass for now."
+        text: "Snow closes the high pass for now. Needs cooked food, a bark bundle, a hardened spear, and Wolf Signs investigated."
       },
       quiet_empty: {
         title: "Quiet Forest",

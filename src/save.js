@@ -71,7 +71,12 @@ OTZI.save = {
     };
     g.progress = {
       smallGameHunts: data.progress?.smallGameHunts || 0,
-      lastSmallGame: data.progress?.lastSmallGame || null
+      lastSmallGame: data.progress?.lastSmallGame || null,
+      visitedBirchGrove: !!data.progress?.visitedBirchGrove,
+      gatheredBirchBark: !!data.progress?.gatheredBirchBark,
+      cookedRawMeat: !!data.progress?.cookedRawMeat,
+      visitedWolfSigns: !!data.progress?.visitedWolfSigns,
+      preparedForHighPass: !!data.progress?.preparedForHighPass
     };
     g.guide = {
       welcomeSeenVersion: data.guide?.welcomeSeenVersion || (data.ui?.welcomeSeen ? OTZI.CFG.saveVersion : 0)

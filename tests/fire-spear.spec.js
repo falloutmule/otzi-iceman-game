@@ -33,6 +33,10 @@ test("menu row, hearth mission, and spear throw loop work on mobile", async ({ p
   if (await page.locator("#welcomePanel").isVisible()) {
     await page.locator("#welcomeOkBtn").tap();
   }
+  await page.evaluate(() => window.__OTZI_TEST__.resetSave());
+  if (await page.locator("#welcomePanel").isVisible()) {
+    await page.locator("#welcomeOkBtn").tap();
+  }
 
   await expect(page.locator("#popupBar #mapTab")).toBeVisible();
   await expect(page.locator("#popupBar #craftBtn")).toBeVisible();
@@ -159,7 +163,7 @@ test("menu row, hearth mission, and spear throw loop work on mobile", async ({ p
   const afterCook = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(afterCook.inventory.rawMeat).toBe(0);
   expect(afterCook.inventory.food).toBeGreaterThan(beforeThrow.inventory.food || 0);
-  expect(afterCook.objective.title).toBe("Explore");
+  expect(afterCook.objective.title).toBe("Visit Birch Grove");
   await page.screenshot({ path: "artifacts/screenshots/fire-spear-small-game-hunt.png", fullPage: true });
 
   const saved = await page.evaluate(() => window.__OTZI_TEST__.saveNow());

@@ -364,6 +364,14 @@ OTZI.installTestHooks = function installTestHooks() {
     equipSpear(kind) { return OTZI.game.equipSpear(kind); },
     throwTool() { return OTZI.game.tryToolUse(); },
     setMeters(meters) { OTZI.survival.apply(OTZI.game.player, meters); },
+    setProgress(progress) {
+      OTZI.game.progress = {
+        ...OTZI.game.progress,
+        ...progress
+      };
+      OTZI.game.updateFocusState();
+      return this.snapshot();
+    },
     completeDungeon(id = "flint_scar") {
       if (!OTZI.game.village.unlocked.includes(id)) OTZI.game.village.unlocked.push(id);
     },

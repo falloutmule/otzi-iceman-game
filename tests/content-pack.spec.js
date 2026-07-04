@@ -33,6 +33,10 @@ test("content pack adds eat food, Birch Grove, and Wolf Signs", async ({ page })
   if (await page.locator("#welcomePanel").isVisible()) {
     await page.locator("#welcomeOkBtn").tap();
   }
+  await page.evaluate(() => window.__OTZI_TEST__.resetSave());
+  if (await page.locator("#welcomePanel").isVisible()) {
+    await page.locator("#welcomeOkBtn").tap();
+  }
 
   const kindCounts = await page.evaluate(() => window.__OTZI_TEST__.screenKindCounts());
   expect(kindCounts.birch_grove).toBe(1);
@@ -50,7 +54,7 @@ test("content pack adds eat food, Birch Grove, and Wolf Signs", async ({ page })
   await page.evaluate(() => window.__OTZI_TEST__.stepFrames(2));
   const birchIntro = await page.evaluate(() => window.__OTZI_TEST__.snapshot().areaCard);
   expect(birchIntro?.title).toBe("Birch Grove");
-  expect(birchIntro?.text).toContain("Good bark for tools and fire");
+  expect(birchIntro?.text).toContain("Good bark for tools, fire, and bundles");
   await page.evaluate(() => { OTZI.game.menuOpen = false; });
   await page.waitForFunction(() => !window.__OTZI_TEST__.snapshot().menuOpen);
 
@@ -80,7 +84,7 @@ test("content pack adds eat food, Birch Grove, and Wolf Signs", async ({ page })
   await page.evaluate(() => window.__OTZI_TEST__.stepFrames(2));
   const birchState = await page.evaluate(() => window.__OTZI_TEST__.snapshot().areaCard);
   expect(birchState?.title).toBe("Birch Grove");
-  expect(birchState?.text).toContain("Good bark for tools and fire");
+  expect(birchState?.text).toContain("Good bark for tools, fire, and bundles");
   await page.evaluate(() => window.__OTZI_TEST__.teleportToNearestResource("bark"));
   const barkFocus = await page.evaluate(() => window.__OTZI_TEST__.snapshot().focusedResource);
   expect(barkFocus?.resource).toBe("bark");
@@ -89,6 +93,23 @@ test("content pack adds eat food, Birch Grove, and Wolf Signs", async ({ page })
   const afterBark = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(afterBark.inventory.bark).toBe((beforeBark.inventory.bark || 0) + 1);
   await page.screenshot({ path: "artifacts/screenshots/content-birch-grove.png", fullPage: true });
+  await page.evaluate(() => window.__OTZI_TEST__.setProgress({
+    visitedBirchGrove: true,
+    gatheredBirchBark: true
+  }));
+  await page.locator("#craftBtn").tap();
+  await page.evaluate(() => {
+    OTZI.inventory.add("bark", 1);
+    OTZI.renderUi.sync();
+  });
+  await expect(page.locator("#recipeBarkBundleNeeds")).toContainText("2 Bark");
+  await expect(page.locator("#recipeBarkBundleHave")).toContainText("Bark 2 / 2");
+  await expect(page.locator("#craftBarkBundleBtn")).toBeEnabled();
+  await page.locator("#craftBarkBundleBtn").tap();
+  await expect(page.locator("#statusLine")).toContainText("Crafted Bark Bundle");
+  await expect(page.locator("#craftBarkBundle")).toHaveText("1");
+  await page.screenshot({ path: "artifacts/screenshots/content-bark-bundle.png", fullPage: true });
+  await page.locator("#craftCloseBtn").tap();
 
   const wolfScreen = await page.evaluate(() => window.__OTZI_TEST__.teleportToWolfSigns());
   expect(wolfScreen.world.currentScreenKind).toBe("wolf_signs");
@@ -100,6 +121,20 @@ test("content pack adds eat food, Birch Grove, and Wolf Signs", async ({ page })
   await page.screenshot({ path: "artifacts/screenshots/content-wolf-signs.png", fullPage: true });
   const wolfSnap = await page.evaluate(() => window.__OTZI_TEST__.snapshot());
   expect(wolfSnap.player.health).toBeGreaterThan(0);
+  await page.evaluate(() => window.__OTZI_TEST__.setProgress({ visitedWolfSigns: true }));
+  await page.locator("#mapTab").tap();
+  await expect(page.locator("#minimapLegend")).toContainText("High Pass");
+  await page.locator("#mapTab").tap();
+  await page.evaluate(() => {
+    OTZI.game.inventory.barkBundle = Math.max(1, OTZI.game.inventory.barkBundle || 0);
+    OTZI.game.inventory.hardenedSpear = Math.max(1, OTZI.game.inventory.hardenedSpear || 0);
+    OTZI.game.progress.visitedBirchGrove = true;
+    OTZI.game.progress.gatheredBirchBark = true;
+    OTZI.game.progress.cookedRawMeat = true;
+    OTZI.game.progress.visitedWolfSigns = true;
+    OTZI.game.maybeCompleteHighPassPrep();
+    OTZI.renderUi.sync();
+  });
   await page.evaluate(() => {
     OTZI.game.inventoryOpen = false;
     OTZI.game.menuOpen = false;

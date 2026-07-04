@@ -242,6 +242,9 @@ OTZI.renderWorld = {
       ctx.fillRect(signs.x - 18, signs.y + 14, 36, 4);
       ctx.restore();
     }
+    if (area.kind === "high_pass_locked_placeholder") {
+      this.drawHighPassLandmark(ctx, area, camera, offsetX, offsetY);
+    }
     if (area.kind === "flint_scar_entrance") {
       const x = (area.map.w - 4.5) * ts;
       const y = Math.floor(area.map.h / 2) * ts + ts * 0.5;
@@ -544,6 +547,33 @@ OTZI.renderWorld = {
     ctx.setLineDash([]);
     ctx.fillStyle = "rgba(120,100,70,.35)";
     ctx.fillRect(p.x - 10, p.y - 10, 20, 20);
+    ctx.restore();
+  },
+  drawHighPassLandmark(ctx, area, camera, offsetX = 0, offsetY = 0) {
+    const ts = OTZI.CFG.tileSize;
+    const x = area.map.w * ts * 0.5;
+    const y = area.map.h * ts * 0.5;
+    const p = this.project(camera, x, y, offsetX, offsetY);
+    ctx.save();
+    ctx.fillStyle = "#dce6ed";
+    ctx.beginPath();
+    ctx.moveTo(p.x - 36, p.y + 18);
+    ctx.lineTo(p.x - 14, p.y - 12);
+    ctx.lineTo(p.x + 12, p.y - 20);
+    ctx.lineTo(p.x + 38, p.y + 14);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = "#8fa3b1";
+    ctx.fillRect(p.x - 14, p.y - 10, 28, 20);
+    ctx.fillStyle = "#2d363c";
+    ctx.fillRect(p.x - 4, p.y - 3, 8, 10);
+    ctx.fillStyle = "rgba(0,0,0,.7)";
+    ctx.fillRect(p.x - 30, p.y - 44, 60, 14);
+    ctx.fillStyle = "#f2ddb2";
+    ctx.font = "800 10px ui-monospace,Consolas,monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    ctx.fillText("HIGH PASS", p.x, p.y - 33);
     ctx.restore();
   },
   project(camera, x, y, offsetX, offsetY) {

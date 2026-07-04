@@ -52,7 +52,12 @@ OTZI.game = {
   },
   progress: {
     smallGameHunts: 0,
-    lastSmallGame: null
+    lastSmallGame: null,
+    visitedBirchGrove: false,
+    gatheredBirchBark: false,
+    cookedRawMeat: false,
+    visitedWolfSigns: false,
+    preparedForHighPass: false
   },
   get craftOpen() {
     return this.inventoryOpen;
@@ -95,7 +100,12 @@ OTZI.game = {
     };
     this.progress = {
       smallGameHunts: 0,
-      lastSmallGame: null
+      lastSmallGame: null,
+      visitedBirchGrove: false,
+      gatheredBirchBark: false,
+      cookedRawMeat: false,
+      visitedWolfSigns: false,
+      preparedForHighPass: false
     };
     this.welcomeOpen = false;
     this.areaCard = null;
@@ -276,10 +286,27 @@ OTZI.game = {
   },
   onAreaEntered() {
     this.showAreaCard();
-    if (this.scene === "overworld" && this.currentScreen?.kind === "village_home") {
-      this.village.visitedHome = true;
-      this.tryUnlockToolmaker();
+    if (this.scene === "overworld") {
+      if (this.currentScreen?.kind === "village_home") {
+        this.village.visitedHome = true;
+        this.tryUnlockToolmaker();
+        this.maybeCompleteHighPassPrep();
+      }
+      if (this.currentScreen?.kind === "birch_grove") this.progress.visitedBirchGrove = true;
+      if (this.currentScreen?.kind === "wolf_signs") this.progress.visitedWolfSigns = true;
     }
+  },
+  maybeCompleteHighPassPrep() {
+    if (this.progress.preparedForHighPass) return false;
+    if (!this.progress.visitedBirchGrove) return false;
+    if (!this.progress.gatheredBirchBark) return false;
+    if ((this.inventory.barkBundle || 0) < 1) return false;
+    if (!this.progress.cookedRawMeat) return false;
+    if (!this.progress.visitedWolfSigns) return false;
+    if ((this.inventory.hardenedSpear || 0) < 1) return false;
+    this.progress.preparedForHighPass = true;
+    OTZI.dialogue.toast("Prepared for the High Pass");
+    return true;
   },
   currentObjective() {
     return OTZI.objectives.current(this);
@@ -575,7 +602,12 @@ OTZI.game = {
   },
   useVillageHearth() {
     if ((this.inventory.rawMeat || 0) > 0) {
-      return OTZI.crafting.cookMeat();
+      const cooked = OTZI.crafting.cookMeat();
+      if (cooked) {
+        this.progress.cookedRawMeat = true;
+        this.maybeCompleteHighPassPrep();
+      }
+      return cooked;
     }
     if ((this.inventory.crudeSpear || 0) < 1) {
       OTZI.dialogue.toast("Craft a crude spear first");
@@ -588,6 +620,7 @@ OTZI.game = {
       this.equipment.spear = "hardenedSpear";
       this.equipment.durability = 2;
     }
+    this.maybeCompleteHighPassPrep();
     OTZI.dialogue.toast("Hardened spear tip");
     OTZI.audio.blip(700, 0.045);
     this.updateFocusState();
@@ -658,6 +691,10 @@ OTZI.game = {
     }
     OTZI.inventory.add(node.resource, node.amount);
     OTZI.resources.deplete(node, this.map);
+    if (node.resource === "bark" && this.currentScreen?.kind === "birch_grove") {
+      this.progress.gatheredBirchBark = true;
+      this.maybeCompleteHighPassPrep();
+    }
     this.updateFocusState();
     OTZI.dialogue.toast(`Gathered ${node.resource} +1`);
     OTZI.audio.blip(660, 0.04);
@@ -884,6 +921,13 @@ OTZI.game = {
     OTZI.dom.recipeCrudeSpearCard.addEventListener("click", (ev) => {
       if (ev.target === OTZI.dom.craftCrudeSpearBtn) return;
       if (!OTZI.crafting.canCraft("crude_spear")) OTZI.crafting.craft("crude_spear");
+    });
+    OTZI.dom.craftBarkBundleBtn.addEventListener("click", () => {
+      OTZI.crafting.craft("bark_bundle");
+    });
+    OTZI.dom.recipeBarkBundleCard.addEventListener("click", (ev) => {
+      if (ev.target === OTZI.dom.craftBarkBundleBtn) return;
+      if (!OTZI.crafting.canCraft("bark_bundle")) OTZI.crafting.craft("bark_bundle");
     });
     OTZI.dom.hardenSpearBtn.addEventListener("click", () => {
       OTZI.crafting.hardenSpearTip();

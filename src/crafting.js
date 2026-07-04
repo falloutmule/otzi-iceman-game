@@ -6,6 +6,7 @@ OTZI.crafting = {
     stick: "Stick",
     stone: "Stone",
     bark: "Bark",
+    barkBundle: "Bark Bundle",
     grass: "Grass",
     food: "Food",
     rawMeat: "Raw Meat",
@@ -26,6 +27,12 @@ OTZI.crafting = {
       name: "Crude Spear",
       inputs: { stick: 1, stone: 1, bark: 1 },
       output: { item: "crudeSpear", count: 1 }
+    },
+    {
+      id: "bark_bundle",
+      name: "Bark Bundle",
+      inputs: { bark: 2 },
+      output: { item: "barkBundle", count: 1 }
     }
   ],
   getRecipe(id) {
@@ -152,6 +159,8 @@ OTZI.crafting = {
     }
     OTZI.inventory.add("rawMeat", -1);
     OTZI.inventory.add("food", 1);
+    OTZI.game.progress.cookedRawMeat = true;
+    OTZI.game.maybeCompleteHighPassPrep?.();
     OTZI.dialogue.toast("Cooked raw meat +1 food");
     OTZI.audio.blip(700, 0.045);
     return true;
@@ -184,6 +193,9 @@ OTZI.crafting = {
       OTZI.inventory.add(item, -count);
     }
     OTZI.inventory.add(recipe.output.item, recipe.output.count);
+    if (recipe.output.item === "barkBundle") {
+      OTZI.game.maybeCompleteHighPassPrep?.();
+    }
     OTZI.dialogue.toast(`Crafted ${recipe.name}`);
     OTZI.audio.blip(720, 0.045);
     return true;

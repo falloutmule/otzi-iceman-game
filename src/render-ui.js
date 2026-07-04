@@ -32,6 +32,7 @@ OTZI.renderUi = {
       <div><span>A</span><span>Animal Clearing</span></div>
       <div><span>B</span><span>Birch Grove</span></div>
       <div><span>W</span><span>Wolf Signs</span></div>
+      <div><span>H</span><span>High Pass</span></div>
       <div><span>@</span><span>You</span></div>
       <div><span>?</span><span>Unknown</span></div>
     `;
@@ -70,6 +71,7 @@ OTZI.renderUi = {
       OTZI.dom.craftStick.textContent = String(game.inventory.stick || 0);
       OTZI.dom.craftStone.textContent = String(game.inventory.stone || 0);
       OTZI.dom.craftBark.textContent = String(game.inventory.bark || 0);
+      OTZI.dom.craftBarkBundle.textContent = String(game.inventory.barkBundle || 0);
       OTZI.dom.craftGrass.textContent = String(game.inventory.grass || 0);
       OTZI.dom.craftFood.textContent = String(game.inventory.food || 0);
       OTZI.dom.craftRawMeat.textContent = String(game.inventory.rawMeat || 0);
@@ -96,6 +98,15 @@ OTZI.renderUi = {
         OTZI.dom.recipeCrudeSpearMissing,
         OTZI.dom.craftCrudeSpearBtn,
         crudeSpearRecipe
+      );
+      const barkBundleRecipe = OTZI.crafting.describeRecipe("bark_bundle", game.inventory);
+      this.syncRecipeCard(
+        OTZI.dom.recipeBarkBundleState,
+        OTZI.dom.recipeBarkBundleNeeds,
+        OTZI.dom.recipeBarkBundleHave,
+        OTZI.dom.recipeBarkBundleMissing,
+        OTZI.dom.craftBarkBundleBtn,
+        barkBundleRecipe
       );
       OTZI.dom.recipeHardenSpearState.textContent = harden.canHarden ? "Ready" : harden.haveSpear > 0 ? "Need Hearth" : "Need Spear";
       OTZI.dom.recipeHardenSpearNeeds.textContent = harden.needsText;
@@ -128,6 +139,8 @@ OTZI.renderUi = {
         "Crude spear equipped. The next throw will lose it.";
       OTZI.dom.craftHint.textContent = cook.canCook ? "The village hearth is ready for cooking." :
         eat.canEat ? "Eat food to lower hunger." :
+        barkBundleRecipe.canCraft ? "Craft a bark bundle before you head for the high pass." :
+        (game.inventory.bark || 0) > 0 ? "Two bark make a bark bundle for the high pass." :
         harden.canHarden ? "The village hearth is ready for hardening." :
         (game.inventory.rawMeat || 0) > 0 ? "Return to the village hearth to cook raw meat." :
         (game.inventory.crudeSpear || 0) > 0 ? "Return to the village hearth to harden the spear tip." :
@@ -177,6 +190,7 @@ OTZI.renderUi = {
       `resources ${game.resourceNodes ? OTZI.resources.count(game.resourceNodes).active : 0}`,
       `spear ${spear.kind || "none"}${spear.kind === "hardenedSpear" ? `:${spear.durability}` : ""}`,
       `hunt ${game.progress.smallGameHunts || 0}`,
+      `highpass ${game.progress.preparedForHighPass ? 1 : 0}`,
       `pointers ${OTZI.input.pointers.size}`,
       `canvas ${OTZI.viewport.internalW}x${OTZI.viewport.internalH}`,
       `flint ${game.inventory.flint || 0}`
@@ -239,11 +253,11 @@ OTZI.renderUi = {
         ctx.fillStyle = screen.kind === "village_home" ? "#9a784b" :
           screen.kind === "birch_grove" ? "#9bb57a" :
           screen.kind === "wolf_signs" ? "#5c5852" :
+          screen.kind === "high_pass_locked_placeholder" ? "#cad3da" :
           screen.kind === "flint_scar_entrance" ? "#c9d0d4" :
           screen.kind === "animal_clearing" ? "#4f6b32" :
           screen.kind === "dense_forest" ? "#29422b" :
-          screen.kind === "river_edge_placeholder" ? "#365f6e" :
-          screen.kind === "high_pass_locked_placeholder" ? "#cad3da" : "#315b36";
+          screen.kind === "river_edge_placeholder" ? "#365f6e" : "#315b36";
         ctx.fillRect(x * cellW + 1, y * cellH + 1, cellW - 2, cellH - 2);
         ctx.strokeStyle = "rgba(243,234,215,.14)";
         ctx.strokeRect(x * cellW + 1, y * cellH + 1, cellW - 2, cellH - 2);
@@ -253,6 +267,7 @@ OTZI.renderUi = {
         else if (screen.kind === "animal_clearing") ctx.fillText("A", x * cellW + cellW / 2, y * cellH + cellH / 2);
         else if (screen.kind === "birch_grove") ctx.fillText("B", x * cellW + cellW / 2, y * cellH + cellH / 2);
         else if (screen.kind === "wolf_signs") ctx.fillText("W", x * cellW + cellW / 2, y * cellH + cellH / 2);
+        else if (screen.kind === "high_pass_locked_placeholder") ctx.fillText("H", x * cellW + cellW / 2, y * cellH + cellH / 2);
         else if (screen.kind === "quiet_empty") ctx.fillText(".", x * cellW + cellW / 2, y * cellH + cellH / 2);
       }
     }
